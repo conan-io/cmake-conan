@@ -1,16 +1,14 @@
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper C CXX)
-
-# message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
-# message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
-# message(STATUS "VERSION " ${CMAKE_CXX_COMPILER_VERSION})
-# message(STATUS "FLAGS " ${CMAKE_LANG_FLAGS})
-# message(STATUS "LIB ARCH " ${CMAKE_CXX_LIBRARY_ARCHITECTURE})
-# message(STATUS "BUILD TYPE " ${CMAKE_BUILD_TYPE})
-# message(STATUS "GENERATOR " ${CMAKE_GENERATOR})
-# message(STATUS "GENERATOR WIN64 " ${CMAKE_CL_64})
+include(CMakeParseArguments)
 
 function(conan_install_settings result)
+  # message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
+  # message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
+  # message(STATUS "VERSION " ${CMAKE_CXX_COMPILER_VERSION})
+  # message(STATUS "FLAGS " ${CMAKE_LANG_FLAGS})
+  # message(STATUS "LIB ARCH " ${CMAKE_CXX_LIBRARY_ARCHITECTURE})
+  # message(STATUS "BUILD TYPE " ${CMAKE_BUILD_TYPE})
+  # message(STATUS "GENERATOR " ${CMAKE_GENERATOR})
+  # message(STATUS "GENERATOR WIN64 " ${CMAKE_CL_64})
   set(SETTINGS_STR "")
   if(${CMAKE_GENERATOR} MATCHES "Visual Studio 14")
     set(_VISUAL "Visual Studio")
@@ -25,54 +23,68 @@ function(conan_install_settings result)
   set(${result} ${SETTINGS_STR} PARENT_SCOPE)
 endfunction()
 
-function(real_install)
+function(conan_execute_install)
+    set(options )
+    set(oneValueArgs BUILD_DIR BUILD CONAN_COMMAND)
+    set(multiValueArgs REQUIRES OPTIONS IMPORTS) 
+    cmake_parse_arguments(CONANFILE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  
     conan_install_settings(settings)
-    # message(STATUS "MY_SETTINGS OK " ${settings})
 
-    #add_custom_target(ConanDeps ALL
-    #                  COMMAND conan install ${CMAKE_SOURCE_DIR} ${settings}
-    #                 )
-
-    #message(STATUS "added 1st cmmand!")
-    #add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake
-    #                 COMMAND conan install ${CMAKE_SOURCE_DIR} ${settings})
-                                       
-    #add_custom_target(conan_install
-    #                  COMMAND conan install ${CMAKE_BINARY_DIR} ${settings})
-
-    message(STATUS "conan install ${CMAKE_BINARY_DIR} ${settings}") 
-    set(conan_command "conan")
-    set(conan_args install . ${settings})
-    execute_process(
-          COMMAND ${conan_command} ${conan_args}
-          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-          RESULT_VARIABLE error_code
-          OUTPUT_VARIABLE out_var)
-    if(error_code)
-      message(FATAL_ERROR "Error while executing conan install: ${error_code}, ${out_var}")
+    if(CONANFILE_BUILD_DIR)
+      set(CONAN_RUN_DIR ${CONANFILE_BUILD_DIR})
     else()
-      message(STATUS ${out_var})
+      set(CONAN_RUN_DIR ${CMAKE_BINARY_DIR})
+     endif()
+    if(CONANFILE_CONAN_COMMAND)
+       set(conan_command ${CONANFILE_CONAN_COMMAND})
+    else()
+      set(conan_command "conan")
     endif()
+    
+    set(conan_args install ${CONAN_RUN_DIR} ${settings})
+
+    add_custom_target(conan_install
+                      COMMAND ${conan_command} ${conan_args}
+                      WORKING_DIRECTORY ${CONAN_RUN_DIR})
+    add_custom_command(TARGET conan_install
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}
+                   )
+
 endfunction()
 
-function(generate_conanfile)
-  set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
-  file(WRITE ${_FN} "[generators]\ncmake\n")
-  foreach(ARG ${ARGV})
-    if(${ARG} STREQUAL "REQUIRES")
-      file(APPEND ${_FN} "\n[requires]\n")     
-    elseif(${ARG} STREQUAL "OPTIONS")
-      file(APPEND ${_FN} "\n[options]\n")
-    else()
-      file(APPEND ${_FN} ${ARG} "\n")
-    endif()
+function(conan_generate_conanfile)
+  set(options )
+  set(oneValueArgs BUILD_DIR BUILD CONAN_COMMAND)
+  set(multiValueArgs REQUIRES OPTIONS IMPORTS) 
+  cmake_parse_arguments(CONANFILE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+ 
+  if(CONANFILE_BUILD_DIR)
+    set(_FN "${CONANFILE_BUILD_DIR}/conanfile.txt")
+  else()
+    set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
+  endif()
+  file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
+  foreach(ARG ${CONANFILE_REQUIRES})
+    file(APPEND ${_FN} ${ARG} "\n")
   endforeach()
+  
+  file(APPEND ${_FN} ${ARG} "\n[options]\n")
+  foreach(ARG ${CONANFILE_OPTIONS})
+    file(APPEND ${_FN} ${ARG} "\n")
+  endforeach()
+  
+  file(APPEND ${_FN} ${ARG} "\n[imports]\n")
+  foreach(ARG ${CONANFILE_IMPORTS})
+    file(APPEND ${_FN} ${ARG} "\n")
+  endforeach()
+     
 endfunction()
 
-macro(conan_requirements)
-    generate_conanfile(${ARGV})
-    real_install()
-    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+macro(conan_requirements)  
+    conan_generate_conanfile(${ARGV})
+    conan_execute_install(${ARGV})   
 endmacro()
     
 
