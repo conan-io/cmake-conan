@@ -1,4 +1,10 @@
-#include "Poco/Timer.h"
+#include "hello.h"
+
+int main(){
+    hello();
+}
+
+/*#include "Poco/Timer.h"
 #include "Poco/Thread.h"
 #include "Poco/Stopwatch.h"
 #include <iostream>
@@ -27,4 +33,4 @@ int main(int argc, char** argv){
         Thread::sleep(1000);
         timer.stop();
         return 0;
-}
+}*/
