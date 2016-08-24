@@ -1,5 +1,13 @@
 include(CMakeParseArguments)
 
+set(POLICY_CHECK "")
+cmake_policy(GET CMP0025 POLICY_CHECK)
+
+message(STATUS "policy set to " ${POLICY_CHECK})
+if (("${POLICY_CHECK}" STREQUAL "") OR ("${POLICY_CHECK}" STREQUAL OLD))
+  message(FATAL_ERROR "This project requires the minimum cmake version to be set to 3.0")
+endif()
+
 function(conan_install_settings result)
   #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
   #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
@@ -19,7 +27,16 @@ function(conan_install_settings result)
 
   if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     # using GCC
-    set(SETTINGS_STR -s compiler=gcc -s compiler.version=4.9 -s compiler.libcxx=libstdc++)
+    string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+    list(GET VERSION_LIST 0 MAJOR)
+    list(GET VERSION_LIST 1 MINOR)
+    set(SETTINGS_STR -s compiler=gcc -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=libstdc++)
+  elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL AppleClang)
+      # using AppleClang
+      string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+      list(GET VERSION_LIST 0 MAJOR)
+      list(GET VERSION_LIST 1 MINOR)
+      set(SETTINGS_STR -s compiler=apple-clang -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=libc++)
   elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
       # using Clang
       string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
@@ -91,9 +108,20 @@ function(conan_execute_install)
                       WORKING_DIRECTORY ${CONAN_RUN_DIR})
     add_custom_command(TARGET conan_install
                    POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}
+                   COMMAND ${CMAKE_COMMAND} "-H${CMAKE_SOURCE_DIR}" "-B${CMAKE_BINARY_DIR}"
                    )
 
+    if(NOT EXISTS ${CONAN_RUN_DIR}/conanbuildinfo.cmake)
+      set(conan_exec_result "")
+      execute_process(COMMAND  ${conan_command} ${conan_args}
+                      WORKING_DIRECTORY ${CONAN_RUN_DIR}
+                      RESULT_VARIABLE conan_exec_result)
+      if(conan_exec_result EQUAL 0)
+        execute_process(COMMAND ${CMAKE_COMMAND} "-H${CMAKE_SOURCE_DIR}" "-B${CMAKE_BINARY_DIR}")
+      else()
+        message(FATAL_ERROR "Conan Failed with exit code: ${conan_exec_result}")
+      endif()
+    endif()
 endfunction()
 
 function(conan_generate_conanfile)
@@ -121,7 +149,6 @@ function(conan_generate_conanfile)
   foreach(ARG ${CONANFILE_IMPORTS})
     file(APPEND ${_FN} ${ARG} "\n")
   endforeach()
-     
 endfunction()
 
 macro(conan_requirements)  
@@ -135,15 +162,13 @@ macro(conan_requirements)
       set(CONAN_RUN_DIR ${CONANFILE_BUILD_DIR})
     else()
       set(CONAN_RUN_DIR ${CMAKE_BINARY_DIR})
-     endif()
+    endif()
     if(CONANFILE_BASIC_SETUP)
-      if(EXISTS ${CONAN_RUN_DIR}/conanbuildinfo.cmake)
-        message(STATUS "*Conan*: Loading conanbuildinfo.cmake")
-        include(${CONAN_RUN_DIR}/conanbuildinfo.cmake)
-        conan_basic_setup()
-      endif()
+      
+    message(STATUS "*Conan*: Loading conanbuildinfo.cmake")
+    include(${CONAN_RUN_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
+   
     endif()
 endmacro()
     
-
-          
