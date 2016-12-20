@@ -44,4 +44,15 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 ```
 
-Please check the source code for other options and arguments
+Please check the source code for other options and arguments.
+
+Development, contributors
+-----------------------------
+
+There are some tests, you can run in python, with nosetests, for example:
+
+```bash
+$ nosetests . --nocapture
+```
+
+If there are enough interest, I will set up CI with travis & appveyor

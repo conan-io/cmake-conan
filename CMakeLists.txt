@@ -11,7 +11,6 @@ project(conan_wrapper CXX)
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
                 BASIC_SETUP CMAKE_TARGETS
-                CONAN_COMMAND C:/Users/drodri/scripts/conan.bat
                 BUILD missing)
 
 add_executable(main main.cpp)

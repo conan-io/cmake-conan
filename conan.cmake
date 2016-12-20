@@ -65,11 +65,19 @@ function(conan_cmake_settings result)
 endfunction()
 
 
+macro(parse_arguments)
+  set(options BASIC_SETUP CMAKE_TARGETS)
+  set(oneValueArgs BUILD CONAN_COMMAND)
+  set(multiValueArgs REQUIRES OPTIONS IMPORTS)
+  cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+endmacro()
+
 function(conan_cmake_install)
-    set(options )
-    set(oneValueArgs BUILD CONAN_COMMAND)
-    set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS)
-    cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    # Calls "conan install"
+    # Argument BUILD is equivalant to --build={missing, PkgName,...}
+    # Argument CONAN_COMMAND, to specify the conan path, e.g. in case of running from source
+    # cmake does not identify conan as command, even if it is +x and it is in the path
+    parse_arguments(${ARGV})
 
     if(ARGUMENTS_BUILD)
         set(CONAN_BUILD_POLICY --build=${ARGUMENTS_BUILD})
@@ -82,7 +90,7 @@ function(conan_cmake_install)
       set(conan_command conan)
     endif()
 
-    set(conan_args install ${CONAN_RUN_DIR} ${settings} ${CONAN_BUILD_POLICY})
+    set(conan_args install ${settings} ${CONAN_BUILD_POLICY})
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
@@ -98,10 +106,10 @@ endfunction()
 
 
 function(conan_cmake_generate_conanfile)
-  set(options BASIC_SETUP)
-  set(oneValueArgs BUILD CONAN_COMMAND)
-  set(multiValueArgs REQUIRES OPTIONS IMPORTS)
-  cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+  # Generate, writing in disk a conanfile.txt with the requires, options, and imports
+  # specified as arguments
+  # This will be considered as temporary file, generated in CMAKE_BINARY_DIR
+  parse_arguments(${ARGV})
 
   set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
 
@@ -122,31 +130,30 @@ function(conan_cmake_generate_conanfile)
 endfunction()
 
 
-macro(conan_cmake_basic_setup targets)
+macro(conan_load_buildinfo)
+    # Checks for the existence of conanbuildinfo.cmake, and loads it
+    # important that it is macro, so variables defined at parent scope
     if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")   
       message(STATUS "Conan: Loading conanbuildinfo.cmake")
       include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-      conan_basic_setup(${targets})
     else()
-        message(FATAL_ERROR "conanbuildinfo doesn't exist in ${CMAKE_BINARY_DIR}")
+      message(FATAL_ERROR "conanbuildinfo doesn't exist in ${CMAKE_BINARY_DIR}")
     endif()
 endmacro()
 
 
 macro(conan_cmake_run)
-    set(options BASIC_SETUP CMAKE_TARGETS)
-    set(oneValueArgs)
-    set(multiValueArgs)
-    cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    parse_arguments(${ARGV})
     conan_cmake_settings(settings)
     conan_cmake_generate_conanfile(${ARGV})
     conan_cmake_install(SETTINGS ${settings} ${ARGV})
-    
+    conan_load_buildinfo()
+
     if(ARGUMENTS_BASIC_SETUP)
       if(ARGUMENTS_CMAKE_TARGETS)
-        conan_cmake_basic_setup("TARGETS")
+        conan_basic_setup(TARGETS)
       else()
-        conan_cmake_basic_setup("")
+        conan_basic_setup()
       endif()
     endif()
 endmacro()
