@@ -71,3 +71,52 @@ target_link_libraries(main CONAN_PKG::Hello)
       run("cmake .. -DCMAKE_BUILD_TYPE=Release")
       run("cmake --build . --config Release")
       run("bin\main")
+
+    def test_existing_conanfile(self):
+      content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(CONANFILE conanfile.txt
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing)
+
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::Hello)
+"""
+      save("CMakeLists.txt", content)
+      save("conanfile.txt", "[requires]\nHello/0.1@memsharded/testing\n"
+                            "[generators]\ncmake")
+
+      os.makedirs("build")
+      os.chdir("build")
+      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake --build . --config Release")
+      run("bin\main")
+
+    def test_existing_conanfile_py(self):
+      content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(CONANFILE conan/conanfile.py
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing)
+
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::Hello)
+"""
+      save("CMakeLists.txt", content)
+      save("conan/conanfile.py", """
+from conans import ConanFile
+
+class Pkg(ConanFile):
+  requires = "Hello/0.1@memsharded/testing"
+  generators = "cmake"
+""")
+
+      os.makedirs("build")
+      os.chdir("build")
+      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake --build . --config Release")
+      run("bin\main")

@@ -67,7 +67,7 @@ endfunction()
 
 macro(parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS)
-  set(oneValueArgs BUILD CONAN_COMMAND)
+  set(oneValueArgs BUILD CONAN_COMMAND CONANFILE)
   set(multiValueArgs REQUIRES OPTIONS IMPORTS)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 endmacro()
@@ -89,8 +89,10 @@ function(conan_cmake_install)
     else()
       set(conan_command conan)
     endif()
-
-    set(conan_args install ${settings} ${CONAN_BUILD_POLICY})
+    if(ARGUMENTS_CONANFILE)
+      set(CONANFILE -f=${CMAKE_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+    endif()
+    set(conan_args install ${CONANFILE} ${settings} ${CONAN_BUILD_POLICY})
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
@@ -110,7 +112,9 @@ function(conan_cmake_generate_conanfile)
   # specified as arguments
   # This will be considered as temporary file, generated in CMAKE_BINARY_DIR
   parse_arguments(${ARGV})
-
+  if(ARGUMENTS_CONANFILE)
+    return()
+  endif()
   set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
 
   file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")

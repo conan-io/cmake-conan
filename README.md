@@ -44,6 +44,18 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 ```
 
+
+If you want to use your own ``conanfile.txt`` or ``conanfile.py`` instead of generating a temporary one, you could do:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing)
+```
+
+The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
+
 Please check the source code for other options and arguments.
 
 Development, contributors
