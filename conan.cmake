@@ -22,8 +22,17 @@ function(conan_cmake_settings result)
 
   if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     # using GCC
-    # TODO: Handle versions and other params
-    set(_SETTINGS ${_SETTINGS} -s compiler=gcc -s compiler.version=4.9 -s compiler.libcxx=libstdc++)
+    # TODO: Handle other params
+    string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+    list(GET VERSION_LIST 0 MAJOR)
+    list(GET VERSION_LIST 1 MINOR)
+    set(SETTINGS_STR -s compiler=gcc -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=libstdc++)
+  elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL AppleClang)
+      # using AppleClang
+      string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+      list(GET VERSION_LIST 0 MAJOR)
+      list(GET VERSION_LIST 1 MINOR)
+      set(SETTINGS_STR -s compiler=apple-clang -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=libc++)
   elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
       # using Clang
       string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
@@ -161,6 +170,3 @@ macro(conan_cmake_run)
       endif()
     endif()
 endmacro()
-    
-
-          
