@@ -26,7 +26,8 @@ function(conan_cmake_settings result)
     string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
     list(GET VERSION_LIST 0 MAJOR)
     list(GET VERSION_LIST 1 MINOR)
-    set(_SETTINGS ${_SETTINGS} -s compiler=gcc -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=libstdc++)
+    conan_cmake_detect_gnu_libcxx(_LIBCXX)
+    set(_SETTINGS ${_SETTINGS} -s compiler=gcc -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=${_LIBCXX})
   elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL AppleClang)
       # using AppleClang
       string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
@@ -80,6 +81,22 @@ function(conan_cmake_settings result)
   endif()
 
   set(${result} ${_SETTINGS} PARENT_SCOPE)
+endfunction()
+
+
+function(conan_cmake_detect_gnu_libcxx result)
+    get_directory_property(defines DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
+    foreach(define ${defines})
+        if(define STREQUAL "_GLIBCXX_USE_CXX11_ABI=0")
+            set(${result} libstdc++ PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1")
+      set(${result} libstdc++ PARENT_SCOPE)
+    else()
+      set(${result} libstdc++11 PARENT_SCOPE)
+    endif()
 endfunction()
 
 
