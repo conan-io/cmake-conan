@@ -13,9 +13,14 @@ function(conan_cmake_settings result)
 
   message(STATUS "Conan ** WARNING** : This detection of settings from cmake is experimental and incomplete. "
                   "Please check 'conan.cmake' and contribute")
-  
+
+  if(CONAN_CMAKE_MULTI)
+    set(_SETTINGS -g cmake_multi)
+  else()
+    set(_SETTINGS -g cmake)
+  endif()
   if(CMAKE_BUILD_TYPE)
-    set(_SETTINGS -s build_type=${CMAKE_BUILD_TYPE})
+    set(_SETTINGS ${_SETTINGS} -s build_type=${CMAKE_BUILD_TYPE})
   else()
     message(FATAL_ERROR "Please specify in command line CMAKE_BUILD_TYPE (-DCMAKE_BUILD_TYPE=Release)")
   endif()
@@ -174,22 +179,39 @@ endfunction()
 
 
 macro(conan_load_buildinfo)
+    if(CONAN_CMAKE_MULTI)
+	  set(_CONANBUILDINFO conanbuildinfo_multi.cmake)
+	else()
+	  set(_CONANBUILDINFO conanbuildinfo.cmake)
+	endif()
     # Checks for the existence of conanbuildinfo.cmake, and loads it
     # important that it is macro, so variables defined at parent scope
-    if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")   
-      message(STATUS "Conan: Loading conanbuildinfo.cmake")
-      include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    if(EXISTS "${CMAKE_BINARY_DIR}/${_CONANBUILDINFO}")
+      message(STATUS "Conan: Loading ${_CONANBUILDINFO}")
+      include(${CMAKE_BINARY_DIR}/${_CONANBUILDINFO})
     else()
-      message(FATAL_ERROR "conanbuildinfo doesn't exist in ${CMAKE_BINARY_DIR}")
+      message(FATAL_ERROR "${_CONANBUILDINFO} doesn't exist in ${CMAKE_BINARY_DIR}")
     endif()
 endmacro()
 
 
 macro(conan_cmake_run)
     parse_arguments(${ARGV})
-    conan_cmake_settings(settings)
     conan_cmake_generate_conanfile(${ARGV})
-    conan_cmake_install(SETTINGS ${settings} ${ARGV})
+    if(CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+        set(CONAN_CMAKE_MULTI ON)
+        message(STATUS "Conan: Using cmake-multi generator")
+        foreach(CMAKE_BUILD_TYPE "Release" "Debug")
+            conan_cmake_settings(settings)
+            conan_cmake_install(SETTINGS ${settings} ${ARGV})
+        endforeach()
+        set(CMAKE_BUILD_TYPE)
+    else()
+        set(CONAN_CMAKE_MULTI OFF)
+        conan_cmake_settings(settings)
+        conan_cmake_install(SETTINGS ${settings} ${ARGV})
+    endif()
+
     conan_load_buildinfo()
 
     if(ARGUMENTS_BASIC_SETUP)

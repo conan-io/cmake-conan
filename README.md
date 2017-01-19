@@ -56,6 +56,8 @@ conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
 
 The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
+To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
+
 Please check the source code for other options and arguments.
 
 Development, contributors
