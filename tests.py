@@ -169,3 +169,42 @@ class Pkg(ConanFile):
       run("cmake .. -DCMAKE_BUILD_TYPE=Release")
       run("cmake --build . --config Release")
       run("bin\main")
+
+    def test_exported_package(self):
+      content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+set(CONAN_EXPORTED ON)
+include(conan.cmake)
+conan_cmake_run(CONANFILE conanfile.py
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing)
+
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::Hello)
+"""
+      save("CMakeLists.txt", content)
+      save("conanfile.py", """
+from conans import ConanFile, CMake
+
+class Pkg(ConanFile):
+  name = "Test"
+  version = "0.1"
+  requires = "Hello/0.1@memsharded/testing"
+  generators = "cmake"
+  exports = ["CMakeLists.txt", "conan.cmake", "main.cpp"]
+  settings = "os", "arch", "compiler", "build_type"
+
+  def build(self):
+    cmake = CMake(self.settings)
+    self.run('cmake . ' + cmake.command_line)
+    self.run('cmake --build . ' + cmake.build_config)
+""")
+      run("conan export test/testing")
+
+      os.makedirs("build")
+      os.chdir("build")
+      save("conanfile.txt", """[requires]
+Test/0.1@test/testing""")
+      run("conan install . --build Test")
+      run("conan remove -f Test/0.1@test/testing")
