@@ -29,7 +29,8 @@ function(conan_cmake_settings result)
   if(CMAKE_SYSTEM_NAME)
   #use default conan os setting if CMAKE_SYSTEM_NAME is not defined
     set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD)
-    if( CMAKE_SYSTEM_NAME IN_LIST CONAN_SUPPORTED_PLATFORMS )
+    list (FIND CONAN_SUPPORTED_PLATFORMS "${CMAKE_SYSTEM_NAME}" _index)
+    if (${_index} GREATER -1)
     #check if the cmake system is a conan supported one
       set(_SETTINGS ${_SETTINGS} -s os=${CMAKE_SYSTEM_NAME})
     else()
