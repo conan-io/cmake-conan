@@ -25,6 +25,14 @@ function(conan_cmake_settings result)
     message(FATAL_ERROR "Please specify in command line CMAKE_BUILD_TYPE (-DCMAKE_BUILD_TYPE=Release)")
   endif()
 
+  #handle -s os setting
+  set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD)
+  if( CMAKE_SYSTEM_NAME IN_LIST CONAN_SUPPORTED_PLATFORMS )
+    set(_SETTINGS ${_SETTINGS} -s os=${CMAKE_SYSTEM_NAME})
+  else()
+    message(FATAL_ERROR "cmake system ${CMAKE_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_PLATFORMS}")
+  endif()
+
   if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
     # using GCC
     # TODO: Handle other params
