@@ -28,13 +28,17 @@ function(conan_cmake_settings result)
   #handle -s os setting
   if(CMAKE_SYSTEM_NAME)
   #use default conan os setting if CMAKE_SYSTEM_NAME is not defined
+    set(CONAN_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        set(CONAN_SYSTEM_NAME Macos)
+    endif()
     set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD)
-    list (FIND CONAN_SUPPORTED_PLATFORMS "${CMAKE_SYSTEM_NAME}" _index)
+    list (FIND CONAN_SUPPORTED_PLATFORMS "${CONAN_SYSTEM_NAME}" _index)
     if (${_index} GREATER -1)
     #check if the cmake system is a conan supported one
-      set(_SETTINGS ${_SETTINGS} -s os=${CMAKE_SYSTEM_NAME})
+      set(_SETTINGS ${_SETTINGS} -s os=${CONAN_SYSTEM_NAME})
     else()
-      message(FATAL_ERROR "cmake system ${CMAKE_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_PLATFORMS}")
+      message(FATAL_ERROR "cmake system ${CONAN_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_PLATFORMS}")
     endif()
   endif()
 
