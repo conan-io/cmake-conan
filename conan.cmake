@@ -107,6 +107,18 @@ endfunction()
 
 
 function(conan_cmake_detect_gnu_libcxx result)
+    # Allow -D_GLIBCXX_USE_CXX11_ABI=ON/OFF as argument to cmake
+    if(DEFINED _GLIBCXX_USE_CXX11_ABI)
+        if(_GLIBCXX_USE_CXX11_ABI)
+            set(${result} libstdc++11 PARENT_SCOPE)
+            return()
+        else()
+            set(${result} libstdc++ PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
+    # Check if there's any add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
     get_directory_property(defines DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
     foreach(define ${defines})
         if(define STREQUAL "_GLIBCXX_USE_CXX11_ABI=0")
@@ -114,6 +126,8 @@ function(conan_cmake_detect_gnu_libcxx result)
             return()
         endif()
     endforeach()
+
+    # Use C++11 stdlib as default if gcc is 5.1+
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1")
       set(${result} libstdc++ PARENT_SCOPE)
     else()
