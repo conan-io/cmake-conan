@@ -1,0 +1,13 @@
+build: false
+
+environment:
+    PYTHON: "C:\\Python27"
+    PYTHON_VERSION: "2.7.8"
+    PYTHON_ARCH: "32"
+
+install:
+  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - pip.exe install conan nose
+
+test_script:
+  - nosetests .
