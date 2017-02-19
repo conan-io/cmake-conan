@@ -1,5 +1,7 @@
 # cmake-conan
 
+[![Build status](https://ci.appveyor.com/api/projects/status/0y2994lfwcpw9232/branch/master?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/cmake-conan/branch/master)
+
 CMake wrapper for conan C and C++ package manager
 
 ** Testing required **: This tools is still experimental, please try and contribute, specially with the extraction of settings from cmake.
