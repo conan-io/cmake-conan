@@ -145,8 +145,8 @@ endfunction()
 
 macro(parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS)
-  set(oneValueArgs BUILD CONAN_COMMAND CONANFILE)
-  set(multiValueArgs REQUIRES OPTIONS IMPORTS)
+  set(oneValueArgs BUILD CONANFILE)
+  set(multiValueArgs REQUIRES OPTIONS IMPORTS CONAN_COMMAND)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 endmacro()
 
