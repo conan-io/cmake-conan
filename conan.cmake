@@ -186,14 +186,22 @@ function(conan_cmake_install)
 endfunction()
 
 
+function(conan_cmake_setup_conanfile)
+  parse_arguments(${ARGV})
+  if(ARGUMENTS_CONANFILE)
+    # configure_file will make sure cmake re-runs when conanfile is updated
+    configure_file(${ARGUMENTS_CONANFILE} ${ARGUMENTS_CONANFILE}.junk)
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${ARGUMENTS_CONANFILE}.junk)
+  else()
+    conan_cmake_generate_conanfile(${ARGV})
+  endif()
+endfunction()
+
 function(conan_cmake_generate_conanfile)
   # Generate, writing in disk a conanfile.txt with the requires, options, and imports
   # specified as arguments
   # This will be considered as temporary file, generated in CMAKE_BINARY_DIR
   parse_arguments(${ARGV})
-  if(ARGUMENTS_CONANFILE)
-    return()
-  endif()
   set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
 
   file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
@@ -245,7 +253,7 @@ macro(conan_cmake_run)
         set(CONAN_CMAKE_MULTI OFF)
     endif()
     if(NOT CONAN_EXPORTED)
-        conan_cmake_generate_conanfile(${ARGV})
+        conan_cmake_setup_conanfile(${ARGV})
         if(CONAN_CMAKE_MULTI)
             foreach(CMAKE_BUILD_TYPE "Release" "Debug")
                 conan_cmake_settings(settings)
