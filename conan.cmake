@@ -191,7 +191,7 @@ function(conan_cmake_install)
 
     execute_process(COMMAND ${conan_command} ${conan_args}
                      RESULT_VARIABLE return_code
-                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     
     if(NOT "${return_code}" STREQUAL "0")
       message(FATAL_ERROR "Conan install failed='${return_code}'")
@@ -214,9 +214,9 @@ endfunction()
 function(conan_cmake_generate_conanfile)
   # Generate, writing in disk a conanfile.txt with the requires, options, and imports
   # specified as arguments
-  # This will be considered as temporary file, generated in CMAKE_BINARY_DIR
+  # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR
   parse_arguments(${ARGV})
-  set(_FN "${CMAKE_BINARY_DIR}/conanfile.txt")
+  set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
 
   file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
   foreach(ARG ${ARGUMENTS_REQUIRES})
@@ -243,11 +243,11 @@ macro(conan_load_buildinfo)
     endif()
     # Checks for the existence of conanbuildinfo.cmake, and loads it
     # important that it is macro, so variables defined at parent scope
-    if(EXISTS "${CMAKE_BINARY_DIR}/${_CONANBUILDINFO}")
+    if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${_CONANBUILDINFO}")
       message(STATUS "Conan: Loading ${_CONANBUILDINFO}")
-      include(${CMAKE_BINARY_DIR}/${_CONANBUILDINFO})
+      include(${CMAKE_CURRENT_BINARY_DIR}/${_CONANBUILDINFO})
     else()
-      message(FATAL_ERROR "${_CONANBUILDINFO} doesn't exist in ${CMAKE_BINARY_DIR}")
+      message(FATAL_ERROR "${_CONANBUILDINFO} doesn't exist in ${CMAKE_CURRENT_BINARY_DIR}")
     endif()
 endmacro()
 
