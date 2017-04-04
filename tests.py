@@ -19,6 +19,7 @@ def run(cmd):
   if retcode != 0:
     raise Exception("Command failed: %s" % cmd)
 
+generator = '-G "Visual Studio 14"'
 
 class CMakeConanTest(unittest.TestCase):
 
@@ -48,7 +49,7 @@ target_link_libraries(main ${CONAN_LIBS})
       
       os.makedirs("build")
       os.chdir("build")
-      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
       run("cmake --build . --config Release")
       cmd = os.sep.join([".", "bin", "main"])
       run(cmd)
@@ -74,7 +75,7 @@ endforeach()
       
       os.makedirs("build")
       os.chdir("build")
-      run("cmake ..")
+      run("cmake .. %s" % generator)
       run("cmake --build . --config Release")
       cmd = os.sep.join([".", "Release", "main"])
       run(cmd)
@@ -98,7 +99,7 @@ target_link_libraries(main CONAN_PKG::Hello)
       
       os.makedirs("build")
       os.chdir("build")
-      run("cmake ..")
+      run("cmake .. %s" % generator)
       run("cmake --build . --config Release")
       cmd = os.sep.join([".", "Release", "main"])
       run(cmd)
@@ -122,7 +123,7 @@ target_link_libraries(main CONAN_PKG::Hello)
       
       os.makedirs("build")
       os.chdir("build")
-      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
       run("cmake --build . --config Release")
       run("bin\main")
 
@@ -144,7 +145,7 @@ target_link_libraries(main CONAN_PKG::Hello)
 
       os.makedirs("build")
       os.chdir("build")
-      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
       run("cmake --build . --config Release")
       run("bin\main")
 
@@ -171,7 +172,7 @@ class Pkg(ConanFile):
 
       os.makedirs("build")
       os.chdir("build")
-      run("cmake .. -DCMAKE_BUILD_TYPE=Release")
+      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
       run("cmake --build . --config Release")
       run("bin\main")
 
