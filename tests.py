@@ -123,7 +123,7 @@ target_link_libraries(main CONAN_PKG::Hello)
         self._build_multi()    
 
     def test_targets(self):
-      content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
@@ -136,17 +136,17 @@ conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
 add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 """
-      save("CMakeLists.txt", content)
-      
-      os.makedirs("build")
-      os.chdir("build")
-      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-      run("cmake --build . --config Release")
-      cmd = os.sep.join([".", "bin", "main"])
-      run(cmd)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
 
     def test_existing_conanfile(self):
-      content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
@@ -159,19 +159,19 @@ conan_cmake_run(CONANFILE conanfile.txt
 add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 """
-      save("CMakeLists.txt", content)
-      save("conanfile.txt", "[requires]\nHello/0.1@memsharded/testing\n"
+        save("CMakeLists.txt", content)
+        save("conanfile.txt", "[requires]\nHello/0.1@memsharded/testing\n"
                             "[generators]\ncmake")
 
-      os.makedirs("build")
-      os.chdir("build")
-      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-      run("cmake --build . --config Release")
-      cmd = os.sep.join([".", "bin", "main"])
-      run(cmd)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
 
     def test_existing_conanfile_py(self):
-      content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
@@ -184,23 +184,23 @@ conan_cmake_run(CONANFILE conan/conanfile.py
 add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 """
-      save("CMakeLists.txt", content)
-      save("conan/conanfile.py", """
+        save("CMakeLists.txt", content)
+        save("conan/conanfile.py", """
 from conans import ConanFile
 
 class Pkg(ConanFile):
-  requires = "Hello/0.1@memsharded/testing"
-  generators = "cmake"
-  # Defining the settings is necessary now to cache them
-  settings = "os", "compiler", "arch", "build_type"
+requires = "Hello/0.1@memsharded/testing"
+generators = "cmake"
+# Defining the settings is necessary now to cache them
+settings = "os", "compiler", "arch", "build_type"
 """)
 
-      os.makedirs("build")
-      os.chdir("build")
-      run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-      run("cmake --build . --config Release")
-      cmd = os.sep.join([".", "bin", "main"])
-      run(cmd)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
 
     def test_exported_package(self):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
