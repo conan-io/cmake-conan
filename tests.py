@@ -24,7 +24,7 @@ if platform.system() == "Windows":
     generator = '-G "Visual Studio 14"'
 else:
     generator = '-G "Unix Makefiles"'
-
+# TODO: Test Xcode
 
 class CMakeConanTest(unittest.TestCase):
 
