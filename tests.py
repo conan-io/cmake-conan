@@ -11,7 +11,7 @@ def save(filename, content):
     except:
         pass
 
-    with open(filename, "wb") as handle:
+    with open(filename, "w") as handle:
         handle.write(content)
 
 
