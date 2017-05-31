@@ -6,7 +6,8 @@ python:
      - 2.7
 
 env:
-  - CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
+  matrix:
+     - CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
 
 matrix:
    include:
