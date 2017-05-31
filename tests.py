@@ -189,10 +189,10 @@ target_link_libraries(main CONAN_PKG::Hello)
 from conans import ConanFile
 
 class Pkg(ConanFile):
-requires = "Hello/0.1@memsharded/testing"
-generators = "cmake"
-# Defining the settings is necessary now to cache them
-settings = "os", "compiler", "arch", "build_type"
+    requires = "Hello/0.1@memsharded/testing"
+    generators = "cmake"
+    # Defining the settings is necessary now to cache them
+    settings = "os", "compiler", "arch", "build_type"
 """)
 
         os.makedirs("build")
