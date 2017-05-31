@@ -1,9 +1,10 @@
-os: linux
-dist: trusty
 language: python
-sudo: required
 python:
-     - 2.7
+    - 2.7
+    - 3.6
+os: linux
+sudo: required
+dist: trusty
 
 env:
   matrix:
