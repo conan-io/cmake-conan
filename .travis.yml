@@ -1,0 +1,23 @@
+os: linux
+language: python
+sudo: required
+services:
+  - docker
+env:
+  matrix:
+    - CONAN_GCC_VERSIONS: 6.3 CONAN_USE_DOCKER=1
+
+matrix:
+   include:
+       - os: osx 
+         osx_image: xcode8.3 # apple-clang 8.1
+         language: generic   
+      
+
+install:
+  - chmod +x .travis/install.sh
+  - ./.travis/install.sh
+
+script:
+  - chmod +x .travis/run.sh
+  - ./.travis/run.sh
