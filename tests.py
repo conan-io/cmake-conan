@@ -25,13 +25,19 @@ class CMakeConanTest(unittest.TestCase):
 
     def setUp(self):
       self.old_folder = os.getcwd()
-      folder = tempfile.mkdtemp(suffix='conans')
+      CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
+      folder = tempfile.mkdtemp(suffix='conans', dir=CONAN_TEST_FOLDER)
       shutil.copy2("conan.cmake", os.path.join(folder, "conan.cmake"))
       shutil.copy2("main.cpp", os.path.join(folder, "main.cpp"))
       os.chdir(folder)
+      folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
+      self.old_env = dict(os.environ)
+      os.environ.update({"CONAN_USER_HOME": folder})
 
     def tearDown(self):
       os.chdir(self.old_folder)
+      os.environ.clear()
+      os.environ.update(self.old_env)
 
     def test_global(self):
       content = """cmake_minimum_required(VERSION 2.8)
@@ -168,6 +174,8 @@ from conans import ConanFile
 class Pkg(ConanFile):
   requires = "Hello/0.1@memsharded/testing"
   generators = "cmake"
+  # Defining the settings is necessary now to cache them
+  settings = "os", "compiler", "arch", "build_type"
 """)
 
       os.makedirs("build")
