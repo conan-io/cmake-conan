@@ -18,3 +18,5 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv rehash
     pyenv activate conan
 fi
+
+pip install nose

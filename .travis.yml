@@ -1,17 +1,18 @@
 os: linux
+dist: trusty
 language: python
 sudo: required
-services:
-  - docker
+python:
+     - 2.7
+
 env:
-  matrix:
-    - CONAN_GCC_VERSIONS: 6.3 CONAN_USE_DOCKER=1
+  - CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
 
 matrix:
    include:
        - os: osx 
          osx_image: xcode8.3 # apple-clang 8.1
-         language: generic   
+         language: generic 
       
 
 install:
