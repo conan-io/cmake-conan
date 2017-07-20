@@ -67,6 +67,30 @@ target_link_libraries(main ${CONAN_LIBS})
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    def test_global_update(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+                BASIC_SETUP
+                UPDATE
+                BUILD missing)
+
+add_executable(main main.cpp)
+target_link_libraries(main ${CONAN_LIBS})
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
     def _build_multi(self):
         os.makedirs("build")
         os.chdir("build")
