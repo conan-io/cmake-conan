@@ -202,14 +202,20 @@ endmacro()
 
 function(conan_cmake_install)
     # Calls "conan install"
-    # Argument BUILD is equivalant to --build={missing, PkgName,...}
+    # Argument BUILD is equivalant to --build={missing, PkgName,...} or
+    # --build when argument is 'BUILD all' (which builds all packages from source)
     # Argument CONAN_COMMAND, to specify the conan path, e.g. in case of running from source
     # cmake does not identify conan as command, even if it is +x and it is in the path
     parse_arguments(${ARGV})
 
     set(CONAN_BUILD_POLICY "")
     foreach(ARG ${ARGUMENTS_BUILD})
-        set(CONAN_BUILD_POLICY ${CONAN_BUILD_POLICY} --build=${ARG})
+        if(${ARG} STREQUAL "all")
+            set(CONAN_BUILD_POLICY ${CONAN_BUILD_POLICY} --build)
+            break()
+        else()
+            set(CONAN_BUILD_POLICY ${CONAN_BUILD_POLICY} --build=${ARG})
+        endif()
     endforeach()
     if(ARGUMENTS_CONAN_COMMAND)
        set(conan_command ${ARGUMENTS_CONAN_COMMAND})
