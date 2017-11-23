@@ -253,7 +253,7 @@ class Pkg(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
 
     def build(self):
-        cmake = CMake(self.settings)
+        cmake = CMake(self)
         self.run('cmake . ' + cmake.command_line)
         self.run('cmake --build . ' + cmake.build_config)
         """)
