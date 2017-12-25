@@ -205,11 +205,13 @@ function(conan_cmake_install)
     endif()
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
-      set(CONANFILE -f=${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
       # A conan file has been specified - apply specified options as well if provided
       foreach(ARG ${ARGUMENTS_OPTIONS})
           set(CONAN_OPTIONS ${CONAN_OPTIONS} -o ${ARG})
       endforeach()
+    else()
+      set(CONANFILE ".")
     endif()
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ARGUMENTS_DEBUG_PROFILE)
       set(settings -pr ${ARGUMENTS_DEBUG_PROFILE})
@@ -253,7 +255,7 @@ endfunction()
 function(conan_cmake_generate_conanfile)
   # Generate, writing in disk a conanfile.txt with the requires, options, and imports
   # specified as arguments
-  # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR
+  # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR)
   parse_arguments(${ARGV})
   set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
 
