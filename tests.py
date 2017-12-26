@@ -144,7 +144,7 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 """
         save("CMakeLists.txt", content)
-        self._build_multi()    
+        self._build_multi()
 
     def test_targets(self):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
@@ -257,7 +257,7 @@ class Pkg(ConanFile):
         self.run('cmake . ' + cmake.command_line)
         self.run('cmake --build . ' + cmake.build_config)
         """)
-        run("conan export test/testing")
+        run("conan export . test/testing")
 
         os.makedirs("build")
         os.chdir("build")
