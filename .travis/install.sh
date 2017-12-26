@@ -19,6 +19,6 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv activate conan
 fi
 
-pip install conan
+pip install conan==1.0.0b2
 conan user
 pip install nose
