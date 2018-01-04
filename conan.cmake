@@ -68,8 +68,14 @@ function(conan_cmake_settings result)
         string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
         list(GET VERSION_LIST 0 MAJOR)
         list(GET VERSION_LIST 1 MINOR)
+        set(COMPILER_VERSION ${MAJOR}.${MINOR})
+        if(${MAJOR} GREATER 4)
+            set(COMPILER_VERSION ${MAJOR})
+        endif()
+
         conan_cmake_detect_gnu_libcxx(_LIBCXX)
-        set(_SETTINGS ${_SETTINGS} -s compiler=gcc -s compiler.version=${MAJOR}.${MINOR} -s compiler.libcxx=${_LIBCXX})
+
+        set(_SETTINGS ${_SETTINGS} -s compiler=gcc -s compiler.version=${COMPILER_VERSION} -s compiler.libcxx=${_LIBCXX})
     elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL AppleClang)
         # using AppleClang
         string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
