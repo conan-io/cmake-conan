@@ -7,7 +7,7 @@ environment:
 
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
-  - pip.exe install conan==1.0.0b2 nose
+  - pip.exe install conan==1.0.0b4 nose
 
 test_script:
   - nosetests .
