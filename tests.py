@@ -22,6 +22,7 @@ def run(cmd):
 
 if platform.system() == "Windows":
     generator = '-G "Visual Studio 14"'
+    vs_toolset = 'v140_xp'
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
@@ -265,3 +266,26 @@ class Pkg(ConanFile):
         Test/0.1@test/testing""")
         run("conan install . --build Test --build=missing")
         run("conan remove -f Test/0.1@test/testing")
+
+    def test_vs_toolset(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+                BASIC_SETUP
+                BUILD missing)
+
+add_executable(main main.cpp)
+target_link_libraries(main ${CONAN_LIBS})
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -T %s -DCMAKE_BUILD_TYPE=Release" % (generator, vs_toolset))
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
