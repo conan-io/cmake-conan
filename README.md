@@ -6,12 +6,18 @@
 
 CMake wrapper for the Conan C and C++ package manager.
 
-**Testing required**: This tools is still experimental, please try and contribute, specially with the extraction of settings from cmake.
-
 
 This cmake module allows to launch ``conan install`` from cmake.
 
-It can be used in this way:
+The branches in this repo are:
+- **develop**: PR are merged to this branch. Latest state of development
+- **master**: Latest release
+- **tagged releases**: https://github.com/conan-io/cmake-conan/releases. 
+
+You probably want to use a tagged release to ensure controlled upgrades.
+
+You can just clone or grab the *conan.cmake* file and put in in your project.
+Or it can be used in this way. Note the ``v0.8`` tag in the URL, change it to point to your desired release:
 
 
 ```cmake
@@ -21,8 +27,8 @@ project(myproject CXX)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-   message(STATUS "Downloading conan.cmake from https://github.com/memsharded/cmake-conan")
-   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.8/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
