@@ -268,6 +268,8 @@ class Pkg(ConanFile):
         run("conan remove -f Test/0.1@test/testing")
 
     def test_vs_toolset(self):
+        if platform.system() != "Windows":
+            return
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
