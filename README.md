@@ -42,6 +42,10 @@ add_executable(main main.cpp)
 target_link_libraries(main ${CONAN_LIBS})
 ```
 
+## conan_cmake_run() options
+
+### CMAKE_TARGETS
+
 If you want to use targets, you could do:
 
 ```cmake
@@ -54,6 +58,9 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 ```
 
+This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition
+
+### CONANFILE
 
 If you want to use your own ``conanfile.txt`` or ``conanfile.py`` instead of generating a temporary one, you could do:
 
@@ -66,12 +73,42 @@ conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
 
 The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
+
+### KEEP_RPATHS
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(CONANFILE conanfile.txt
+                BASIC_SETUP KEEP_RPATHS)
+```
+
+### CMAKE_BUILD_TYPE
+
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
+
+## Creating packages
+
+This cmake wrapper launchs conan, installing dependencies, and injecting a ``conan_basic_setup()`` call. So it is for end-users only, but not necessary at all for creating packages, because conan already downloaded and installed dependencies the moment that a package needs to be built. So if you are using the same CMakeLists.txt for both consuming and creating packages, consider doing something like:
+
+
+```cmake
+if(CONAN_EXPORTED) # in conan local cache
+    # standard conan installation, deps will be defined in conanfile.py
+    # and not necessary to call conan again, conan is already running
+    include(${CMAKE_BINAR_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
+else() # in user space
+    include(conan.cmake)
+    # Make sure to use conanfile.py to define dependencies, to stay consistent
+    conan_cmake_run(CONANFILE conanfile.py
+                    BASIC_SETUP)
+endif()
+```
+
 
 Please check the source code for other options and arguments.
 
-Development, contributors
------------------------------
+## Development, contributors
 
 There are some tests, you can run in python, with nosetests, for example:
 
