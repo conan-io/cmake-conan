@@ -22,7 +22,6 @@ def run(cmd):
 
 if platform.system() == "Windows":
     generator = '-G "Visual Studio 14"'
-    vs_toolset = 'v140_xp'
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
@@ -270,8 +269,9 @@ class Pkg(ConanFile):
     def test_vs_toolset(self):
         if platform.system() != "Windows":
             return
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
+        content = """#set(CMAKE_CXX_COMPILER_WORKS 1)
+#set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
 
@@ -287,7 +287,7 @@ target_link_libraries(main ${CONAN_LIBS})
 
         os.makedirs("build")
         os.chdir("build")
-        run("cmake .. %s -T %s -DCMAKE_BUILD_TYPE=Release" % (generator, vs_toolset))
+        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
