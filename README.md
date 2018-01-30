@@ -82,6 +82,16 @@ conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP KEEP_RPATHS)
 ```
 
+### NO_OUTPUT_DIRS
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(CONANFILE conanfile.txt
+                BASIC_SETUP NO_OUTPUT_DIRS)
+```
+
+Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin)
+
 ### CMAKE_BUILD_TYPE
 
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
