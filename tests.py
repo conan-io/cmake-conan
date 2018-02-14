@@ -291,3 +291,70 @@ target_link_libraries(main ${CONAN_LIBS})
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
+
+    def test_arch(self):
+        content = """#set(CMAKE_CXX_COMPILER_WORKS 1)
+#set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                BUILD missing
+                ARCH armv7)
+
+if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv7")
+    message(FATAL_ERROR "ARCHITECTURE IS NOT armv7")
+endif()
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+
+    def test_no_output_dir(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                NO_OUTPUT_DIRS
+                BUILD missing)
+
+
+if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    message(FATAL_ERROR "OUTPUT_DIRS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endif()
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+    def test_build_type(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                BUILD_TYPE None)
+
+if(NOT ${CONAN_SETTINGS_BUILD_TYPE} STREQUAL "None")
+    message(FATAL_ERROR "CMAKE BUILD TYPE is not None!")
+endif()
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
