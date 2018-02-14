@@ -189,7 +189,7 @@ function(conan_cmake_settings result)
         conan_cmake_detect_vs_runtime(_vs_runtime)
         message(STATUS "Detected VS runtime: ${_vs_runtime}")
         set(_SETTINGS ${_SETTINGS} -s compiler.runtime=${_vs_runtime})
-        
+
         if (CMAKE_GENERATOR_TOOLSET)
             set(_SETTINGS ${_SETTINGS} -s compiler.toolset=${CMAKE_GENERATOR_TOOLSET})
         elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
@@ -286,6 +286,7 @@ function(conan_cmake_install)
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
       set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CONANFILE}")
       # A conan file has been specified - apply specified options as well if provided
       foreach(ARG ${ARGUMENTS_OPTIONS})
           set(CONAN_OPTIONS ${CONAN_OPTIONS} -o ${ARG})
