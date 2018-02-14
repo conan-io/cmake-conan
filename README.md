@@ -92,6 +92,29 @@ conan_cmake_run(CONANFILE conanfile.txt
 
 Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin)
 
+### ARCH
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(ARCH armv7)
+```
+
+Use it to override the architecture detection and force to call conan with the provided one. The architecture should
+exist in *settings.yml*
+
+
+### BUILD_TYPE
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(BUILD_TYPE "None")
+```
+
+Use it to override the build_type detection and force to call conan with the provided one. The build type should
+exist in *settings.yml*
+
+
+
 ### CMAKE_BUILD_TYPE
 
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
