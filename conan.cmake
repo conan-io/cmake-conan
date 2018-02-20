@@ -199,6 +199,10 @@ function(conan_cmake_settings result)
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
 
+    foreach(ARG ${ARGUMENTS_SETTINGS})
+        set(_SETTINGS ${_SETTINGS} -s ${ARG})
+    endforeach()
+
     set(${result} ${_SETTINGS} PARENT_SCOPE)
 endfunction()
 
@@ -257,7 +261,7 @@ endfunction()
 macro(parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS)
   set(oneValueArgs CONANFILE DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE PROFILE ARCH BUILD_TYPE)
-  set(multiValueArgs REQUIRES OPTIONS IMPORTS BUILD CONAN_COMMAND)
+  set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS BUILD CONAN_COMMAND)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 endmacro()
 
