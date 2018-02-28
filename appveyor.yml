@@ -10,5 +10,4 @@ install:
   - pip.exe install conan nose
 
 test_script:
-  - conan remote add transit https://api.bintray.com/conan/conan/conan-transit 
   - nosetests .
