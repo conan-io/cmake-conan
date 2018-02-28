@@ -113,7 +113,13 @@ conan_cmake_run(BUILD_TYPE "None")
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
 exist in *settings.yml*
 
+### PROFILE
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default)
+```
 
+Use it to use the default conan profile rather than inferring settings from CMake.
 
 ### CMAKE_BUILD_TYPE
 
