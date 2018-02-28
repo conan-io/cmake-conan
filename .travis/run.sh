@@ -8,5 +8,5 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv activate conan
 fi
 
-conan remote add transit https://bintray.com/conan/conan-transit
+conan remote add transit https://api.bintray.com/conan/conan/conan-transit 
 nosetests .
