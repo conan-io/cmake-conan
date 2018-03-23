@@ -28,7 +28,7 @@ project(myproject CXX)
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.8/conan.cmake"
+   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.10/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
@@ -113,11 +113,27 @@ conan_cmake_run(BUILD_TYPE "None")
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
 exist in *settings.yml*
 
+### PROFILE
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default)
+```
 
+Use it to use the default conan profile rather than inferring settings from CMake.
 
 ### CMAKE_BUILD_TYPE
 
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
+
+
+### SETTINGS
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                SETTINGS arch=armv6
+                SETTINGS cppstd=14)
+```
+
 
 ## Creating packages
 

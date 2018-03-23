@@ -359,3 +359,29 @@ endif()
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+
+    def test_settings(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                SETTINGS arch=armv6
+                SETTINGS cppstd=14)
+
+if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
+    message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
+endif()
+if(NOT ${CONAN_SETTINGS_CPPSTD} STREQUAL "14")
+    message(FATAL_ERROR "CONAN_SETTINGS_CPPSTD INCORRECT!")
+endif()
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
