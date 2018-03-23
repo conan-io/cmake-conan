@@ -38,6 +38,7 @@ class CMakeConanTest(unittest.TestCase):
         folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
         self.old_env = dict(os.environ)
         os.environ.update({"CONAN_USER_HOME": folder})
+        run("conan remote add transit https://api.bintray.com/conan/conan/conan-transit")
 
     def tearDown(self):
         os.chdir(self.old_folder)
@@ -351,6 +352,32 @@ conan_cmake_run(BASIC_SETUP
 
 if(NOT ${CONAN_SETTINGS_BUILD_TYPE} STREQUAL "None")
     message(FATAL_ERROR "CMAKE BUILD TYPE is not None!")
+endif()
+"""
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+
+    def test_settings(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+message(STATUS "COMPILING-------")
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                SETTINGS arch=armv6
+                SETTINGS cppstd=14)
+
+if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
+    message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
+endif()
+if(NOT ${CONAN_SETTINGS_CPPSTD} STREQUAL "14")
+    message(FATAL_ERROR "CONAN_SETTINGS_CPPSTD INCORRECT!")
 endif()
 """
         save("CMakeLists.txt", content)
