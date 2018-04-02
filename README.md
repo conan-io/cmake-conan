@@ -17,7 +17,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``v0.8`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``v0.11`` tag in the URL, change it to point to your desired release:
 
 
 ```cmake
@@ -28,7 +28,7 @@ project(myproject CXX)
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.10/conan.cmake"
+   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.11/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 

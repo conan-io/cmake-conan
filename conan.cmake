@@ -191,7 +191,7 @@ function(conan_cmake_settings result)
         set(_SETTINGS ${_SETTINGS} -s compiler.runtime=${_vs_runtime})
         
         if (CMAKE_GENERATOR_TOOLSET)
-            set(_SETTINGS ${_SETTINGS} -s compiler.toolset=${CMAKE_GENERATOR_TOOLSET})
+            set(_SETTINGS ${_SETTINGS} -s compiler.toolset=${CMAKE_VS_PLATFORM_TOOLSET})
         elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
             set(_SETTINGS ${_SETTINGS} -s compiler.toolset=${CMAKE_VS_PLATFORM_TOOLSET})
         endif()
