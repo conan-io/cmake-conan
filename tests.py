@@ -411,3 +411,46 @@ endif()
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+
+    def test_existing_conanfile_profile(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+set(BUILD_CONAN_PROFILE "" CACHE STRING "Use profile to overide the profile detection")
+
+if(BUILD_CONAN_PROFILE)
+    set(CONAN_DISABLE_CHECK_COMPILER True)
+    set(_BUILD_CONAN_PROFILE PROFILE "${BUILD_CONAN_PROFILE}")
+endif()
+
+include(conan.cmake)
+conan_cmake_run(CONANFILE conan/conanfile.py
+                BASIC_SETUP CMAKE_TARGETS
+                BUILD missing
+                ${_BUILD_CONAN_PROFILE})
+
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::Hello)
+"""
+        save("CMakeLists.txt", content)
+        save("conan/conanfile.py", """
+from conans import ConanFile
+
+class Pkg(ConanFile):
+    requires = "Hello/0.1@memsharded/testing"
+    # Defining the settings is necessary now to cache them
+    settings = "os", "compiler", "arch", "build_type"
+""")
+
+        profile_name = "myprofile"
+        os.makedirs("build")
+        os.chdir("build")
+        run("conan profile new --detect %s" % (profile_name))
+
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug -DBUILD_CONAN_PROFILE=%s" % (generator, profile_name))
+        run("cmake --build . --config Debug")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
