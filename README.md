@@ -134,6 +134,15 @@ conan_cmake_run(...
                 SETTINGS cppstd=14)
 ```
 
+### GENERATORS
+
+Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). May useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                GENERATORS virtualrunenv)
+```
 
 ## Creating packages
 
