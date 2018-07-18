@@ -143,6 +143,29 @@ include(conan.cmake)
 conan_cmake_run(...
                 GENERATORS virtualrunenv)
 ```
+## Other macros and functions
+
+### conan_check()
+
+Checks conan availability in PATH
+Arguments REQUIRED and VERSION are optional
+
+Example usage:
+```
+conan_check(VERSION 1.0.0 REQUIRED)
+```
+
+### conan_add_remote()
+
+Adds a remote
+Arguments URL and NAME are required, INDEX is optional.
+
+Example usage:
+```
+conan_add_remote(NAME bincrafters INDEX 1
+            URL https://api.bintray.com/conan/bincrafters/public-conan)
+```
+    
 
 ## Creating packages
 
