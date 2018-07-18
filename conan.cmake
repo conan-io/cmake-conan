@@ -189,7 +189,7 @@ function(conan_cmake_settings result)
         conan_cmake_detect_vs_runtime(_vs_runtime)
         message(STATUS "Detected VS runtime: ${_vs_runtime}")
         set(_SETTINGS ${_SETTINGS} -s compiler.runtime=${_vs_runtime})
-        
+
         if (CMAKE_GENERATOR_TOOLSET)
             set(_SETTINGS ${_SETTINGS} -s compiler.toolset=${CMAKE_VS_PLATFORM_TOOLSET})
         elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
@@ -260,8 +260,8 @@ endfunction()
 
 macro(parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS)
-  set(oneValueArgs CONANFILE DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE PROFILE ARCH BUILD_TYPE)
-  set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS BUILD CONAN_COMMAND)
+  set(oneValueArgs CONANFILE DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE PROFILE ARCH BUILD_TYPE INSTALL_FOLDER)
+  set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS BUILD CONAN_COMMAND GENERATORS)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 endmacro()
 
@@ -315,7 +315,14 @@ function(conan_cmake_install)
     if(ARGUMENTS_UPDATE)
       set(CONAN_INSTALL_UPDATE --update)
     endif()
-    set(conan_args install ${CONANFILE} ${settings} ${CONAN_BUILD_POLICY} ${CONAN_INSTALL_UPDATE} ${CONAN_OPTIONS})
+    set(CONAN_INSTALL_FOLDER "")
+    if(ARGUMENTS_INSTALL_FOLDER)
+      set(CONAN_INSTALL_FOLDER -if ${ARGUMENTS_INSTALL_FOLDER})
+    endif()
+    foreach(ARG ${ARGUMENTS_GENERATORS})
+        set(CONAN_GENERATORS ${CONAN_GENERATORS} -g ${ARG})
+    endforeach()
+    set(conan_args install ${CONANFILE} ${settings} ${CONAN_GENERATORS} ${CONAN_BUILD_POLICY} ${CONAN_INSTALL_UPDATE} ${CONAN_OPTIONS} ${CONAN_INSTALL_FOLDER})
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
@@ -396,6 +403,7 @@ macro(conan_cmake_run)
         conan_cmake_setup_conanfile(${ARGV})
         if(CONAN_CMAKE_MULTI)
             foreach(CMAKE_BUILD_TYPE "Release" "Debug")
+                set(ENV{CONAN_IMPORT_PATH} ${CMAKE_BUILD_TYPE})
                 conan_cmake_settings(settings ${ARGV})
                 conan_cmake_install(SETTINGS ${settings} ${ARGV})
             endforeach()
@@ -421,3 +429,49 @@ macro(conan_cmake_run)
         conan_basic_setup(${_setup_options})
     endif()
 endmacro()
+
+macro(conan_check)
+    # Checks conan availability in PATH
+    # Arguments REQUIRED and VERSION are optional
+    # Example usage:
+    #    conan_check(VERSION 1.0.0 REQUIRED)
+    set(options REQUIRED)
+    set(oneValueArgs VERSION)
+    cmake_parse_arguments(CONAN "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    find_program(CONAN_CMD conan)
+    if(NOT CONAN_CMD AND CONAN_REQUIRED)
+        message(FATAL_ERROR "Conan executable not found!")
+    endif()
+
+    if(DEFINED CONAN_VERSION)
+        execute_process(COMMAND ${CONAN_CMD} --version
+            OUTPUT_VARIABLE CONAN_VERSION_OUTPUT)
+        string(REGEX MATCH ".*Conan version ([0-9]+\.[0-9]+\.[0-9]+)" FOO
+            "${CONAN_VERSION_OUTPUT}")
+        if(${CMAKE_MATCH_1} VERSION_LESS ${CONAN_VERSION})
+            message(FATAL_ERROR "Conan outdated. Installed: ${CONAN_VERSION}, \
+                required: ${CONAN_VERSION_REQUIRED}. Consider updating via 'pip \
+                install conan --upgrade'.")
+        endif()
+    endif()
+endmacro()
+
+macro(conan_add_remote)
+    # Adds a remote
+    # Arguments URL and NAME are required, INDEX is optional
+    # Example usage:
+    #    conan_add_remote(NAME bincrafters INDEX 1
+    #       URL https://api.bintray.com/conan/bincrafters/public-conan)
+    set(oneValueArgs URL NAME INDEX)
+    cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
+
+    if(DEFINED CONAN_INDEX)
+        set(CONAN_INDEX_ARG "-i ${CONAN_INDEX}")
+    endif()
+
+    message(STATUS "Conan: Adding ${CONAN_NAME} remote repositoy (${CONAN_URL})")
+    execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
+      ${CONAN_INDEX_ARG} -f)
+endmacro()
+

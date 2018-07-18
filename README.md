@@ -17,7 +17,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``v0.11`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``v0.12`` tag in the URL, change it to point to your desired release:
 
 
 ```cmake
@@ -28,7 +28,7 @@ project(myproject CXX)
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.11/conan.cmake"
+   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.12/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
@@ -134,6 +134,49 @@ conan_cmake_run(...
                 SETTINGS cppstd=14)
 ```
 
+### INSTALL_FOLDER
+
+Provide the ``conan install --install-folder=[folder]`` argument:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                INSTALL_FOLDER myfolder
+                )
+```
+
+### GENERATORS
+
+Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). May useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                GENERATORS virtualrunenv)
+```
+## Other macros and functions
+
+### conan_check()
+
+Checks conan availability in PATH
+Arguments REQUIRED and VERSION are optional
+
+Example usage:
+```
+conan_check(VERSION 1.0.0 REQUIRED)
+```
+
+### conan_add_remote()
+
+Adds a remote
+Arguments URL and NAME are required, INDEX is optional.
+
+Example usage:
+```
+conan_add_remote(NAME bincrafters INDEX 1
+            URL https://api.bintray.com/conan/bincrafters/public-conan)
+```
+    
 
 ## Creating packages
 
