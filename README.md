@@ -134,6 +134,17 @@ conan_cmake_run(...
                 SETTINGS cppstd=14)
 ```
 
+### INSTALL_FOLDER
+
+Provide the ``conan install --install-folder=[folder]`` argument:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                INSTALL_FOLDER myfolder
+                )
+```
+
 ### GENERATORS
 
 Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). May useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
