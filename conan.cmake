@@ -259,7 +259,7 @@ endfunction()
 
 
 macro(parse_arguments)
-  set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS)
+  set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS OUTPUT_QUIET)
   set(oneValueArgs CONANFILE DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE PROFILE ARCH BUILD_TYPE INSTALL_FOLDER)
   set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS BUILD CONAN_COMMAND GENERATORS)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
@@ -326,6 +326,10 @@ function(conan_cmake_install)
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
+
+    if(ARGUMENTS_OUTPUT_QUIET)
+      set(OUTPUT_CONTROL OUTPUT_QUIET)
+    endif()
 
     execute_process(COMMAND ${conan_command} ${conan_args}
                      RESULT_VARIABLE return_code
