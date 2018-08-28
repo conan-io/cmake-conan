@@ -329,8 +329,12 @@ function(conan_cmake_install)
 
     execute_process(COMMAND ${conan_command} ${conan_args}
                      RESULT_VARIABLE return_code
+                     OUTPUT_VARIABLE conan_output
+                     ERROR_VARIABLE conan_output					 
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+    message(STATUS "${conan_output}")
+				 
     if(NOT "${return_code}" STREQUAL "0")
       message(FATAL_ERROR "Conan install failed='${return_code}'")
     endif()
