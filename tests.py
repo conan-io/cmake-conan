@@ -15,9 +15,9 @@ def save(filename, content):
         handle.write(content)
 
 
-def run(cmd):
+def run(cmd, ignore_errors=False):
     retcode = os.system(cmd)
-    if retcode != 0:
+    if retcode != 0 and not ignore_errors:
         raise Exception("Command failed: %s" % cmd)
 
 if platform.system() == "Windows":
