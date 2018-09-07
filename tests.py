@@ -386,7 +386,6 @@ endif()
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
 
-
     def test_settings(self):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
@@ -411,3 +410,26 @@ endif()
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+
+    def test_profile_auto(self):
+        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_CXX_ABI_COMPILED 1)
+cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                PROFILE myprofile
+                PROFILE_AUTO SETTING_BUILD_TYPE)
+
+if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
+    message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
+endif()
+"""
+        save("build/myprofile", """[settings]
+build_type=RelWithDebInfo""")
+        save("CMakeLists.txt", content)
+
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
