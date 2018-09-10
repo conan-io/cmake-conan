@@ -418,7 +418,7 @@ project(conan_wrapper CXX)
 include(conan.cmake)
 conan_cmake_run(BASIC_SETUP
                 PROFILE myprofile
-                PROFILE_AUTO settings.build_type)
+                PROFILE_AUTO build_type)
 
 if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
     message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
