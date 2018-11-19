@@ -196,16 +196,7 @@ function(conan_cmake_settings result)
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
 
-    # AUTO-DEDUCED FROM CMAKE VALUES
-    foreach(ARG ARCH BUILD_TYPE COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_LIBCXX
-                COMPILER_TOOLSET)
-        if(_CONAN_SETTING_${ARG})
-            string(TOLOWER ${ARG} _setting_name)
-            string(REPLACE "compiler_" "compiler." _setting_name ${_setting_name})
-            set(_SETTINGS ${_SETTINGS} -s ${_setting_name}=${_CONAN_SETTING_${ARG}})
-        endif()
-    endforeach()
-
+    # If profile is defined it is used
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ARGUMENTS_DEBUG_PROFILE)
         set(_SETTINGS -pr ${ARGUMENTS_DEBUG_PROFILE})
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release" AND ARGUMENTS_RELEASE_PROFILE)
@@ -216,14 +207,22 @@ function(conan_cmake_settings result)
         set(_SETTINGS -pr ${ARGUMENTS_MINSIZEREL_PROFILE})
     elseif(ARGUMENTS_PROFILE)
         set(_SETTINGS -pr ${ARGUMENTS_PROFILE})
-        foreach(ARG ${ARGUMENTS_PROFILE_AUTO})
-            string(TOUPPER ${ARG} _arg_name)
-            string(REPLACE "." "_" _arg_name ${_arg_name})
-            if(_CONAN_SETTING_${_arg_name})
-                set(_SETTINGS ${_SETTINGS} -s ${ARG}=${_CONAN_SETTING_${_arg_name}})
-            endif()
-        endforeach()
     endif()
+
+    if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
+        set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
+                                   compiler.runtime compiler.libcxx compiler.toolset)
+    endif()
+
+    # Automatic from CMake
+    foreach(ARG ${ARGUMENTS_PROFILE_AUTO})
+        string(TOUPPER ${ARG} _arg_name)
+        string(REPLACE "." "_" _arg_name ${_arg_name})
+        if(_CONAN_SETTING_${_arg_name})
+            set(_SETTINGS ${_SETTINGS} -s ${ARG}=${_CONAN_SETTING_${_arg_name}})
+        endif()
+    endforeach()
+
     foreach(ARG ${ARGUMENTS_SETTINGS})
         set(_SETTINGS ${_SETTINGS} -s ${ARG})
     endforeach()
