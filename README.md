@@ -58,7 +58,7 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 ```
 
-This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition
+This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
 
 ### CONANFILE
 
@@ -90,7 +90,7 @@ conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP NO_OUTPUT_DIRS)
 ```
 
-Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin)
+Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin).
 
 ### ARCH
 
@@ -100,7 +100,7 @@ conan_cmake_run(ARCH armv7)
 ```
 
 Use it to override the architecture detection and force to call conan with the provided one. The architecture should
-exist in *settings.yml*
+exist in *settings.yml*.
 
 
 ### BUILD_TYPE
@@ -111,7 +111,7 @@ conan_cmake_run(BUILD_TYPE "None")
 ```
 
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
-exist in *settings.yml*
+exist in *settings.yml*.
 
 ### PROFILE
 ```cmake
@@ -147,7 +147,7 @@ conan_cmake_run(...
 
 ### GENERATORS
 
-Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). May useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
+Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). It may useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
 
 ```cmake
 include(conan.cmake)
@@ -158,8 +158,8 @@ conan_cmake_run(...
 
 ### conan_check()
 
-Checks conan availability in PATH
-Arguments REQUIRED and VERSION are optional
+Checks conan availability in PATH.
+Arguments ``REQUIRED`` and ``VERSION`` are optional.
 
 Example usage:
 ```
@@ -168,8 +168,8 @@ conan_check(VERSION 1.0.0 REQUIRED)
 
 ### conan_add_remote()
 
-Adds a remote
-Arguments URL and NAME are required, INDEX is optional.
+Adds a remote.
+Arguments ``URL`` and ``NAME`` are required, ``INDEX`` is optional.
 
 Example usage:
 ```
@@ -180,7 +180,7 @@ conan_add_remote(NAME bincrafters INDEX 1
 
 ## Creating packages
 
-This cmake wrapper launchs conan, installing dependencies, and injecting a ``conan_basic_setup()`` call. So it is for end-users only, but not necessary at all for creating packages, because conan already downloaded and installed dependencies the moment that a package needs to be built. So if you are using the same CMakeLists.txt for both consuming and creating packages, consider doing something like:
+This cmake wrapper launches conan, installing dependencies, and injecting a ``conan_basic_setup()`` call. So it is for end-users only, but not necessary at all for creating packages, because conan already downloaded and installed dependencies the moment that a package needs to be built. If you are using the same CMakeLists.txt for both consuming and creating packages, consider doing something like:
 
 
 ```cmake

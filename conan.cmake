@@ -88,7 +88,7 @@ function(conan_cmake_settings result)
         if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
             set(CONAN_SYSTEM_NAME Macos)
         endif()
-        set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD)
+        set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD WindowsStore)
         list (FIND CONAN_SUPPORTED_PLATFORMS "${CONAN_SYSTEM_NAME}" _index)
         if (${_index} GREATER -1)
             #check if the cmake system is a conan supported one
@@ -286,7 +286,7 @@ endfunction()
 
 
 macro(parse_arguments)
-  set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS)
+  set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_OUTPUT_DIRS OUTPUT_QUIET)
   set(oneValueArgs CONANFILE DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE PROFILE ARCH BUILD_TYPE INSTALL_FOLDER)
   set(multiValueArgs REQUIRES OPTIONS IMPORTS SETTINGS BUILD CONAN_COMMAND GENERATORS PROFILE_AUTO)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
@@ -345,10 +345,18 @@ function(conan_cmake_install)
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
 
+    if(ARGUMENTS_OUTPUT_QUIET)
+      set(OUTPUT_CONTROL OUTPUT_QUIET)
+    endif()
+
     execute_process(COMMAND ${conan_command} ${conan_args}
                      RESULT_VARIABLE return_code
+                     OUTPUT_VARIABLE conan_output
+                     ERROR_VARIABLE conan_output					 
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+    message(STATUS "${conan_output}")
+				 
     if(NOT "${return_code}" STREQUAL "0")
       message(FATAL_ERROR "Conan install failed='${return_code}'")
     endif()
