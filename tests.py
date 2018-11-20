@@ -204,7 +204,9 @@ project(conan_wrapper CXX)
 include(conan.cmake)
 conan_cmake_run(CONANFILE conan/conanfile.py
                 BASIC_SETUP CMAKE_TARGETS
-                BUILD missing)
+                BUILD missing
+                NO_IMPORTS
+                INSTALL_ARGS --update)
 
 add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
@@ -218,6 +220,9 @@ class Pkg(ConanFile):
     generators = "cmake"
     # Defining the settings is necessary now to cache them
     settings = "os", "compiler", "arch", "build_type"
+
+    def imports(self):
+        raise Exception("BOOM!")
 """)
 
         os.makedirs("build")
