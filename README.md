@@ -44,6 +44,19 @@ target_link_libraries(main ${CONAN_LIBS})
 
 ## conan_cmake_run() options
 
+
+### REQUIRES, OPTIONS
+```cmake
+conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+                         Bye/2.1@otheruser/testing
+                OPTIONS Pkg:shared=True
+                        OtherPkg:option=value
+                )
+```
+
+Define requirements and their options. These values are written to a temporary `conanfile.py`. If you need more advanced functionality, like conditional requirements, you can define your own `conanfile.txt` or `conanfile.py` and provide
+it with the ``CONANFILE`` argument
+
 ### CMAKE_TARGETS
 
 If you want to use targets, you could do:
@@ -119,11 +132,44 @@ include(conan.cmake)
 conan_cmake_run(PROFILE default)
 ```
 
-Use it to use the default conan profile rather than inferring settings from CMake.
+Use it to use the "default" (or your own profile) conan profile rather than inferring settings from CMake.
+When it is defined, the CMake automatically detected settings are not used at all,
+and are overridden by the values from the profile.
+
+### PROFILE_AUTO
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default
+                PROFILE_AUTO build_type)
+```
+
+Use the CMake automatically detected value, instead of the profile one. The above
+means use the profile named "default", but override its content with the ``build_type``
+automatically detected by CMake.
+
+The precedence for settings definition is:
+
+```
+CMake detected < PROFILE < PROFILE_AUTO < Explicit ``conan_cmake_run()`` args
+```
+
+The ``ALL`` value is used to use all detected settings from CMake, instead of the ones
+defined in the profile:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default
+                PROFILE_AUTO ALL)
+```
+
+This is still useful, as the profile can have many other things defined (options, build_requires, etc).
+
 
 ### CMAKE_BUILD_TYPE
 
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
+
+If the ``BUILD_TYPE`` is explictly passed to ``conan_cmake_run()``, then single configuration ``cmake`` generator will be used.
 
 
 ### SETTINGS
@@ -133,6 +179,25 @@ conan_cmake_run(...
                 SETTINGS arch=armv6
                 SETTINGS cppstd=14)
 ```
+
+### ENV
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                ENV env_var=value
+                ENV Pkg:env_var2=value2)
+```
+
+Define command line environment variables. Even if with CMake it is also possible to
+directly define environment variables, with this syntax you can define environment
+variables per-package, as the above is equivalent to:
+
+```bash
+$ conan install .... -e env_var=value -e Pkg:env_var2=value
+```
+
+If environment variables were defined in a given profile, command line arguments
+have higher precedence, so these values would be used instead of the profiles ones.
 
 ### INSTALL_FOLDER
 
