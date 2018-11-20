@@ -44,6 +44,19 @@ target_link_libraries(main ${CONAN_LIBS})
 
 ## conan_cmake_run() options
 
+
+### REQUIRES, OPTIONS
+```cmake
+conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+                         Bye/2.1@otheruser/testing
+                OPTIONS Pkg:shared=True
+                        OtherPkg:option=value
+                )
+```
+
+Define requirements and their options. These values are written to a temporary `conanfile.py`. If you need more advanced functionality, like conditional requirements, you can define your own `conanfile.txt` or `conanfile.py` and provide
+it with the ``CONANFILE`` argument
+
 ### CMAKE_TARGETS
 
 If you want to use targets, you could do:
@@ -58,7 +71,7 @@ add_executable(main main.cpp)
 target_link_libraries(main CONAN_PKG::Hello)
 ```
 
-This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition
+This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
 
 ### CONANFILE
 
@@ -90,7 +103,7 @@ conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP NO_OUTPUT_DIRS)
 ```
 
-Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin)
+Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not change the output directories (lib, bin).
 
 ### ARCH
 
@@ -100,7 +113,7 @@ conan_cmake_run(ARCH armv7)
 ```
 
 Use it to override the architecture detection and force to call conan with the provided one. The architecture should
-exist in *settings.yml*
+exist in *settings.yml*.
 
 
 ### BUILD_TYPE
@@ -111,7 +124,7 @@ conan_cmake_run(BUILD_TYPE "None")
 ```
 
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
-exist in *settings.yml*
+exist in *settings.yml*.
 
 ### PROFILE
 ```cmake
@@ -119,11 +132,44 @@ include(conan.cmake)
 conan_cmake_run(PROFILE default)
 ```
 
-Use it to use the default conan profile rather than inferring settings from CMake.
+Use it to use the "default" (or your own profile) conan profile rather than inferring settings from CMake.
+When it is defined, the CMake automatically detected settings are not used at all,
+and are overridden by the values from the profile.
+
+### PROFILE_AUTO
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default
+                PROFILE_AUTO build_type)
+```
+
+Use the CMake automatically detected value, instead of the profile one. The above
+means use the profile named "default", but override its content with the ``build_type``
+automatically detected by CMake.
+
+The precedence for settings definition is:
+
+```
+CMake detected < PROFILE < PROFILE_AUTO < Explicit ``conan_cmake_run()`` args
+```
+
+The ``ALL`` value is used to use all detected settings from CMake, instead of the ones
+defined in the profile:
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(PROFILE default
+                PROFILE_AUTO ALL)
+```
+
+This is still useful, as the profile can have many other things defined (options, build_requires, etc).
+
 
 ### CMAKE_BUILD_TYPE
 
 To use the [cmake_multi](http://docs.conan.io/en/latest/integrations/cmake.html#cmake-multi-configuration-environments) generator you just need to make sure ``CMAKE_BUILD_TYPE`` is empty and use a CMake generator that supports multi-configuration.
+
+If the ``BUILD_TYPE`` is explictly passed to ``conan_cmake_run()``, then single configuration ``cmake`` generator will be used.
 
 
 ### SETTINGS
@@ -133,6 +179,25 @@ conan_cmake_run(...
                 SETTINGS arch=armv6
                 SETTINGS cppstd=14)
 ```
+
+### ENV
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                ENV env_var=value
+                ENV Pkg:env_var2=value2)
+```
+
+Define command line environment variables. Even if with CMake it is also possible to
+directly define environment variables, with this syntax you can define environment
+variables per-package, as the above is equivalent to:
+
+```bash
+$ conan install .... -e env_var=value -e Pkg:env_var2=value
+```
+
+If environment variables were defined in a given profile, command line arguments
+have higher precedence, so these values would be used instead of the profiles ones.
 
 ### INSTALL_FOLDER
 
@@ -147,7 +212,7 @@ conan_cmake_run(...
 
 ### GENERATORS
 
-Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). May useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
+Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). It may useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
 
 ```cmake
 include(conan.cmake)
@@ -158,8 +223,8 @@ conan_cmake_run(...
 
 ### conan_check()
 
-Checks conan availability in PATH
-Arguments REQUIRED and VERSION are optional
+Checks conan availability in PATH.
+Arguments ``REQUIRED`` and ``VERSION`` are optional.
 
 Example usage:
 ```
@@ -168,8 +233,8 @@ conan_check(VERSION 1.0.0 REQUIRED)
 
 ### conan_add_remote()
 
-Adds a remote
-Arguments URL and NAME are required, INDEX is optional.
+Adds a remote.
+Arguments ``URL`` and ``NAME`` are required, ``INDEX`` is optional.
 
 Example usage:
 ```
@@ -180,7 +245,7 @@ conan_add_remote(NAME bincrafters INDEX 1
 
 ## Creating packages
 
-This cmake wrapper launchs conan, installing dependencies, and injecting a ``conan_basic_setup()`` call. So it is for end-users only, but not necessary at all for creating packages, because conan already downloaded and installed dependencies the moment that a package needs to be built. So if you are using the same CMakeLists.txt for both consuming and creating packages, consider doing something like:
+This cmake wrapper launches conan, installing dependencies, and injecting a ``conan_basic_setup()`` call. So it is for end-users only, but not necessary at all for creating packages, because conan already downloaded and installed dependencies the moment that a package needs to be built. If you are using the same CMakeLists.txt for both consuming and creating packages, consider doing something like:
 
 
 ```cmake
