@@ -252,7 +252,7 @@ This cmake wrapper launches conan, installing dependencies, and injecting a ``co
 if(CONAN_EXPORTED) # in conan local cache
     # standard conan installation, deps will be defined in conanfile.py
     # and not necessary to call conan again, conan is already running
-    include(${CMAKE_BINAR_DIR}/conanbuildinfo.cmake)
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
 else() # in user space
     include(conan.cmake)
