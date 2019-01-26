@@ -1,11 +1,25 @@
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
 
-# if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-#   message(STATUS "Downloading conan.cmake from https://github.com/memsharded/cmake-conan")
-#   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/master/conan.cmake"
-#                 "${CMAKE_BINARY_DIR}/conan.cmake")
-# endif()
+
+# Extend file() with DOWNLOAD_ONCE sub-command: download only
+# if there is no file with such name in the filesystem.
+
+macro(file action)
+    if(${action} STREQUAL DOWNLOAD_ONCE)
+        if(NOT EXISTS ${ARGV2})
+            message(STATUS "Downloading ${ARGV1}")
+            _file(DOWNLOAD ${ARGN})
+        endif()
+    else()
+        # Call the original function
+        _file(${action} ${ARGN})
+    endif()
+endmacro()
+
+
+# file(DOWNLOAD_ONCE "https://github.com/conan-io/cmake-conan/raw/master/conan.cmake"
+#                    "${CMAKE_BINARY_DIR}/conan.cmake")
 
 # include(${CMAKE_BINARY_DIR}/conan.cmake)
 include(conan.cmake)
