@@ -18,11 +18,10 @@ macro(file action)
 endmacro()
 
 
-# file(DOWNLOAD_ONCE "https://github.com/conan-io/cmake-conan/raw/master/conan.cmake"
-#                    "${CMAKE_BINARY_DIR}/conan.cmake")
+file(DOWNLOAD_ONCE "https://github.com/conan-io/cmake-conan/raw/master/conan.cmake"
+                   "${CMAKE_BINARY_DIR}/conan.cmake")
 
-# include(${CMAKE_BINARY_DIR}/conan.cmake)
-include(conan.cmake)
+include(${CMAKE_BINARY_DIR}/conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
