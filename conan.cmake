@@ -233,41 +233,14 @@ function(conan_cmake_detect_unix_libcxx result)
     # Take into account any -stdlib in compile options
     get_directory_property(compile_options DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_OPTIONS)
 
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
-        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
-        OUTPUT_VARIABLE string_defines
-    )
-
-    if(string_defines MATCHES "#define __GLIBCXX__")
-        conan_cmake_detect_gnu_libcxx(_LIBCXX)
-        set(${result} ${_LIBCXX} PARENT_SCOPE)
-    else()
-        set(${result} libc++ PARENT_SCOPE)
-    endif()
-endfunction()
-
-function(conan_cmake_detect_gnu_libcxx result)
-    # Allow -D_GLIBCXX_USE_CXX11_ABI=ON/OFF as argument to cmake
-    if(DEFINED _GLIBCXX_USE_CXX11_ABI)
-        if(_GLIBCXX_USE_CXX11_ABI)
-            set(${result} libstdc++11 PARENT_SCOPE)
-            return()
-        else()
-            set(${result} libstdc++ PARENT_SCOPE)
-            return()
-        endif()
-    endif()
-
     # Take into account any _GLIBCXX_USE_CXX11_ABI in compile definitions
     get_directory_property(defines DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
-    set(compile_options)
     foreach(define ${defines})
         if(define MATCHES "_GLIBCXX_USE_CXX11_ABI")
             if(define MATCHES "^-D")
-                set(compile_options ${define})
+                set(compile_options ${compile_options} "${define}")
             else()
-                set(compile_options "-D${define}")
+                set(compile_options ${compile_options} "-D${define}")
             endif()
         endif()
     endforeach()
@@ -278,16 +251,30 @@ function(conan_cmake_detect_gnu_libcxx result)
         OUTPUT_VARIABLE string_defines
     )
 
-    if(string_defines MATCHES "#define _GLIBCXX_USE_CXX11_ABI 1\n")
-        set(${result} libstdc++11 PARENT_SCOPE)
+    if(string_defines MATCHES "#define __GLIBCXX__")
+        # Allow -D_GLIBCXX_USE_CXX11_ABI=ON/OFF as argument to cmake
+        if(DEFINED _GLIBCXX_USE_CXX11_ABI)
+            if(_GLIBCXX_USE_CXX11_ABI)
+                set(${result} libstdc++11 PARENT_SCOPE)
+                return()
+            else()
+                set(${result} libstdc++ PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+
+        if(string_defines MATCHES "#define _GLIBCXX_USE_CXX11_ABI 1\n")
+            set(${result} libstdc++11 PARENT_SCOPE)
+        else()
+            # Either the compiler is missing the define because it is old, and so
+            # it can't use the new abi, or the compiler was configured to use the
+            # old abi by the user or distro (e.g. devtoolset on RHEL/CentOS)
+            set(${result} libstdc++ PARENT_SCOPE)
+        endif()
     else()
-        # Either the compiler is missing the define because it is old, and so
-        # it can't use the new abi, or the compiler was configured to use the
-        # old abi by the user or distro (e.g. devtoolset on RHEL/CentOS)
-        set(${result} libstdc++ PARENT_SCOPE)
+        set(${result} libc++ PARENT_SCOPE)
     endif()
 endfunction()
-
 
 function(conan_cmake_detect_vs_runtime result)
     string(TOUPPER ${CMAKE_BUILD_TYPE} build_type)
@@ -538,4 +525,3 @@ macro(conan_add_remote)
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
 endmacro()
-
