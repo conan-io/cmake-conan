@@ -34,7 +34,7 @@ macro(file action)
         if(${ARGC} LESS 3)
             # Too few arguments: show the standard error message
             _file(DOWNLOAD ${ARGN})
-        endif ()
+        endif()
         if(NOT EXISTS ${ARGV2})
             message(STATUS "Downloading ${ARGV1}")
             _file(DOWNLOAD ${ARGN})
