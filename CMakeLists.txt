@@ -7,6 +7,10 @@ project(conan_wrapper CXX)
 
 macro(file action)
     if(${action} STREQUAL DOWNLOAD_ONCE)
+        if(${ARGC} LESS 3)
+            # Too few arguments: show the standard error message
+            _file(DOWNLOAD ${ARGN})
+        endif ()
         if(NOT EXISTS ${ARGV2})
             message(STATUS "Downloading ${ARGV1}")
             _file(DOWNLOAD ${ARGN})
