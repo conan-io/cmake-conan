@@ -501,3 +501,33 @@ compiler.runtime=MTd""")
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
+
+    def test_multi_profile(self):
+        content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+
+set(CONAN_DISABLE_CHECK_COMPILER ON)
+include(conan.cmake)
+conan_cmake_run(BASIC_SETUP
+                PROFILE myprofile PROFILE myprofile2)
+
+if(NOT "${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
+    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
+endif()
+if(NOT "${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
+    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
+endif()
+"""
+        save("build/myprofile", """[settings]
+compiler=Visual Studio
+compiler.version=15
+compiler.runtime=MTd
+""")
+        save("build/myprofile2", """[settings]
+compiler.version=12
+""")
+        save("CMakeLists.txt", content)
+
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
