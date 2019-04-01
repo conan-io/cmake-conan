@@ -81,22 +81,81 @@ function(conan_cmake_settings result)
     if(ARGUMENTS_ARCH)
         set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
     endif()
-    #handle -s os setting
-    if(CMAKE_SYSTEM_NAME)
-        #use default conan os setting if CMAKE_SYSTEM_NAME is not defined
-        set(CONAN_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+
+    # Handle platform settings
+    foreach (HOST HOST_ "")
+        set(CONAN_SYSTEM_NAME ${CMAKE_${HOST}SYSTEM_NAME})
+        set(CONAN_SYSTEM_PROCESSOR ${CMAKE_${HOST}SYSTEM_PROCESSOR})
+        if(NOT HOST)
+            if(NOT CONAN_SYSTEM_NAME)
+                set(CONAN_SYSTEM_NAME ${CMAKE_HOST_SYSTEM_NAME})
+            endif()
+            if(NOT CONAN_SYSTEM_PROCESSOR)
+                set(CONAN_SYSTEM_PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR})
+            endif()
+        endif()
+
+        if("${CONAN_SYSTEM_NAME}" STREQUAL "Darwin")
             set(CONAN_SYSTEM_NAME Macos)
         endif()
-        set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD WindowsStore)
-        list (FIND CONAN_SUPPORTED_PLATFORMS "${CONAN_SYSTEM_NAME}" _index)
+
+        set(CONAN_SUPPORTED_OSES Windows Linux Macos Android iOS FreeBSD WindowsStore)
+        list (FIND CONAN_SUPPORTED_OSES "${CONAN_SYSTEM_NAME}" _index)
         if (${_index} GREATER -1)
             #check if the cmake system is a conan supported one
-            set(_CONAN_SETTING_OS ${CONAN_SYSTEM_NAME})
+            if(HOST)
+                set(_CONAN_SETTING_OS_BUILD ${CONAN_SYSTEM_NAME})
+            else()
+                set(_CONAN_SETTING_OS ${CONAN_SYSTEM_NAME})
+            endif()
         else()
-            message(FATAL_ERROR "cmake system ${CONAN_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_PLATFORMS}")
+            message(FATAL_ERROR "Conan: cmake system ${CONAN_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_OSES}")
         endif()
-    endif()
+
+        if ("${CONAN_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
+            set(CONAN_SYSTEM_PROCESSOR "x86_64")
+        elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "ARM")
+            set(CONAN_SYSTEM_PROCESSOR "armv6")
+        elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "ARM64")
+            set(CONAN_SYSTEM_PROCESSOR "armv8")
+        elseif ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^i[36]86$")
+            set(CONAN_SYSTEM_PROCESSOR "x86")
+        endif ()
+
+        set(CONAN_SUPPORTED_ARCHS
+            x86
+            x86_64
+            ppc32
+            ppc64le
+            ppc64
+            armv5el
+            armv5hf
+            armv6
+            armv7
+            armv7hf
+            armv7s
+            armv7k
+            armv8
+            armv8_32
+            armv8.3
+            sparc
+            sparcv9
+            mips
+            mips64
+            avr
+        )
+        list (FIND CONAN_SUPPORTED_ARCHS "${CONAN_SYSTEM_PROCESSOR}" _index)
+        if (${_index} GREATER -1)
+            #check if the cmake system is a conan supported one
+            if(HOST)
+                set(_CONAN_SETTING_ARCH_BUILD ${CONAN_SYSTEM_PROCESSOR})
+            else()
+                set(_CONAN_SETTING_ARCH ${CONAN_SYSTEM_PROCESSOR})
+            endif()
+        else()
+            message(FATAL_ERROR "Conan: cmake processor ${CONAN_SYSTEM_PROCESSOR} is not supported by conan. Use one of ${CONAN_SUPPORTED_ARCHS}")
+        endif()
+    endforeach()
 
     get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
     if (";${_languages};" MATCHES ";CXX;")
@@ -166,19 +225,6 @@ function(conan_cmake_settings result)
             set(_CONAN_SETTING_COMPILER_VERSION ${_VISUAL_VERSION})
         endif()
 
-        if(NOT _CONAN_SETTING_ARCH)
-            if (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "64")
-                set(_CONAN_SETTING_ARCH x86_64)
-            elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "^ARM")
-                message(STATUS "Conan: Using default ARM architecture from MSVC")
-                set(_CONAN_SETTING_ARCH armv6)
-            elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "86")
-                set(_CONAN_SETTING_ARCH x86)
-            else ()
-                message(FATAL_ERROR "Conan: Unknown MSVC architecture [${MSVC_${LANGUAGE}_ARCHITECTURE_ID}]")
-            endif()
-        endif()
-
         conan_cmake_detect_vs_runtime(_vs_runtime)
         message(STATUS "Conan: Detected VS runtime: ${_vs_runtime}")
         set(_CONAN_SETTING_COMPILER_RUNTIME ${_vs_runtime})
@@ -210,7 +256,7 @@ function(conan_cmake_settings result)
     endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
-        set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
+        set(ARGUMENTS_PROFILE_AUTO arch arch_build os os_build build_type compiler compiler.version
                                    compiler.runtime compiler.libcxx compiler.toolset)
     endif()
 
