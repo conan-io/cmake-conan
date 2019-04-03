@@ -52,6 +52,8 @@ function(_get_msvc_ide_version result)
         set(${result} 14 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1910 AND MSVC_VERSION VERSION_LESS 1920)
         set(${result} 15 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1920 AND MSVC_VERSION VERSION_LESS 1930)
+        set(${result} 16 PARENT_SCOPE)
     else()
         message(FATAL_ERROR "Conan: Unknown MSVC compiler version [${MSVC_VERSION}]")
     endif()
@@ -376,11 +378,11 @@ function(conan_cmake_install)
     execute_process(COMMAND ${conan_command} ${conan_args}
                      RESULT_VARIABLE return_code
                      OUTPUT_VARIABLE conan_output
-                     ERROR_VARIABLE conan_output					 
+                     ERROR_VARIABLE conan_output
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     message(STATUS "${conan_output}")
-				 
+
     if(NOT "${return_code}" STREQUAL "0")
       message(FATAL_ERROR "Conan install failed='${return_code}'")
     endif()
