@@ -509,7 +509,7 @@ macro(conan_add_remote)
         set(CONAN_INDEX_ARG "-i ${CONAN_INDEX}")
     endif()
 
-    message(STATUS "Conan: Adding ${CONAN_NAME} remote repositoy (${CONAN_URL})")
+    message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL})")
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
 endmacro()
