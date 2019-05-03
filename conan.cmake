@@ -520,9 +520,9 @@ macro(conan_check)
         string(REGEX MATCH ".*Conan version ([0-9]+\.[0-9]+\.[0-9]+)" FOO
             "${CONAN_VERSION_OUTPUT}")
         if(${CMAKE_MATCH_1} VERSION_LESS ${CONAN_VERSION})
-            message(FATAL_ERROR "Conan outdated. Installed: ${CONAN_VERSION}, \
-                required: ${CONAN_VERSION_REQUIRED}. Consider updating via 'pip \
-                install conan --upgrade'.")
+            message(FATAL_ERROR "Conan outdated. Installed: ${CMAKE_MATCH_1}, \
+                required: ${CONAN_VERSION}. Consider updating via 'pip \
+                install conan==${CONAN_VERSION}'.")
         endif()
     endif()
 endmacro()
