@@ -50,6 +50,7 @@ class CMakeConanTest(unittest.TestCase):
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
@@ -73,6 +74,7 @@ target_link_libraries(main ${CONAN_LIBS})
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
@@ -111,6 +113,7 @@ target_link_libraries(main ${CONAN_LIBS})
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
@@ -135,6 +138,7 @@ endforeach()
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
@@ -152,6 +156,7 @@ target_link_libraries(main CONAN_PKG::Hello)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
 project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
 conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
