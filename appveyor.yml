@@ -9,6 +9,8 @@ environment:
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan nose
+  - conan install cmake_installer/3.7.2@conan/stable -g=virtualrunenv
+  - activate_run.bat
 
 test_script:
   - nosetests .
