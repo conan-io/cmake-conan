@@ -21,6 +21,4 @@ fi
 
 pip install conan
 conan user
-conan install cmake_installer/3.7.2@conan/stable -g=virtualrunenv
-source activate_run.sh
 pip install nose
