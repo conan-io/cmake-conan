@@ -4,6 +4,7 @@ import os
 import platform
 import shutil
 
+from nose.plugins.attrib import attr
 
 def save(filename, content):
     try:
@@ -305,6 +306,7 @@ target_link_libraries(main ${CONAN_LIBS})
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    @attr("cmake39")
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
             return
@@ -325,6 +327,7 @@ target_link_libraries(main ${CONAN_LIBS})
 
         os.makedirs("build")
         os.chdir("build")
+        # Only works cmake>=3.9
         run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
