@@ -17,7 +17,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``v0.12`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``v0.14`` tag in the URL, change it to point to your desired release:
 
 
 ```cmake
@@ -28,7 +28,7 @@ project(myproject CXX)
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.12/conan.cmake"
+   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.14/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
@@ -252,7 +252,7 @@ This cmake wrapper launches conan, installing dependencies, and injecting a ``co
 if(CONAN_EXPORTED) # in conan local cache
     # standard conan installation, deps will be defined in conanfile.py
     # and not necessary to call conan again, conan is already running
-    include(${CMAKE_BINAR_DIR}/conanbuildinfo.cmake)
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
 else() # in user space
     include(conan.cmake)

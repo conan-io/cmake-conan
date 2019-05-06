@@ -3,7 +3,7 @@ project(conan_wrapper CXX)
 
 # if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 #   message(STATUS "Downloading conan.cmake from https://github.com/memsharded/cmake-conan")
-#   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+#   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/master/conan.cmake"
 #                 "${CMAKE_BINARY_DIR}/conan.cmake")
 # endif()
 
