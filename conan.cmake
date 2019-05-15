@@ -380,16 +380,16 @@ function(conan_cmake_install)
     set(conan_args install ${CONANFILE} ${settings} ${CONAN_ENV_VARS} ${CONAN_GENERATORS} ${CONAN_BUILD_POLICY} ${CONAN_INSTALL_UPDATE} ${CONAN_INSTALL_NO_IMPORTS} ${CONAN_OPTIONS} ${CONAN_INSTALL_FOLDER} ${ARGUMENTS_INSTALL_ARGS})
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
-    message(STATUS "Conan executing: ${conan_command} ${_conan_args}")
+    message(STATUS "Conan executing: ${CONAN_CMD} ${_conan_args}")
 
     if(ARGUMENTS_OUTPUT_QUIET)
-        execute_process(COMMAND ${conan_command} ${conan_args}
+        execute_process(COMMAND ${CONAN_CMD} ${conan_args}
                         RESULT_VARIABLE return_code
                         OUTPUT_VARIABLE conan_output
                         ERROR_VARIABLE conan_output
                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     else()
-        execute_process(COMMAND ${conan_command} ${conan_args}
+        execute_process(COMMAND ${CONAN_CMD} ${conan_args}
                         RESULT_VARIABLE return_code
                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     endif()
@@ -534,7 +534,7 @@ macro(conan_check)
     endif()
 endmacro()
 
-macro(conan_add_remote)
+function(conan_add_remote)
     # Adds a remote
     # Arguments URL and NAME are required, INDEX is optional
     # Example usage:
@@ -552,4 +552,4 @@ macro(conan_add_remote)
     message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL})")
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
-endmacro()
+endfunction()
