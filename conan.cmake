@@ -348,10 +348,9 @@ function(conan_cmake_install)
         endif()
     endforeach()
     if(ARGUMENTS_CONAN_COMMAND)
-       set(conan_command ${ARGUMENTS_CONAN_COMMAND})
-    else()
-      set(conan_command conan)
+       set(CONAN_CMD ${ARGUMENTS_CONAN_COMMAND})
     endif()
+    conan_check()
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
       set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
@@ -541,6 +540,8 @@ macro(conan_add_remote)
     # Example usage:
     #    conan_add_remote(NAME bincrafters INDEX 1
     #       URL https://api.bintray.com/conan/bincrafters/public-conan)
+    conan_check()
+
     set(oneValueArgs URL NAME INDEX)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
 
