@@ -540,8 +540,6 @@ function(conan_add_remote)
     # Example usage:
     #    conan_add_remote(NAME bincrafters INDEX 1
     #       URL https://api.bintray.com/conan/bincrafters/public-conan)
-    conan_check()
-
     set(oneValueArgs URL NAME INDEX)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
 
@@ -549,6 +547,7 @@ function(conan_add_remote)
         set(CONAN_INDEX_ARG "-i ${CONAN_INDEX}")
     endif()
 
+    conan_check()
     message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL})")
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
