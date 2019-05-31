@@ -350,7 +350,7 @@ function(conan_cmake_install)
     if(ARGUMENTS_CONAN_COMMAND)
        set(CONAN_CMD ${ARGUMENTS_CONAN_COMMAND})
     endif()
-    conan_check()
+    conan_check(REQUIRED)
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
       set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
@@ -508,7 +508,7 @@ macro(conan_check)
     # Arguments REQUIRED and VERSION are optional
     # Example usage:
     #    conan_check(VERSION 1.0.0 REQUIRED)
-    message(STATUS "Conan: checking conan executable in path")
+    message(STATUS "Conan: checking conan executable")
     set(options REQUIRED)
     set(oneValueArgs VERSION)
     cmake_parse_arguments(CONAN "${options}" "${oneValueArgs}" "" ${ARGN})
@@ -536,18 +536,20 @@ endmacro()
 
 function(conan_add_remote)
     # Adds a remote
-    # Arguments URL and NAME are required, INDEX is optional
+    # Arguments URL and NAME are required, INDEX and COMMAND is optional
     # Example usage:
     #    conan_add_remote(NAME bincrafters INDEX 1
     #       URL https://api.bintray.com/conan/bincrafters/public-conan)
-    set(oneValueArgs URL NAME INDEX)
+    set(oneValueArgs URL NAME INDEX COMMAND)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
 
     if(DEFINED CONAN_INDEX)
         set(CONAN_INDEX_ARG "-i ${CONAN_INDEX}")
     endif()
-
-    conan_check()
+    if(CONAN_COMMAND)
+       set(CONAN_CMD ${CONAN_COMMAND})
+    endif()
+    conan_check(REQUIRED)
     message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL})")
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
