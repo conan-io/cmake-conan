@@ -537,7 +537,7 @@ endmacro()
 
 function(conan_add_remote)
     # Adds a remote
-    # Arguments URL and NAME are required, INDEX and COMMAND is optional
+    # Arguments URL and NAME are required, INDEX and COMMAND are optional
     # Example usage:
     #    conan_add_remote(NAME bincrafters INDEX 1
     #       URL https://api.bintray.com/conan/bincrafters/public-conan)
