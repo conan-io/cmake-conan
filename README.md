@@ -241,7 +241,17 @@ Example usage:
 conan_add_remote(NAME bincrafters INDEX 1
             URL https://api.bintray.com/conan/bincrafters/public-conan)
 ```
-    
+
+### conan_config_install()
+
+Adds a remote.
+Argument ``ITEM`` is required,  arguments ``TYPE``, ``SOURCE``, ``TARGET`` and ``VERIFY_SSL`` are optional.
+
+Example usage:
+```
+conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
+```
+
 
 ## Creating packages
 
