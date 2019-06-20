@@ -564,6 +564,11 @@ macro(conan_config_install)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
     set(CONAN_CONFIG_INSTALL_ARGS "")
 
+    find_program(CONAN_CMD conan)
+    if(NOT CONAN_CMD AND CONAN_REQUIRED)
+        message(FATAL_ERROR "Conan executable not found!")
+    endif()
+
     if(DEFINED CONAN_VERIFY_SSL)
         set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --verify-ssl ${CONAN_VERIFY_SSL}")
     endif()
