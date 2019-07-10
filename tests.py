@@ -411,6 +411,8 @@ class LocalTests(unittest.TestCase):
         run("conan new Hello/0.1 -s")
         run("conan create . user/testing")
         run("conan create . user/testing -s build_type=Debug")
+        run("conan create . user/testing -s build_type=RelWithDebInfo")
+        run("conan create . user/testing -s build_type=MinSizeRel")
         if platform.system() == "Windows":
             cls.generator = '-G "Visual Studio 15 Win64"'
         else:
@@ -434,13 +436,11 @@ class LocalTests(unittest.TestCase):
     def _build_multi(self):
         os.makedirs("build")
         os.chdir("build")
-        run("cmake .. %s" % self.generator)
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "Release", "main"])
-        run(cmd)
-        run("cmake --build . --config Debug")
-        cmd = os.sep.join([".", "Debug", "main"])
-        run(cmd)
+        for build_type in ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]:
+            run("cmake .. %s" % self.generator)
+            run("cmake --build . --config %s" % build_type)
+            cmd = os.sep.join([".", build_type, "main"])
+            run(cmd)
 
     def test_global(self):
         content = textwrap.dedent("""
