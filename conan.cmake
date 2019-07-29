@@ -220,7 +220,7 @@ function(conan_cmake_settings result)
     endif()
 
     foreach(ARG ${_APPLIED_PROFILES})
-        set(_SETTINGS ${_SETTINGS} -pr ${ARG})
+        set(_SETTINGS ${_SETTINGS} -pr=${ARG})
     endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
