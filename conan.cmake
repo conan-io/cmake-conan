@@ -207,6 +207,7 @@ function(conan_cmake_settings result)
     endif()
 
     if(${CONAN_SYSTEM_NAME} STREQUAL "Android")
+        set(_CONAN_SETTING_OS_API_LEVEL ${ANDROID_PLATFORM_LEVEL})
         if(${ANDROID_ABI} STREQUAL armeabi-v7a)
             set(_CONAN_SETTING_ARCH armv7)
         elseif(${ANDROID_ABI} STREQUAL arm64-v8a)
@@ -239,7 +240,7 @@ function(conan_cmake_settings result)
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
         set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
-                                   compiler.runtime compiler.libcxx compiler.toolset)
+                                   compiler.runtime compiler.libcxx compiler.toolset os os.api_level)
     endif()
 
     # Automatic from CMake
