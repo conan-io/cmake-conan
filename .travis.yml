@@ -14,7 +14,7 @@ matrix:
          language: generic 
        - os: linux
          env: CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
-         dist: trusty
+         dist: xenial
          sudo: required
          language: python
          python: "3.7"
