@@ -1,20 +1,23 @@
-language: python
-python:
-    - 3.7
-os: linux
-sudo: required
-dist: trusty
-
-env:
-  matrix:
-     - CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
-
 matrix:
    include:
        - os: osx 
-         osx_image: xcode8.3 # apple-clang 8.1
+         osx_image: xcode8.3
          language: generic 
-      
+       - os: osx 
+         osx_image: xcode9.3
+         language: generic 
+       - os: osx 
+         osx_image: xcode10.3
+         language: generic 
+       - os: osx 
+         osx_image: xcode11.3
+         language: generic 
+       - os: linux
+         env: CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
+         dist: trusty
+         sudo: required
+         language: python
+         python: "3.7"
 
 install:
   - chmod +x .travis/install.sh
