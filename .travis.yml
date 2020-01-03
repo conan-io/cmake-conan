@@ -13,7 +13,7 @@ matrix:
          osx_image: xcode11.3
          language: generic 
        - os: linux
-         env: CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=4.8
+         env: CONAN_COMPILER=gcc CONAN_COMPILER_VERSION=5.4
          dist: xenial
          sudo: required
          language: python
