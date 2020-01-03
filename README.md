@@ -1,6 +1,6 @@
 # cmake-conan
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0y2994lfwcpw9232/branch/master?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/cmake-conan/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/master?svg=true)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/master)
 
 [![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
 
