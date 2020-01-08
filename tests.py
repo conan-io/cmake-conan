@@ -434,8 +434,8 @@ class LocalTests(unittest.TestCase):
     def _build_multi(self, build_types):
         os.makedirs("build")
         os.chdir("build")
+        run("cmake .. %s" % self.generator)
         for build_type in build_types:
-            run("cmake .. %s" % self.generator)
             run("cmake --build . --config %s" % build_type)
             cmd = os.sep.join([".", build_type, "main"])
             run(cmd)
