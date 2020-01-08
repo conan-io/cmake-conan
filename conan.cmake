@@ -81,6 +81,18 @@ function(conan_cmake_settings result)
         message(FATAL_ERROR "Please specify in command line CMAKE_BUILD_TYPE (-DCMAKE_BUILD_TYPE=Release)")
     endif()
 
+    if(ARGUMENTS_CONFIGURATION_TYPES)
+        if(NOT ARGUMENTS_BUILD_TYPE AND ${CMAKE_CONFIGURATION_TYPES})
+            set(_CONAN_SETTING_CONFIGURATION_TYPES ${ARGUMENTS_CONFIGURATION_TYPES})
+        elseif(NOT ${CMAKE_CONFIGURATION_TYPES})
+            message(WARNING "CONFIGURATION_TYPES should only be specified for multi-configuration generators")
+        else()
+            message(WARNING "CONFIGURATION_TYPES and BUILD_TYPE arguments defined at the same time. Only BUILD_TYPE will be considered")
+        endif()
+    elseif(${CMAKE_CONFIGURATION_TYPES})
+        set(_CONAN_SETTING_CONFIGURATION_TYPES "Release;Debug")
+    endif()
+
     string(TOUPPER ${_CONAN_SETTING_BUILD_TYPE} _CONAN_SETTING_BUILD_TYPE_UPPER)
     if (_CONAN_SETTING_BUILD_TYPE_UPPER STREQUAL "DEBUG")
         set(_CONAN_SETTING_BUILD_TYPE "Debug")
@@ -464,7 +476,7 @@ endmacro()
 
 macro(conan_cmake_run)
     parse_arguments(${ARGV})
-
+    
     if(CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE AND NOT CONAN_EXPORTED
             AND NOT ARGUMENTS_BUILD_TYPE)
         set(CONAN_CMAKE_MULTI ON)

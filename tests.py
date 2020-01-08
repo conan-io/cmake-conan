@@ -431,10 +431,10 @@ class LocalTests(unittest.TestCase):
         os.environ.clear()
         os.environ.update(cls.old_env)
 
-    def _build_multi(self):
+    def _build_multi(self, build_types):
         os.makedirs("build")
         os.chdir("build")
-        for build_type in ["Release", "Debug", "RelWithDebInfo", "MinSizeRel"]:
+        for build_type in build_types:
             run("cmake .. %s" % self.generator)
             run("cmake --build . --config %s" % build_type)
             cmd = os.sep.join([".", build_type, "main"])
@@ -561,7 +561,32 @@ class LocalTests(unittest.TestCase):
             endforeach()
             """)
         save("CMakeLists.txt", content)
-        self._build_multi()
+        self._build_multi(["Release", "Debug"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_configuration_types(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP
+                            CONFIGURATION_TYPES "Release;RelWithDebInfo")
+
+            add_executable(main main.cpp)
+            foreach(_LIB ${CONAN_LIBS_RELEASE})
+                target_link_libraries(main optimized ${_LIB})
+            endforeach()
+            foreach(_LIB ${CONAN_LIBS_DEBUG})
+                target_link_libraries(main debug ${_LIB})
+            endforeach()
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "RelWithDebInfo"])
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi_targets(self):
@@ -580,4 +605,24 @@ class LocalTests(unittest.TestCase):
             target_link_libraries(main CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
-        self._build_multi()
+        self._build_multi(["Release", "Debug"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_targets_configuration_types(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP CMAKE_TARGETS
+                            CONFIGURATION_TYPES "Release;RelWithDebInfo")
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "RelWithDebInfo"])
