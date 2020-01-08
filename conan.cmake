@@ -89,7 +89,7 @@ function(conan_cmake_settings result)
         else()
             message(WARNING "CONFIGURATION_TYPES and BUILD_TYPE arguments defined at the same time. Only BUILD_TYPE will be considered")
         endif()
-    elseif(${CMAKE_CONFIGURATION_TYPES})
+    elseif(${CMAKE_CONFIGURATION_TYPES} NOT STREQUAL "")
         set(_CONAN_SETTING_CONFIGURATION_TYPES "Release;Debug")
     endif()
 
