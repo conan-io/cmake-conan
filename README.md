@@ -126,6 +126,18 @@ conan_cmake_run(BUILD_TYPE "None")
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
 exist in *settings.yml*.
 
+### CONFIGURATION_TYPES
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
+```
+
+Use it to set the different configurations when using multi-configuration generators. The default 
+configurations used for multi-configuration generators are `Debug` and `Release` if the argument 
+`CONFIGURATION_TYPES` is not specified  The build types passed through this argument should exist 
+in *settings.yml*.
+
 ### PROFILE
 ```cmake
 include(conan.cmake)
