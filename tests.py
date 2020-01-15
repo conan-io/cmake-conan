@@ -452,7 +452,8 @@ class LocalTests(unittest.TestCase):
 
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
-                            BASIC_SETUP)
+                            BASIC_SETUP
+                            BUILD missing)
 
             add_executable(main main.cpp)
             target_link_libraries(main ${CONAN_LIBS})
@@ -476,7 +477,8 @@ class LocalTests(unittest.TestCase):
 
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
-                            BASIC_SETUP CMAKE_TARGETS)
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
 
             add_executable(main main.cpp)
             target_link_libraries(main CONAN_PKG::Hello)
@@ -500,7 +502,8 @@ class LocalTests(unittest.TestCase):
 
             include(conan.cmake)
             conan_cmake_run(CONANFILE conanfile.txt
-                            BASIC_SETUP CMAKE_TARGETS)
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
 
             add_executable(main main.cpp)
             target_link_libraries(main CONAN_PKG::Hello)
