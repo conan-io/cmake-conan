@@ -580,7 +580,8 @@ class LocalTests(unittest.TestCase):
 
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
-                            BASIC_SETUP)
+                            BASIC_SETUP
+                            BUILD missing)
 
             add_executable(main main.cpp)
             foreach(_LIB ${CONAN_LIBS_RELEASE})
@@ -605,7 +606,8 @@ class LocalTests(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
                             BASIC_SETUP
-                            CONFIGURATION_TYPES "Release;RelWithDebInfo")
+                            CONFIGURATION_TYPES "Release;RelWithDebInfo"
+                            BUILD missing)
 
             add_executable(main main.cpp)
             foreach(_LIB ${CONAN_LIBS_RELEASE})
@@ -629,7 +631,8 @@ class LocalTests(unittest.TestCase):
 
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
-                            BASIC_SETUP CMAKE_TARGETS)
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
 
             add_executable(main main.cpp)
             target_link_libraries(main CONAN_PKG::Hello)
