@@ -635,4 +635,24 @@ class LocalTests(unittest.TestCase):
             target_link_libraries(main CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
-        self._build_multi()
+        self._build_multi(["Release", "RelWithDebInfo"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_targets_configuration_types(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP CMAKE_TARGETS
+                            CONFIGURATION_TYPES "Release;RelWithDebInfo")
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "RelWithDebInfo"])
