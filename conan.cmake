@@ -490,7 +490,7 @@ macro(conan_cmake_run)
     endif()
 
     if (NOT ARGUMENTS_NO_LOAD)
-    	conan_load_buildinfo()
+      conan_load_buildinfo()
     endif()
 
     if(ARGUMENTS_BASIC_SETUP)
@@ -559,3 +559,43 @@ function(conan_add_remote)
     execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
       ${CONAN_INDEX_ARG} -f)
 endfunction()
+
+macro(conan_config_install)
+    # install a full configuration from a local or remote zip file
+    # Argument ITEM is required, arguments TYPE, SOURCE, TARGET and VERIFY_SSL are optional
+    # Example usage:
+    #    conan_config_install(ITEM https://github.com/conan-io/cmake-conan.git
+    #       TYPE git SOURCE source-folder TARGET target-folder VERIFY_SSL false)
+    set(oneValueArgs ITEM TYPE SOURCE TARGET VERIFY_SSL)
+    set(multiValueArgs ARGS)
+    cmake_parse_arguments(CONAN "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(CONAN_CONFIG_INSTALL_ARGS "")
+
+    find_program(CONAN_CMD conan)
+    if(NOT CONAN_CMD AND CONAN_REQUIRED)
+        message(FATAL_ERROR "Conan executable not found!")
+    endif()
+
+    if(DEFINED CONAN_VERIFY_SSL)
+        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --verify-ssl ${CONAN_VERIFY_SSL}")
+    endif()
+
+    if(DEFINED CONAN_TYPE)
+        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --type ${CONAN_TYPE}")
+    endif()
+
+    if(DEFINED CONAN_ARGS)
+        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --args \"${CONAN_ARGS}\"")
+    endif()
+
+    if(DEFINED CONAN_SOURCE)
+        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --source-folder ${CONAN_SOURCE}")
+    endif()
+
+    if(DEFINED CONAN_TARGET)
+        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --target-folder ${CONAN_TARGET}")
+    endif()
+
+    message(STATUS "Conan: Installing config from ${CONAN_ITEM}")
+    execute_process(COMMAND ${CONAN_CMD} config install ${CONAN_CONFIG_INSTALL_ARGS} ${CONAN_ITEM})
+endmacro()
