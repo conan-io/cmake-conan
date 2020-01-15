@@ -3,6 +3,7 @@ import tempfile
 import os
 import platform
 import shutil
+import json
 import textwrap
 
 from nose.plugins.attrib import attr
@@ -177,7 +178,7 @@ target_link_libraries(main ${CONAN_LIBS})
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
-        
+
     def test_arch(self):
         content = """#set(CMAKE_CXX_COMPILER_WORKS 1)
 #set(CMAKE_CXX_ABI_COMPILED 1)
@@ -397,6 +398,32 @@ compiler.version=12
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
 
+    def test_conan_config_install(self):
+        remote_name = "test-remote"
+        remote_url = "https://test.test.test"
+        verify_ssl = False
+
+        content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+set(CONAN_DISABLE_CHECK_COMPILER ON)
+include(conan.cmake)
+conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\")
+"""
+        save("config/remotes.txt", "%s %s %r" % (remote_name, remote_url, verify_ssl))
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s" % generator)
+
+        with open("%s/.conan/remotes.json" % os.environ["CONAN_USER_HOME"]) as json_file:
+            data = json.load(json_file)
+            assert len(data["remotes"]) == 1, "Invalid number of remotes"
+            remote = data["remotes"][0]
+            assert remote["name"] == remote_name, "Invalid remote name"
+            assert remote["url"] == remote_url, "Invalid remote url"
+            assert remote["verify_ssl"] == verify_ssl, "Invalid verify_ssl"
 
 class LocalTests(unittest.TestCase):
 
@@ -424,7 +451,7 @@ class LocalTests(unittest.TestCase):
         shutil.copy2(os.path.join(self.old_folder, "main.cpp"),
                      os.path.join(folder, "main.cpp"))
         os.chdir(folder)
-        
+
     @classmethod
     def tearDownClass(cls):
         os.chdir(cls.old_folder)
