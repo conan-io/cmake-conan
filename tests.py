@@ -606,7 +606,7 @@ class LocalTests(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
                             BASIC_SETUP
-                            CONFIGURATION_TYPES "Release;RelWithDebInfo"
+                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo"
                             BUILD missing)
 
             add_executable(main main.cpp)
@@ -618,7 +618,7 @@ class LocalTests(unittest.TestCase):
             endforeach()
             """)
         save("CMakeLists.txt", content)
-        self._build_multi(["Release", "RelWithDebInfo"])
+        self._build_multi(["Release", "Debug", "RelWithDebInfo"])
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi_targets(self):
@@ -638,7 +638,7 @@ class LocalTests(unittest.TestCase):
             target_link_libraries(main CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
-        self._build_multi(["Release", "RelWithDebInfo"])
+        self._build_multi(["Release", "Debug"])
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi_targets_configuration_types(self):
@@ -652,10 +652,10 @@ class LocalTests(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(REQUIRES Hello/0.1@user/testing
                             BASIC_SETUP CMAKE_TARGETS
-                            CONFIGURATION_TYPES "Release;RelWithDebInfo")
+                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
 
             add_executable(main main.cpp)
             target_link_libraries(main CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
-        self._build_multi(["Release", "RelWithDebInfo"])
+        self._build_multi(["Release", "Debug", "RelWithDebInfo"])
