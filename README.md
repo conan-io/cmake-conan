@@ -1,8 +1,6 @@
 # cmake-conan
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0y2994lfwcpw9232/branch/master?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/cmake-conan/branch/master)
-
-[![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
+[![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/master?svg=true&passingText=master%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/develop?svg=true&passingText=develop%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/develop) [![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
 
 CMake wrapper for the Conan C and C++ package manager.
 
@@ -253,7 +251,17 @@ Example usage:
 conan_add_remote(NAME bincrafters INDEX 1
             URL https://api.bintray.com/conan/bincrafters/public-conan)
 ```
-    
+
+### conan_config_install()
+
+Adds a remote.
+Argument ``ITEM`` is required,  arguments ``TYPE``, ``SOURCE``, ``TARGET`` and ``VERIFY_SSL`` are optional.
+
+Example usage:
+```
+conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
+```
+
 
 ## Creating packages
 
