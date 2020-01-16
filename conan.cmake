@@ -322,7 +322,7 @@ macro(parse_arguments)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
                      PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS)
+                     INSTALL_ARGS CONFIGURATION_TYPES)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
@@ -464,10 +464,19 @@ endmacro()
 
 macro(conan_cmake_run)
     parse_arguments(${ARGV})
+    
+    if(ARGUMENTS_CONFIGURATION_TYPES AND NOT CMAKE_CONFIGURATION_TYPES)
+        message(WARNING "CONFIGURATION_TYPES should only be specified for multi-configuration generators")
+    elseif(ARGUMENTS_CONFIGURATION_TYPES AND ARGUMENTS_BUILD_TYPE)
+        message(WARNING "CONFIGURATION_TYPES and BUILD_TYPE arguments should not be defined at the same time.")
+    endif()
 
     if(CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE AND NOT CONAN_EXPORTED
             AND NOT ARGUMENTS_BUILD_TYPE)
         set(CONAN_CMAKE_MULTI ON)
+        if (NOT ARGUMENTS_CONFIGURATION_TYPES)
+            set(ARGUMENTS_CONFIGURATION_TYPES "Release;Debug")
+        endif()
         message(STATUS "Conan: Using cmake-multi generator")
     else()
         set(CONAN_CMAKE_MULTI OFF)
@@ -476,7 +485,7 @@ macro(conan_cmake_run)
     if(NOT CONAN_EXPORTED)
         conan_cmake_setup_conanfile(${ARGV})
         if(CONAN_CMAKE_MULTI)
-            foreach(CMAKE_BUILD_TYPE "Release" "Debug")
+            foreach(CMAKE_BUILD_TYPE ${ARGUMENTS_CONFIGURATION_TYPES})
                 set(ENV{CONAN_IMPORT_PATH} ${CMAKE_BUILD_TYPE})
                 conan_cmake_settings(settings ${ARGV})
                 conan_cmake_install(SETTINGS ${settings} ${ARGV})
