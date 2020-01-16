@@ -544,6 +544,11 @@ class LocalTests(unittest.TestCase):
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    def test_version_in_cmake(self):
+        with open("conan.cmake", "r") as handle:
+            if "# version: " not in handle.read():
+                raise Exception("Version missing in conan.cmake") 
+
     @unittest.skipIf(platform.system() != "Windows", "toolsets only in Windows")
     def test_vs_toolset(self):
         content = textwrap.dedent("""
