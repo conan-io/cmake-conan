@@ -1,8 +1,6 @@
 # cmake-conan
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0y2994lfwcpw9232/branch/master?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/cmake-conan/branch/master)
-
-[![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
+[![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/master?svg=true&passingText=master%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/develop?svg=true&passingText=develop%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/develop) [![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
 
 CMake wrapper for the Conan C and C++ package manager.
 
@@ -17,7 +15,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``v0.14`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to point to your desired release:
 
 
 ```cmake
@@ -28,7 +26,7 @@ project(myproject CXX)
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.14/conan.cmake"
+   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
                  "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
@@ -125,6 +123,18 @@ conan_cmake_run(BUILD_TYPE "None")
 
 Use it to override the build_type detection and force to call conan with the provided one. The build type should
 exist in *settings.yml*.
+
+### CONFIGURATION_TYPES
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
+```
+
+Use it to set the different configurations when using multi-configuration generators. The default 
+configurations used for multi-configuration generators are `Debug` and `Release` if the argument 
+`CONFIGURATION_TYPES` is not specified  The build types passed through this argument should exist 
+in *settings.yml*.
 
 ### PROFILE
 ```cmake
@@ -241,7 +251,17 @@ Example usage:
 conan_add_remote(NAME bincrafters INDEX 1
             URL https://api.bintray.com/conan/bincrafters/public-conan)
 ```
-    
+
+### conan_config_install()
+
+Adds a remote.
+Argument ``ITEM`` is required,  arguments ``TYPE``, ``SOURCE``, ``TARGET`` and ``VERIFY_SSL`` are optional.
+
+Example usage:
+```
+conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
+```
+
 
 ## Creating packages
 

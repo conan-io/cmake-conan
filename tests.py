@@ -3,6 +3,8 @@ import tempfile
 import os
 import platform
 import shutil
+import json
+import textwrap
 
 from nose.plugins.attrib import attr
 
@@ -46,30 +48,6 @@ class CMakeConanTest(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.old_env)
 
-    def test_global(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                BASIC_SETUP
-                BUILD missing)
-
-add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
-"""
-        save("CMakeLists.txt", content)
-
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
-        run(cmd)
-
     def test_global_update(self):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
@@ -87,113 +65,6 @@ add_executable(main main.cpp)
 target_link_libraries(main ${CONAN_LIBS})
 """
         save("CMakeLists.txt", content)
-
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
-        run(cmd)
-
-    def _build_multi(self):
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s" % generator)
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "Release", "main"])
-        run(cmd)
-        run("cmake --build . --config Debug")
-        cmd = os.sep.join([".", "Debug", "main"])
-        run(cmd)
-
-
-    def test_multi(self):
-        if platform.system() != "Windows":
-            return
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                BASIC_SETUP
-                BUILD missing)
-
-add_executable(main main.cpp)
-foreach(_LIB ${CONAN_LIBS_RELEASE})
-    target_link_libraries(main optimized ${_LIB})
-endforeach()
-foreach(_LIB ${CONAN_LIBS_DEBUG})
-    target_link_libraries(main debug ${_LIB})
-endforeach()
-"""
-        save("CMakeLists.txt", content)
-        self._build_multi()
-
-    def test_multi_targets(self):
-        if platform.system() != "Windows":
-            return
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                BASIC_SETUP CMAKE_TARGETS
-                BUILD missing)
-
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
-"""
-        save("CMakeLists.txt", content)
-        self._build_multi()
-
-    def test_targets(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                BASIC_SETUP CMAKE_TARGETS
-                BUILD missing)
-
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
-"""
-        save("CMakeLists.txt", content)
-
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
-        run(cmd)
-
-    def test_existing_conanfile(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(CONANFILE conanfile.txt
-                BASIC_SETUP CMAKE_TARGETS
-                BUILD missing)
-
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
-"""
-        save("CMakeLists.txt", content)
-        save("conanfile.txt", "[requires]\nHello/0.1@memsharded/testing\n"
-                            "[generators]\ncmake")
 
         os.makedirs("build")
         os.chdir("build")
@@ -281,31 +152,6 @@ class Pkg(ConanFile):
         run("conan install . --build Test --build=missing")
         run("conan remove -f Test/0.1@test/testing")
 
-    def test_vs_toolset(self):
-        if platform.system() != "Windows":
-            return
-        content = """message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
-
-include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                BASIC_SETUP
-                BUILD missing)
-
-add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
-"""
-        save("CMakeLists.txt", content)
-
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (generator))
-        run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
-        run(cmd)
-
     @attr("cmake39")
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
@@ -332,7 +178,7 @@ target_link_libraries(main ${CONAN_LIBS})
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
-        
+
     def test_arch(self):
         content = """#set(CMAKE_CXX_COMPILER_WORKS 1)
 #set(CMAKE_CXX_ABI_COMPILED 1)
@@ -551,3 +397,270 @@ compiler.version=12
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
+
+    def test_conan_config_install(self):
+        remote_name = "test-remote"
+        remote_url = "https://test.test.test"
+        verify_ssl = False
+
+        content = """cmake_minimum_required(VERSION 2.8)
+project(conan_wrapper CXX)
+message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+set(CONAN_DISABLE_CHECK_COMPILER ON)
+include(conan.cmake)
+conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\")
+"""
+        save("config/remotes.txt", "%s %s %r" % (remote_name, remote_url, verify_ssl))
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s" % generator)
+
+        with open("%s/.conan/remotes.json" % os.environ["CONAN_USER_HOME"]) as json_file:
+            data = json.load(json_file)
+            assert len(data["remotes"]) == 1, "Invalid number of remotes"
+            remote = data["remotes"][0]
+            assert remote["name"] == remote_name, "Invalid remote name"
+            assert remote["url"] == remote_url, "Invalid remote url"
+            assert remote["verify_ssl"] == verify_ssl, "Invalid verify_ssl"
+
+class LocalTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
+        folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
+        cls.old_env = dict(os.environ)
+        cls.old_folder = os.getcwd()
+        os.environ.update({"CONAN_USER_HOME": folder})
+        os.chdir(folder)
+        run("conan new Hello/0.1 -s")
+        run("conan create . user/testing")
+        run("conan create . user/testing -s build_type=Debug")
+        if platform.system() == "Windows":
+            cls.generator = '-G "Visual Studio 15 Win64"'
+        else:
+            cls.generator = '-G "Unix Makefiles"'
+
+    def setUp(self):
+        CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
+        folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
+        shutil.copy2(os.path.join(self.old_folder, "conan.cmake"),
+                     os.path.join(folder, "conan.cmake"))
+        shutil.copy2(os.path.join(self.old_folder, "main.cpp"),
+                     os.path.join(folder, "main.cpp"))
+        os.chdir(folder)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.old_folder)
+        os.environ.clear()
+        os.environ.update(cls.old_env)
+
+    def _build_multi(self, build_types):
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s" % self.generator)
+        for build_type in build_types:
+            run("cmake --build . --config %s" % build_type)
+            cmd = os.sep.join([".", build_type, "main"])
+            run(cmd)
+
+    def test_global(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main ${CONAN_LIBS})
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
+    def test_targets(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
+    def test_existing_conanfile(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE conanfile.txt
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        save("conanfile.txt", "[requires]\nHello/0.1@user/testing\n"
+                            "[generators]\ncmake")
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
+    def test_version_in_cmake(self):
+        with open("conan.cmake", "r") as handle:
+            if "# version: " not in handle.read():
+                raise Exception("Version missing in conan.cmake") 
+
+    @unittest.skipIf(platform.system() != "Windows", "toolsets only in Windows")
+    def test_vs_toolset(self):
+        content = textwrap.dedent("""
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main ${CONAN_LIBS})
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            foreach(_LIB ${CONAN_LIBS_RELEASE})
+                target_link_libraries(main optimized ${_LIB})
+            endforeach()
+            foreach(_LIB ${CONAN_LIBS_DEBUG})
+                target_link_libraries(main debug ${_LIB})
+            endforeach()
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_configuration_types(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP
+                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo"
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            foreach(_LIB ${CONAN_LIBS_RELEASE})
+                target_link_libraries(main optimized ${_LIB})
+            endforeach()
+            foreach(_LIB ${CONAN_LIBS_DEBUG})
+                target_link_libraries(main debug ${_LIB})
+            endforeach()
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug", "RelWithDebInfo"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_targets(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_targets_configuration_types(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            BASIC_SETUP CMAKE_TARGETS
+                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug", "RelWithDebInfo"])
