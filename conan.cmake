@@ -453,7 +453,10 @@ macro(conan_load_buildinfo)
     if(ARGUMENTS_INSTALL_FOLDER)
         set(_CONANBUILDINFOFOLDER ${ARGUMENTS_INSTALL_FOLDER})
     else()
-        set(_CONANBUILDINFOFOLDER ${CMAKE_CURRENT_BINARY_DIR})
+        find_path(_CONANBUILDINFOFOLDER 
+        NAMES ${_CONANBUILDINFO} 
+        PATHS ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+        NO_DEFAULT_PATH)
     endif()
     # Checks for the existence of conanbuildinfo.cmake, and loads it
     # important that it is macro, so variables defined at parent scope
