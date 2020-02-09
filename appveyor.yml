@@ -7,9 +7,9 @@ environment:
   PYTHON_ARCH: "32"
 
 install:
-  - set PATH=%PYTHON%/Scripts/;%PYTHON;%PATH%;
+  - set PATH=%PYTHON%/Scripts/;%PYTHON%;%PATH%
   - pip.exe install conan nose
-  - conan install cmake_installer/3.7.2@conan/stable -g=virtualrunenv
+  - conan install cmake_installer/3.16.3@conan/stable -g=virtualrunenv
 
 test_script:
   - activate_run.bat
