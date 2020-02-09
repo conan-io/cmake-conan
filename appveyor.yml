@@ -2,12 +2,12 @@ build: false
 image: Visual Studio 2017
 
 environment:
-    PYTHON: "C:\\Python27"
-    PYTHON_VERSION: "2.7.8"
-    PYTHON_ARCH: "32"
+  PYTHON: "C:\\Python37"
+  PYTHON_VERSION: "3.7.5"
+  PYTHON_ARCH: "32"
 
 install:
-  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - set PATH=%PYTHON%/Scripts/;%PYTHON;%PATH%;
   - pip.exe install conan nose
   - conan install cmake_installer/3.7.2@conan/stable -g=virtualrunenv
 
