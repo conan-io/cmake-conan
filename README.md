@@ -187,7 +187,7 @@ If the ``BUILD_TYPE`` is explictly passed to ``conan_cmake_run()``, then single 
 include(conan.cmake)
 conan_cmake_run(...
                 SETTINGS arch=armv6
-                SETTINGS cppstd=14)
+                SETTINGS compiler.cppstd=14)
 ```
 
 ### ENV
