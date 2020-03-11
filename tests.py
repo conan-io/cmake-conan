@@ -258,6 +258,10 @@ endif()
         with ch_build_dir():
             run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
 
+        save("CMakeLists.txt", content.format("Release"))
+        with ch_build_dir():
+            run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
+
         # https://github.com/conan-io/cmake-conan/issues/89
         save("CMakeLists.txt", content.format("Release"))
         with ch_build_dir():
