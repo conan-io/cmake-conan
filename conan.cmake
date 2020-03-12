@@ -72,7 +72,7 @@ function(conan_cmake_settings result)
 
     message(STATUS "Conan: Automatic detection of conan settings from cmake")
 
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
 
     if(ARGUMENTS_BUILD_TYPE)
         set(_CONAN_SETTING_BUILD_TYPE ${ARGUMENTS_BUILD_TYPE})
@@ -318,7 +318,7 @@ function(conan_cmake_detect_vs_runtime result)
 endfunction()
 
 
-macro(parse_arguments)
+macro(conan_parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
@@ -333,7 +333,7 @@ function(conan_cmake_install)
     # --build when argument is 'BUILD all' (which builds all packages from source)
     # Argument CONAN_COMMAND, to specify the conan path, e.g. in case of running from source
     # cmake does not identify conan as command, even if it is +x and it is in the path
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
 
     if(CONAN_CMAKE_MULTI)
         set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_multi)
@@ -406,7 +406,7 @@ endfunction()
 
 
 function(conan_cmake_setup_conanfile)
-  parse_arguments(${ARGV})
+  conan_parse_arguments(${ARGV})
   if(ARGUMENTS_CONANFILE)
     get_filename_component(_CONANFILE_NAME ${ARGUMENTS_CONANFILE} NAME)
     # configure_file will make sure cmake re-runs when conanfile is updated
@@ -421,7 +421,7 @@ function(conan_cmake_generate_conanfile)
   # Generate, writing in disk a conanfile.txt with the requires, options, and imports
   # specified as arguments
   # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR)
-  parse_arguments(${ARGV})
+  conan_parse_arguments(${ARGV})
   set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
 
   file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
@@ -464,7 +464,7 @@ endmacro()
 
 
 macro(conan_cmake_run)
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
     
     if(ARGUMENTS_CONFIGURATION_TYPES AND NOT CMAKE_CONFIGURATION_TYPES)
         message(WARNING "CONFIGURATION_TYPES should only be specified for multi-configuration generators")
