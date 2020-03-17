@@ -254,7 +254,7 @@ conan_add_remote(NAME bincrafters INDEX 1
 
 ### conan_config_install()
 
-Adds a remote.
+Installs a full configuration from a local or remote zip file.
 Argument ``ITEM`` is required,  arguments ``TYPE``, ``SOURCE``, ``TARGET`` and ``VERIFY_SSL`` are optional.
 
 Example usage:
