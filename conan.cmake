@@ -263,6 +263,7 @@ function(conan_cmake_detect_unix_libcxx result)
             endif()
         endif()
     endforeach()
+    string(GENEX_STRIP "${compile_options}" compile_options)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
