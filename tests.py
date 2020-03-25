@@ -41,7 +41,6 @@ class CMakeConanTest(unittest.TestCase):
         folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
         self.old_env = dict(os.environ)
         os.environ.update({"CONAN_USER_HOME": folder})
-        run("conan remote add transit https://api.bintray.com/conan/conan/conan-transit")
 
     def tearDown(self):
         os.chdir(self.old_folder)
