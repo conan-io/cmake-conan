@@ -36,7 +36,7 @@ class CMakeConanTest(unittest.TestCase):
         CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
         folder = tempfile.mkdtemp(suffix='conans', dir=CONAN_TEST_FOLDER)
         shutil.copy2("conan.cmake", os.path.join(folder, "conan.cmake"))
-        shutil.copy2("main.cpp", os.path.join(folder, "main.cpp"))
+        shutil.copy2("md5.cpp", os.path.join(folder, "md5.cpp"))
         os.chdir(folder)
         folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
         self.old_env = dict(os.environ)
@@ -56,13 +56,13 @@ project(conan_wrapper CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES poco/1.9.4
                 BASIC_SETUP
                 UPDATE
                 BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 ${CONAN_LIBS})
 """
         save("CMakeLists.txt", content)
 
@@ -70,7 +70,7 @@ target_link_libraries(main ${CONAN_LIBS})
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_existing_conanfile_py(self):
@@ -87,15 +87,15 @@ conan_cmake_run(CONANFILE conan/conanfile.py
                 NO_IMPORTS
                 INSTALL_ARGS --update)
 
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 CONAN_PKG::poco)
 """
         save("CMakeLists.txt", content)
         save("conan/conanfile.py", """
 from conans import ConanFile
 
 class Pkg(ConanFile):
-    requires = "Hello/0.1@memsharded/testing"
+    requires = "poco/1.9.4"
     generators = "cmake"
     # Defining the settings is necessary now to cache them
     settings = "os", "compiler", "arch", "build_type"
@@ -108,7 +108,7 @@ class Pkg(ConanFile):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_exported_package(self):
@@ -124,8 +124,8 @@ conan_cmake_run(CONANFILE conanfile.py
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 CONAN_PKG::poco)
 """
         save("CMakeLists.txt", content)
         save("conanfile.py", """from conans import ConanFile, CMake
@@ -133,9 +133,9 @@ target_link_libraries(main CONAN_PKG::Hello)
 class Pkg(ConanFile):
     name = "Test"
     version = "0.1"
-    requires = "Hello/0.1@memsharded/testing"
+    requires = "poco/1.9.4"
     generators = "cmake"
-    exports = ["CMakeLists.txt", "conan.cmake", "main.cpp"]
+    exports = ["CMakeLists.txt", "conan.cmake", "md5.cpp"]
     settings = "os", "arch", "compiler", "build_type"
 
     def build(self):
@@ -162,12 +162,12 @@ project(conan_wrapper CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES poco/1.9.4
                 BASIC_SETUP
                 BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 ${CONAN_LIBS})
 """
         save("CMakeLists.txt", content)
 
@@ -176,7 +176,7 @@ target_link_libraries(main ${CONAN_LIBS})
         # Only works cmake>=3.9
         run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_arch(self):
@@ -435,7 +435,7 @@ class LocalTests(unittest.TestCase):
         cls.old_folder = os.getcwd()
         os.environ.update({"CONAN_USER_HOME": folder})
         os.chdir(folder)
-        run("conan new Hello/0.1 -s")
+        run("conan new hello/0.1 -s")
         run("conan create . user/testing")
         run("conan create . user/testing -s build_type=Debug")
         if platform.system() == "Windows":
@@ -448,8 +448,8 @@ class LocalTests(unittest.TestCase):
         folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
         shutil.copy2(os.path.join(self.old_folder, "conan.cmake"),
                      os.path.join(folder, "conan.cmake"))
-        shutil.copy2(os.path.join(self.old_folder, "main.cpp"),
-                     os.path.join(folder, "main.cpp"))
+        shutil.copy2(os.path.join(self.old_folder, "md5.cpp"),
+                     os.path.join(folder, "md5.cpp"))
         os.chdir(folder)
 
     @classmethod
@@ -464,7 +464,7 @@ class LocalTests(unittest.TestCase):
         run("cmake .. %s" % self.generator)
         for build_type in build_types:
             run("cmake --build . --config %s" % build_type)
-            cmd = os.sep.join([".", build_type, "main"])
+            cmd = os.sep.join([".", build_type, "md5"])
             run(cmd)
 
     def test_global(self):
@@ -476,12 +476,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP
                             BUILD missing)
 
-            add_executable(main main.cpp)
-            target_link_libraries(main ${CONAN_LIBS})
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 ${CONAN_LIBS})
             """)
         save("CMakeLists.txt", content)
 
@@ -489,7 +489,7 @@ class LocalTests(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_targets(self):
@@ -501,12 +501,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
-            add_executable(main main.cpp)
-            target_link_libraries(main CONAN_PKG::Hello)
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
 
@@ -514,7 +514,7 @@ class LocalTests(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_existing_conanfile(self):
@@ -530,18 +530,18 @@ class LocalTests(unittest.TestCase):
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
-            add_executable(main main.cpp)
-            target_link_libraries(main CONAN_PKG::Hello)
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
-        save("conanfile.txt", "[requires]\nHello/0.1@user/testing\n"
+        save("conanfile.txt", "[requires]\nhello/0.1@user/testing\n"
                             "[generators]\ncmake")
 
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     def test_version_in_cmake(self):
@@ -558,12 +558,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP
                             BUILD missing)
 
-            add_executable(main main.cpp)
-            target_link_libraries(main ${CONAN_LIBS})
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 ${CONAN_LIBS})
             """)
         save("CMakeLists.txt", content)
 
@@ -571,7 +571,7 @@ class LocalTests(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "main"])
+        cmd = os.sep.join([".", "bin", "md5"])
         run(cmd)
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
@@ -584,16 +584,16 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP
                             BUILD missing)
 
-            add_executable(main main.cpp)
+            add_executable(md5 md5.cpp)
             foreach(_LIB ${CONAN_LIBS_RELEASE})
-                target_link_libraries(main optimized ${_LIB})
+                target_link_libraries(md5 optimized ${_LIB})
             endforeach()
             foreach(_LIB ${CONAN_LIBS_DEBUG})
-                target_link_libraries(main debug ${_LIB})
+                target_link_libraries(md5 debug ${_LIB})
             endforeach()
             """)
         save("CMakeLists.txt", content)
@@ -609,17 +609,17 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP
                             CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo"
                             BUILD missing)
 
-            add_executable(main main.cpp)
+            add_executable(md5 md5.cpp)
             foreach(_LIB ${CONAN_LIBS_RELEASE})
-                target_link_libraries(main optimized ${_LIB})
+                target_link_libraries(md5 optimized ${_LIB})
             endforeach()
             foreach(_LIB ${CONAN_LIBS_DEBUG})
-                target_link_libraries(main debug ${_LIB})
+                target_link_libraries(md5 debug ${_LIB})
             endforeach()
             """)
         save("CMakeLists.txt", content)
@@ -635,12 +635,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
-            add_executable(main main.cpp)
-            target_link_libraries(main CONAN_PKG::Hello)
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::Hello)
             """)
         save("CMakeLists.txt", content)
         self._build_multi(["Release", "Debug"])
@@ -655,12 +655,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+            conan_cmake_run(REQUIRES hello/0.1@user/testing
                             BASIC_SETUP CMAKE_TARGETS
                             CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
 
-            add_executable(main main.cpp)
-            target_link_libraries(main CONAN_PKG::Hello)
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::poco)
             """)
         save("CMakeLists.txt", content)
         self._build_multi(["Release", "Debug", "RelWithDebInfo"])
