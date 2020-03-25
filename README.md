@@ -32,7 +32,7 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES poco/1.9.4
                 BASIC_SETUP 
                 BUILD missing)
 
@@ -45,8 +45,8 @@ target_link_libraries(main ${CONAN_LIBS})
 
 ### REQUIRES, OPTIONS
 ```cmake
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                         Bye/2.1@otheruser/testing
+conan_cmake_run(REQUIRES poco/1.9.4
+                         cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
                 )
@@ -61,12 +61,12 @@ If you want to use targets, you could do:
 
 ```cmake
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES poco/1.9.4
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 CONAN_PKG::poco)
 ```
 
 This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
