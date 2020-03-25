@@ -23,7 +23,7 @@ example](https://docs.conan.io/en/latest/getting_started.html#getting-started) f
 ```cmake
 
 cmake_minimum_required(VERSION 2.8)
-project(myproject CXX)
+project(MD5hasher CXX)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
@@ -38,8 +38,8 @@ conan_cmake_run(REQUIRES poco/1.9.4
                 BASIC_SETUP 
                 BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 ${CONAN_LIBS})
 ```
 
 ## conan_cmake_run() options
