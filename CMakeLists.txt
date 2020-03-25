@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(MD5Encrypter)
+project(MD5hasher)
 
 add_definitions("-std=c++11")
 
