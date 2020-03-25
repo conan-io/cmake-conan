@@ -17,6 +17,8 @@ You probably want to use a tagged release to ensure controlled upgrades.
 You can just clone or grab the *conan.cmake* file and put in in your project.
 Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to point to your desired release:
 
+This CMakeLists.txt will replicate the [conan getting started
+example](https://docs.conan.io/en/latest/getting_started.html#getting-started) for cmake-conan:
 
 ```cmake
 
