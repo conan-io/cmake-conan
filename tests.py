@@ -367,30 +367,33 @@ compiler.runtime=MTd""")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
 
     def test_multi_profile(self):
-        content = """cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-set(CONAN_DISABLE_CHECK_COMPILER ON)
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                PROFILE myprofile PROFILE myprofile2)
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            PROFILE myprofile PROFILE myprofile2)
 
-if(NOT "${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
-endif()
-if(NOT "${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
-endif()
-"""
-        save("build/myprofile", """[settings]
-compiler=Visual Studio
-compiler.version=15
-compiler.runtime=MTd
-""")
-        save("build/myprofile2", """[settings]
-compiler.version=12
-""")
+            if(NOT "${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
+            endif()
+            if(NOT "${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
+            endif()
+        """)
+        save("build/myprofile", textwrap.dedent("""
+            [settings]
+            compiler=Visual Studio
+            compiler.version=15
+            compiler.runtime=MTd
+        """))
+        save("build/myprofile2", textwrap.dedent("""
+            [settings]
+            compiler.version=12
+        """))
         save("CMakeLists.txt", content)
 
         os.chdir("build")
@@ -402,14 +405,15 @@ compiler.version=12
         remote_url = "https://test.test.test"
         verify_ssl = False
 
-        content = """cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-set(CONAN_DISABLE_CHECK_COMPILER ON)
-include(conan.cmake)
-conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\")
-"""
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\")
+        """)
+
         save("config/remotes.txt", "%s %s %r" % (remote_name, remote_url, verify_ssl))
         save("CMakeLists.txt", content)
         os.makedirs("build")
