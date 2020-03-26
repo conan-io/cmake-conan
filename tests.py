@@ -681,7 +681,8 @@ class LocalTests(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP CMAKE_TARGETS
-                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
+                            CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo"
+                            BUILD missing)
 
             add_executable(md5 md5.cpp)
             target_link_libraries(md5 CONAN_PKG::poco)
