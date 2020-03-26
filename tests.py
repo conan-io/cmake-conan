@@ -48,21 +48,22 @@ class CMakeConanTest(unittest.TestCase):
         os.environ.update(self.old_env)
 
     def test_global_update(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(REQUIRES poco/1.9.4
-                BASIC_SETUP
-                UPDATE
-                BUILD missing)
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES poco/1.9.4
+                            BASIC_SETUP
+                            UPDATE
+                            BUILD missing)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 ${CONAN_LIBS})
-"""
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 ${CONAN_LIBS})
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -73,35 +74,36 @@ target_link_libraries(md5 ${CONAN_LIBS})
         run(cmd)
 
     def test_existing_conanfile_py(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(CONANFILE conan/conanfile.py
-                BASIC_SETUP CMAKE_TARGETS
-                BUILD missing
-                NO_IMPORTS
-                INSTALL_ARGS --update)
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE conan/conanfile.py
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing
+                            NO_IMPORTS
+                            INSTALL_ARGS --update)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 CONAN_PKG::poco)
-"""
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::poco)
+        """)
         save("CMakeLists.txt", content)
-        save("conan/conanfile.py", """
-from conans import ConanFile
+        save("conan/conanfile.py", textwrap.dedent("""
+            from conans import ConanFile
 
-class Pkg(ConanFile):
-    requires = "poco/1.9.4"
-    generators = "cmake"
-    # Defining the settings is necessary now to cache them
-    settings = "os", "compiler", "arch", "build_type"
+            class Pkg(ConanFile):
+                requires = "poco/1.9.4"
+                generators = "cmake"
+                # Defining the settings is necessary now to cache them
+                settings = "os", "compiler", "arch", "build_type"
 
-    def imports(self):
-        raise Exception("BOOM!")
-""")
+                def imports(self):
+                    raise Exception("BOOM!")
+        """))
 
         os.makedirs("build")
         os.chdir("build")
@@ -111,37 +113,39 @@ class Pkg(ConanFile):
         run(cmd)
 
     def test_exported_package(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-set(CONAN_EXPORTED ON)
-include(conan.cmake)
-conan_cmake_run(CONANFILE conanfile.py
-                BASIC_SETUP CMAKE_TARGETS
-                BUILD missing)
+            set(CONAN_EXPORTED ON)
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE conanfile.py
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 CONAN_PKG::poco)
-"""
-        save("CMakeLists.txt", content)
-        save("conanfile.py", """from conans import ConanFile, CMake
-
-class Pkg(ConanFile):
-    name = "Test"
-    version = "0.1"
-    requires = "poco/1.9.4"
-    generators = "cmake"
-    exports = ["CMakeLists.txt", "conan.cmake", "md5.cpp"]
-    settings = "os", "arch", "compiler", "build_type"
-
-    def build(self):
-        cmake = CMake(self)
-        self.run('cmake . ' + cmake.command_line)
-        self.run('cmake --build . ' + cmake.build_config)
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 CONAN_PKG::poco)
         """)
+        save("CMakeLists.txt", content)
+        save("conanfile.py", textwrap.dedent("""
+            from conans import ConanFile, CMake
+
+            class Pkg(ConanFile):
+                name = "Test"
+                version = "0.1"
+                requires = "poco/1.9.4"
+                generators = "cmake"
+                exports = ["CMakeLists.txt", "conan.cmake", "md5.cpp"]
+                settings = "os", "arch", "compiler", "build_type"
+
+                def build(self):
+                    cmake = CMake(self)
+                    self.run('cmake . ' + cmake.command_line)
+                    self.run('cmake --build . ' + cmake.build_config)
+        """))
         run("conan export . test/testing")
 
         os.makedirs("build")
@@ -155,19 +159,20 @@ class Pkg(ConanFile):
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
             return
-        content = """message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(REQUIRES poco/1.9.4
-                BASIC_SETUP
-                BUILD missing)
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES poco/1.9.4
+                            BASIC_SETUP
+                            BUILD missing)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 ${CONAN_LIBS})
-"""
+            add_executable(md5 md5.cpp)
+            target_link_libraries(md5 ${CONAN_LIBS})
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -179,22 +184,23 @@ target_link_libraries(md5 ${CONAN_LIBS})
         run(cmd)
 
     def test_arch(self):
-        content = """#set(CMAKE_CXX_COMPILER_WORKS 1)
-#set(CMAKE_CXX_ABI_COMPILED 1)
-message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            #set(CMAKE_CXX_COMPILER_WORKS 1)
+            #set(CMAKE_CXX_ABI_COMPILED 1)
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                BUILD missing
-                ARCH armv7)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            BUILD missing
+                            ARCH armv7)
 
-if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv7")
-    message(FATAL_ERROR "ARCHITECTURE IS NOT armv7")
-endif()
-"""
+            if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv7")
+                message(FATAL_ERROR "ARCHITECTURE IS NOT armv7")
+            endif()
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -203,23 +209,24 @@ endif()
 
 
     def test_no_output_dir(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                NO_OUTPUT_DIRS
-                BUILD missing)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            NO_OUTPUT_DIRS
+                            BUILD missing)
 
 
-if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    message(FATAL_ERROR "OUTPUT_DIRS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-endif()
-"""
+            if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+                message(FATAL_ERROR "OUTPUT_DIRS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+            endif()
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -227,21 +234,22 @@ endif()
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % (generator))
 
     def test_build_type(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                BUILD_TYPE None)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            BUILD_TYPE None)
 
-if(NOT ${CONAN_SETTINGS_BUILD_TYPE} STREQUAL "None")
-    message(FATAL_ERROR "CMAKE BUILD TYPE is not None!")
-endif()
-"""
+            if(NOT ${CONAN_SETTINGS_BUILD_TYPE} STREQUAL "None")
+                message(FATAL_ERROR "CMAKE BUILD TYPE is not None!")
+            endif()
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -249,25 +257,26 @@ endif()
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
 
     def test_settings(self):
-        content = """set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_CXX_ABI_COMPILED 1)
-message(STATUS "COMPILING-------")
-cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            message(STATUS "COMPILING-------")
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                SETTINGS arch=armv6
-                SETTINGS cppstd=14)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            SETTINGS arch=armv6
+                            SETTINGS cppstd=14)
 
-if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
-    message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
-endif()
-if(NOT ${CONAN_SETTINGS_CPPSTD} STREQUAL "14")
-    message(FATAL_ERROR "CONAN_SETTINGS_CPPSTD INCORRECT!")
-endif()
-"""
+            if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
+                message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
+            endif()
+            if(NOT ${CONAN_SETTINGS_CPPSTD} STREQUAL "14")
+                message(FATAL_ERROR "CONAN_SETTINGS_CPPSTD INCORRECT!")
+            endif()
+        """)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
@@ -275,46 +284,51 @@ endif()
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
 
     def test_profile_auto(self):
-        content = """cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-set(CONAN_DISABLE_CHECK_COMPILER ON)
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                PROFILE myprofile
-                PROFILE_AUTO build_type
-                PROFILE_AUTO compiler
-                )
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            PROFILE myprofile
+                            PROFILE_AUTO build_type
+                            PROFILE_AUTO compiler
+                            )
 
-if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
-    message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER}" STREQUAL "sun-cc")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
-endif()
-"""
-        save("build/myprofile", """[settings]
-build_type=RelWithDebInfo
-compiler=sun-cc
-compiler.version=5.10""")
+            if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
+                message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER}" STREQUAL "sun-cc")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
+            endif()
+        """)
+        save("build/myprofile", textwrap.dedent("""
+            [settings]
+            build_type=RelWithDebInfo
+            compiler=sun-cc
+            compiler.version=5.10
+        """))
         save("CMakeLists.txt", content)
 
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
 
-        save("build/myprofile", """[settings]
-build_type=RelWithDebInfo
-compiler=Visual Studio
-compiler.version=12
-compiler.runtime=MTd""")
+        save("build/myprofile", textwrap.dedent("""
+            [settings]
+            build_type=RelWithDebInfo
+            compiler=Visual Studio
+            compiler.version=12
+            compiler.runtime=MTd
+        """))
         save("CMakeLists.txt", content)
 
         os.chdir("build")
@@ -322,44 +336,51 @@ compiler.runtime=MTd""")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
 
     def test_profile_auto_all(self):
-        content = """cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
-message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(MD5hasher CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
-set(CONAN_DISABLE_CHECK_COMPILER ON)
-include(conan.cmake)
-conan_cmake_run(BASIC_SETUP
-                PROFILE myprofile
-                PROFILE_AUTO ALL)
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            PROFILE myprofile
+                            PROFILE_AUTO ALL)
 
-if("${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
-    message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER}" STREQUAL "sun-cc")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
-endif()
-if("${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
-    message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
-endif()
-"""
-        save("build/myprofile", """[settings]
-build_type=RelWithDebInfo
-compiler=sun-cc
-compiler.version=5.10""")
+            if("${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+                message(FATAL_ERROR "CONAN_SETTINGS_BUILD_TYPE INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER}" STREQUAL "sun-cc")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER_VERSION}" STREQUAL "12")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_VERSION INCORRECT!")
+            endif()
+            if("${CONAN_SETTINGS_COMPILER_RUNTIME}" STREQUAL "MTd")
+                message(FATAL_ERROR "CONAN_SETTINGS_COMPILER_RUNTIME INCORRECT!")
+            endif()
+        """)
+
+        save("build/myprofile", textwrap.dedent("""
+            [settings]
+            build_type=RelWithDebInfo
+            compiler=sun-cc
+            compiler.version=5.10
+        """))
+
         save("CMakeLists.txt", content)
 
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
 
-        save("build/myprofile", """[settings]
-build_type=RelWithDebInfo
-compiler=Visual Studio
-compiler.version=12
-compiler.runtime=MTd""")
+        save("build/myprofile", textwrap.dedent("""
+            [settings]
+            build_type=RelWithDebInfo
+            compiler=Visual Studio
+            compiler.version=12
+            compiler.runtime=MT
+        """))
         save("CMakeLists.txt", content)
 
         os.chdir("build")
@@ -405,7 +426,8 @@ compiler.runtime=MTd""")
         remote_url = "https://test.test.test"
         verify_ssl = False
 
-        content = textwrap.dedent("""cmake_minimum_required(VERSION 2.8)
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
             project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
