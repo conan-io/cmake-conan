@@ -51,7 +51,7 @@ class CMakeConanTest(unittest.TestCase):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -76,7 +76,7 @@ target_link_libraries(md5 ${CONAN_LIBS})
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -114,7 +114,7 @@ class Pkg(ConanFile):
         content = """set(CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_CXX_ABI_COMPILED 1)
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 set(CONAN_EXPORTED ON)
@@ -157,7 +157,7 @@ class Pkg(ConanFile):
             return
         content = """message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -183,7 +183,7 @@ target_link_libraries(md5 ${CONAN_LIBS})
 #set(CMAKE_CXX_ABI_COMPILED 1)
 message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -207,7 +207,7 @@ endif()
 set(CMAKE_CXX_ABI_COMPILED 1)
 message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -231,7 +231,7 @@ endif()
 set(CMAKE_CXX_ABI_COMPILED 1)
 message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -253,7 +253,7 @@ endif()
 set(CMAKE_CXX_ABI_COMPILED 1)
 message(STATUS "COMPILING-------")
 cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 include(conan.cmake)
@@ -276,7 +276,7 @@ endif()
 
     def test_profile_auto(self):
         content = """cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -323,7 +323,7 @@ compiler.runtime=MTd""")
 
     def test_profile_auto_all(self):
         content = """cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -368,7 +368,7 @@ compiler.runtime=MTd""")
 
     def test_multi_profile(self):
         content = """cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -403,7 +403,7 @@ compiler.version=12
         verify_ssl = False
 
         content = """cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+project(MD5hasher CXX)
 message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
 set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -434,8 +434,8 @@ class LocalTests(unittest.TestCase):
         cls.old_folder = os.getcwd()
         os.environ.update({"CONAN_USER_HOME": folder})
         os.chdir(folder)
-        run("conan install . poco/1.9.4@")
-        run("conan install . poco/1.9.4@ -s build_type=Debug")
+        run("conan install poco/1.9.4@")
+        run("conan install poco/1.9.4@ -s build_type=Debug")
         if platform.system() == "Windows":
             cls.generator = '-G "Visual Studio 15 Win64"'
         else:
@@ -470,7 +470,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -495,7 +495,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -520,7 +520,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -552,7 +552,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -578,7 +578,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -603,7 +603,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -629,7 +629,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -649,7 +649,7 @@ class LocalTests(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(conan_wrapper CXX)
+            project(MD5hasher CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
