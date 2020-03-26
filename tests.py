@@ -434,9 +434,8 @@ class LocalTests(unittest.TestCase):
         cls.old_folder = os.getcwd()
         os.environ.update({"CONAN_USER_HOME": folder})
         os.chdir(folder)
-        run("conan new hello/0.1 -s")
-        run("conan create . user/testing")
-        run("conan create . user/testing -s build_type=Debug")
+        run("conan install . poco/1.9.4@")
+        run("conan install . poco/1.9.4@ -s build_type=Debug")
         if platform.system() == "Windows":
             cls.generator = '-G "Visual Studio 15 Win64"'
         else:
@@ -475,7 +474,7 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP
                             BUILD missing)
 
@@ -500,12 +499,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
             add_executable(md5 md5.cpp)
-            target_link_libraries(md5 CONAN_PKG::Hello)
+            target_link_libraries(md5 CONAN_PKG::poco)
             """)
         save("CMakeLists.txt", content)
 
@@ -530,10 +529,10 @@ class LocalTests(unittest.TestCase):
                             BUILD missing)
 
             add_executable(md5 md5.cpp)
-            target_link_libraries(md5 CONAN_PKG::Hello)
+            target_link_libraries(md5 CONAN_PKG::poco)
             """)
         save("CMakeLists.txt", content)
-        save("conanfile.txt", "[requires]\nhello/0.1@user/testing\n"
+        save("conanfile.txt", "[requires]\npoco/1.9.4\n"
                             "[generators]\ncmake")
 
         os.makedirs("build")
@@ -557,7 +556,7 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP
                             BUILD missing)
 
@@ -583,7 +582,7 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP
                             BUILD missing)
 
@@ -608,7 +607,7 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP
                             CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo"
                             BUILD missing)
@@ -634,12 +633,12 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
             add_executable(md5 md5.cpp)
-            target_link_libraries(md5 CONAN_PKG::Hello)
+            target_link_libraries(md5 CONAN_PKG::poco)
             """)
         save("CMakeLists.txt", content)
         self._build_multi(["Release", "Debug"])
@@ -654,7 +653,7 @@ class LocalTests(unittest.TestCase):
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES hello/0.1@user/testing
+            conan_cmake_run(REQUIRES poco/1.9.4
                             BASIC_SETUP CMAKE_TARGETS
                             CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
 
