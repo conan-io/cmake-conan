@@ -264,6 +264,13 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
+    if (APPLE)
+        # ensure that <string> can include <string.h>
+        if (IS_DIRECTORY /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include)
+            set(compile_options "${compile_option}" "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/")
+        endif()
+    endif()
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
         COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
