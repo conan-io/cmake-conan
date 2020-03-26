@@ -460,8 +460,8 @@ class LocalTests(unittest.TestCase):
         cls.old_folder = os.getcwd()
         os.environ.update({"CONAN_USER_HOME": folder})
         os.chdir(folder)
-        run("conan install poco/1.9.4@")
-        run("conan install poco/1.9.4@ -s build_type=Debug")
+        run("conan install poco/1.9.4@ --build missing")
+        run("conan install poco/1.9.4@ -s build_type=Debug --build missing")
         if platform.system() == "Windows":
             cls.generator = '-G "Visual Studio 15 Win64"'
         else:
