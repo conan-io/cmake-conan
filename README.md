@@ -77,7 +77,7 @@ If you want to use your own ``conanfile.txt`` or ``conanfile.py`` instead of gen
 
 ```cmake
 include(conan.cmake)
-conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
+conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt or absolute
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 ```

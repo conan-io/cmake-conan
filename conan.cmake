@@ -357,7 +357,8 @@ function(conan_cmake_install)
     endif()
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
-      set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      get_filename_component(CONANFILE ${ARGUMENTS_CONANFILE}
+                             ABSOLUTE BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
       # A conan file has been specified - apply specified options as well if provided
       foreach(ARG ${ARGUMENTS_OPTIONS})
           set(CONAN_OPTIONS ${CONAN_OPTIONS} -o=${ARG})

@@ -544,6 +544,60 @@ class LocalTests(unittest.TestCase):
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    def test_existing_conanfile_with_relative_path(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE conan/conanfile.txt
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        save("conan/conanfile.txt", "[requires]\nHello/0.1@user/testing\n"
+                            "[generators]\ncmake")
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
+    def test_existing_conanfile_with_absolute_path(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE ${CMAKE_SOURCE_DIR}/conanfile.txt
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::Hello)
+            """)
+        save("CMakeLists.txt", content)
+        save("conanfile.txt", "[requires]\nHello/0.1@user/testing\n"
+                            "[generators]\ncmake")
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
     def test_version_in_cmake(self):
         with open("conan.cmake", "r") as handle:
             if "# version: " not in handle.read():
