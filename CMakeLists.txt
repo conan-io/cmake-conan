@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(MD5hasher)
+project(FormatOutput)
 
 add_definitions("-std=c++11")
 
@@ -11,11 +11,11 @@ add_definitions("-std=c++11")
 
 # include(${CMAKE_BINARY_DIR}/conan.cmake)
 include(conan.cmake)
-conan_cmake_run(REQUIRES poco/1.9.4
+conan_cmake_run(REQUIRES fmt/6.1.2
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
  
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 CONAN_PKG::poco)
-#target_link_libraries(md5 ${CONAN_LIBS})
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::fmt)
+#target_link_libraries(main ${CONAN_LIBS})

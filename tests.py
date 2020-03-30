@@ -36,7 +36,7 @@ class CMakeConanTest(unittest.TestCase):
         CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
         folder = tempfile.mkdtemp(suffix='conans', dir=CONAN_TEST_FOLDER)
         shutil.copy2("conan.cmake", os.path.join(folder, "conan.cmake"))
-        shutil.copy2("md5.cpp", os.path.join(folder, "md5.cpp"))
+        shutil.copy2("main.cpp", os.path.join(folder, "main.cpp"))
         os.chdir(folder)
         folder = tempfile.mkdtemp(suffix="conan", dir=CONAN_TEST_FOLDER)
         self.old_env = dict(os.environ)
@@ -52,17 +52,18 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
+            add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES poco/1.9.4
+            conan_cmake_run(REQUIRES fmt/6.1.2
                             BASIC_SETUP
                             UPDATE
                             BUILD missing)
 
-            add_executable(md5 md5.cpp)
-            target_link_libraries(md5 ${CONAN_LIBS})
+            add_executable(main main.cpp)
+            target_link_libraries(main ${CONAN_LIBS})
         """)
         save("CMakeLists.txt", content)
 
@@ -70,7 +71,7 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "md5"])
+        cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
     def test_existing_conanfile_py(self):
@@ -78,7 +79,8 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
+            add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -88,15 +90,15 @@ class CMakeConanTest(unittest.TestCase):
                             NO_IMPORTS
                             INSTALL_ARGS --update)
 
-            add_executable(md5 md5.cpp)
-            target_link_libraries(md5 CONAN_PKG::poco)
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::fmt)
         """)
         save("CMakeLists.txt", content)
         save("conan/conanfile.py", textwrap.dedent("""
             from conans import ConanFile
 
             class Pkg(ConanFile):
-                requires = "poco/1.9.4"
+                requires = "fmt/6.1.2"
                 generators = "cmake"
                 # Defining the settings is necessary now to cache them
                 settings = "os", "compiler", "arch", "build_type"
@@ -109,7 +111,7 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "md5"])
+        cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
     def test_exported_package(self):
@@ -117,7 +119,8 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
+            add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             set(CONAN_EXPORTED ON)
@@ -126,8 +129,8 @@ class CMakeConanTest(unittest.TestCase):
                             BASIC_SETUP CMAKE_TARGETS
                             BUILD missing)
 
-            add_executable(md5 md5.cpp)
-            target_link_libraries(md5 CONAN_PKG::poco)
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::fmt)
         """)
         save("CMakeLists.txt", content)
         save("conanfile.py", textwrap.dedent("""
@@ -136,9 +139,9 @@ class CMakeConanTest(unittest.TestCase):
             class Pkg(ConanFile):
                 name = "Test"
                 version = "0.1"
-                requires = "poco/1.9.4"
+                requires = "fmt/6.1.2"
                 generators = "cmake"
-                exports = ["CMakeLists.txt", "conan.cmake", "md5.cpp"]
+                exports = ["CMakeLists.txt", "conan.cmake", "main.cpp"]
                 settings = "os", "arch", "compiler", "build_type"
 
                 def build(self):
@@ -162,16 +165,16 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
-            conan_cmake_run(REQUIRES poco/1.9.4
+            conan_cmake_run(REQUIRES fmt/6.1.2
                             BASIC_SETUP
                             BUILD missing)
 
-            add_executable(md5 md5.cpp)
-            target_link_libraries(md5 ${CONAN_LIBS})
+            add_executable(main main.cpp)
+            target_link_libraries(main ${CONAN_LIBS})
         """)
         save("CMakeLists.txt", content)
 
@@ -180,7 +183,7 @@ class CMakeConanTest(unittest.TestCase):
         # Only works cmake>=3.9
         run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "bin", "md5"])
+        cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
     def test_arch(self):
@@ -189,7 +192,7 @@ class CMakeConanTest(unittest.TestCase):
             #set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -214,7 +217,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -239,7 +242,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -262,7 +265,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             include(conan.cmake)
@@ -286,7 +289,7 @@ class CMakeConanTest(unittest.TestCase):
     def test_profile_auto(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -338,7 +341,7 @@ class CMakeConanTest(unittest.TestCase):
     def test_profile_auto_all(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -390,7 +393,7 @@ class CMakeConanTest(unittest.TestCase):
     def test_multi_profile(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             set(CONAN_DISABLE_CHECK_COMPILER ON)
@@ -428,7 +431,7 @@ class CMakeConanTest(unittest.TestCase):
 
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
-            project(MD5hasher CXX)
+            project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
             set(CONAN_DISABLE_CHECK_COMPILER ON)

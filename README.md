@@ -23,7 +23,7 @@ example](https://docs.conan.io/en/latest/getting_started.html#getting-started) f
 ```cmake
 
 cmake_minimum_required(VERSION 2.8)
-project(MD5hasher CXX)
+project(FormatOutput CXX)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
@@ -34,12 +34,12 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_run(REQUIRES poco/1.9.4
+conan_cmake_run(REQUIRES fmt/6.1.2
                 BASIC_SETUP 
                 BUILD missing)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 ${CONAN_LIBS})
+add_executable(main main.cpp)
+target_link_libraries(main ${CONAN_LIBS})
 ```
 
 ## conan_cmake_run() options
@@ -47,7 +47,7 @@ target_link_libraries(md5 ${CONAN_LIBS})
 
 ### REQUIRES, OPTIONS
 ```cmake
-conan_cmake_run(REQUIRES poco/1.9.4
+conan_cmake_run(REQUIRES fmt/1.9.4
                          cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
@@ -63,12 +63,12 @@ If you want to use targets, you could do:
 
 ```cmake
 include(conan.cmake)
-conan_cmake_run(REQUIRES poco/1.9.4
+conan_cmake_run(REQUIRES fmt/1.9.4
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
-add_executable(md5 md5.cpp)
-target_link_libraries(md5 CONAN_PKG::poco)
+add_executable(main main.cpp)
+target_link_libraries(main CONAN_PKG::fmt)
 ```
 
 This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
