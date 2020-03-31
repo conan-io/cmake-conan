@@ -2,5 +2,5 @@
 
 int main() {
     fmt::print(fg(fmt::terminal_color::cyan), "Hello!\n");
-    return EXIT_SUCCESS;
+    return 1;
 }
