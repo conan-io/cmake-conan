@@ -517,6 +517,34 @@ class LocalTests(unittest.TestCase):
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    def test_generators(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES Hello/0.1@user/testing
+                            GENERATORS cmake_find_package cmake_paths
+                            NO_LOAD 1
+                            BUILD missing)
+
+            include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+            find_package(Hello REQUIRED)
+            add_executable(main main.cpp)
+            target_link_libraries(main Hello::Hello)
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "main"])
+        run(cmd)
+
     def test_existing_conanfile(self):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
