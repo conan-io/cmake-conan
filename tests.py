@@ -535,6 +535,8 @@ class LocalTests(unittest.TestCase):
             find_package(Hello REQUIRED)
             add_executable(main main.cpp)
             target_link_libraries(main Hello::Hello)
+            set_target_properties(main PROPERTIES
+                                  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
             """)
         save("CMakeLists.txt", content)
 
@@ -542,7 +544,7 @@ class LocalTests(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
         run("cmake --build . --config Release")
-        cmd = os.sep.join([".", "main"])
+        cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
     def test_existing_conanfile(self):
