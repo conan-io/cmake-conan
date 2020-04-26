@@ -264,9 +264,13 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
+    if(APPLE)
+        set(xcode_sysroot_option "--sysroot=${CMAKE_OSX_SYSROOT}")
+    endif()
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
-        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
+        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${xcode_sysroot_option} ${compile_options} -E -dM -
         OUTPUT_VARIABLE string_defines
     )
 
