@@ -549,24 +549,28 @@ endmacro()
 
 function(conan_add_remote)
     # Adds a remote
-    # Arguments URL and NAME are required, INDEX and COMMAND are optional
+    # Arguments URL and NAME are required, INDEX, COMMAND and VERIFY_SSL are optional
     # Example usage:
     #    conan_add_remote(NAME bincrafters INDEX 1
-    #       URL https://api.bintray.com/conan/bincrafters/public-conan)
-    set(oneValueArgs URL NAME INDEX COMMAND)
+    #       URL https://api.bintray.com/conan/bincrafters/public-conan
+    #       VERIFY_SSL True)
+    set(oneValueArgs URL NAME INDEX COMMAND VERIFY_SSL)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
 
     if(DEFINED CONAN_INDEX)
         set(CONAN_INDEX_ARG "-i ${CONAN_INDEX}")
     endif()
-    if(CONAN_COMMAND)
-       set(CONAN_CMD ${CONAN_COMMAND})
+    if(DEFINED CONAN_COMMAND)
+        set(CONAN_CMD ${CONAN_COMMAND})
     else()
         conan_check(REQUIRED)
     endif()
-    message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL})")
-    execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_URL}
-      ${CONAN_INDEX_ARG} -f)
+    set(CONAN_VERIFY_SSL_ARG "True")
+    if(DEFINED CONAN_VERIFY_SSL)
+        set(CONAN_VERIFY_SSL_ARG ${CONAN_VERIFY_SSL})
+    endif()
+    message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL}) verify ssl (${CONAN_VERIFY_SSL_ARG})")
+    execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_INDEX_ARG} -f ${CONAN_URL} ${CONAN_VERIFY_SSL_ARG})
 endfunction()
 
 macro(conan_config_install)
