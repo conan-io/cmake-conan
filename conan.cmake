@@ -264,6 +264,14 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
+    if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL AppleClang OR ${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL Clang)
+        foreach(cxx_flag ${CMAKE_CXX_FLAGS})
+            if(cxx_flag MATCHES "stdlib")
+                set(compile_options ${compile_options} ${cxx_flag})
+            endif()
+        endforeach()
+    endif()
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
         COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
