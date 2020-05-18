@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
-project(conan_wrapper CXX)
+cmake_minimum_required(VERSION 2.8.12)
+project(FormatOutput)
+
+add_definitions("-std=c++11")
 
 # if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 #   message(STATUS "Downloading conan.cmake from https://github.com/memsharded/cmake-conan")
@@ -9,10 +11,11 @@ project(conan_wrapper CXX)
 
 # include(${CMAKE_BINARY_DIR}/conan.cmake)
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES fmt/6.1.2
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
+ 
 add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
-# target_link_libraries(main ${CONAN_LIBS})
+target_link_libraries(main CONAN_PKG::fmt)
+#target_link_libraries(main ${CONAN_LIBS})

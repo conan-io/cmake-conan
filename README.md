@@ -17,11 +17,10 @@ You probably want to use a tagged release to ensure controlled upgrades.
 You can just clone or grab the *conan.cmake* file and put in in your project.
 Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to point to your desired release:
 
-
 ```cmake
 
 cmake_minimum_required(VERSION 2.8)
-project(myproject CXX)
+project(FormatOutput CXX)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
@@ -32,7 +31,7 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES fmt/6.1.2
                 BASIC_SETUP 
                 BUILD missing)
 
@@ -45,8 +44,8 @@ target_link_libraries(main ${CONAN_LIBS})
 
 ### REQUIRES, OPTIONS
 ```cmake
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                         Bye/2.1@otheruser/testing
+conan_cmake_run(REQUIRES fmt/1.9.4
+                         cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
                 )
@@ -61,12 +60,12 @@ If you want to use targets, you could do:
 
 ```cmake
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES fmt/1.9.4
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
 add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
+target_link_libraries(main CONAN_PKG::fmt)
 ```
 
 This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
