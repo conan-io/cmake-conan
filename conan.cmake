@@ -73,7 +73,6 @@ function(conan_cmake_settings result)
     message(STATUS "Conan: Automatic detection of conan settings from cmake")
 
     parse_arguments(${ARGV})
-
     if(ARGUMENTS_BUILD_TYPE)
         set(_CONAN_SETTING_BUILD_TYPE ${ARGUMENTS_BUILD_TYPE})
     elseif(CMAKE_BUILD_TYPE)
@@ -357,7 +356,11 @@ function(conan_cmake_install)
     endif()
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
-      set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      if(IS_ABSOLUTE ${ARGUMENTS_CONANFILE})
+          set(CONANFILE ${ARGUMENTS_CONANFILE})
+      else()
+          set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      endif()
       # A conan file has been specified - apply specified options as well if provided
       foreach(ARG ${ARGUMENTS_OPTIONS})
           set(CONAN_OPTIONS ${CONAN_OPTIONS} -o=${ARG})
@@ -465,7 +468,7 @@ endmacro()
 
 macro(conan_cmake_run)
     parse_arguments(${ARGV})
-    
+
     if(ARGUMENTS_CONFIGURATION_TYPES AND NOT CMAKE_CONFIGURATION_TYPES)
         message(WARNING "CONFIGURATION_TYPES should only be specified for multi-configuration generators")
     elseif(ARGUMENTS_CONFIGURATION_TYPES AND ARGUMENTS_BUILD_TYPE)

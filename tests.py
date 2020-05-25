@@ -478,10 +478,10 @@ class LocalTests(unittest.TestCase):
                      os.path.join(folder, "conan.cmake"))
         os.chdir(folder)
         content = textwrap.dedent("""
-            #include "hello.h"	
+            #include "hello.h"
 
-            int main(){	
-                hello();	
+            int main(){
+                hello();
             }
         """)
         save("main.cpp", content)
@@ -578,10 +578,38 @@ class LocalTests(unittest.TestCase):
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
 
+    def test_absolute_path_conanfile(self):
+        content = textwrap.dedent("""
+            set(CMAKE_CXX_COMPILER_WORKS 1)
+            set(CMAKE_CXX_ABI_COMPILED 1)
+            cmake_minimum_required(VERSION 2.8)
+            project(ProjectHello CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE ${CMAKE_BINARY_DIR}/conanfile.txt
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::hello)
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        save("build/conanfile.txt", "[requires]\nhello/1.0\n"
+                            "[generators]\ncmake")
+
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % self.generator)
+        run("cmake --build . --config Release")
+        cmd = os.sep.join([".", "bin", "main"])
+        run(cmd)
+
     def test_version_in_cmake(self):
         with open("conan.cmake", "r") as handle:
             if "# version: " not in handle.read():
-                raise Exception("Version missing in conan.cmake") 
+                raise Exception("Version missing in conan.cmake")
 
     @unittest.skipIf(platform.system() != "Windows", "toolsets only in Windows")
     def test_vs_toolset(self):
