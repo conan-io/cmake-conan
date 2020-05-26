@@ -586,25 +586,23 @@ macro(conan_config_install)
     endif()
 
     if(DEFINED CONAN_VERIFY_SSL)
-        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --verify-ssl ${CONAN_VERIFY_SSL}")
+        string(STRIP "${CONAN_CONFIG_INSTALL_ARGS} --verify-ssl=${CONAN_VERIFY_SSL}" CONAN_CONFIG_INSTALL_ARGS)
     endif()
 
     if(DEFINED CONAN_TYPE)
-        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --type ${CONAN_TYPE}")
+        string(STRIP "${CONAN_CONFIG_INSTALL_ARGS} --type=${CONAN_TYPE}" CONAN_CONFIG_INSTALL_ARGS)
     endif()
 
     if(DEFINED CONAN_ARGS)
-        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --args \"${CONAN_ARGS}\"")
+        string(STRIP "${CONAN_CONFIG_INSTALL_ARGS} --args=\"${CONAN_ARGS}\"" CONAN_CONFIG_INSTALL_ARGS)
     endif()
 
     if(DEFINED CONAN_SOURCE)
-        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --source-folder ${CONAN_SOURCE}")
+        string(STRIP "${CONAN_CONFIG_INSTALL_ARGS} --source-folder=${CONAN_SOURCE}" CONAN_CONFIG_INSTALL_ARGS)
     endif()
 
     if(DEFINED CONAN_TARGET)
-        set(CONAN_CONFIG_INSTALL_ARGS "${CONAN_CONFIG_INSTALL_ARGS} --target-folder ${CONAN_TARGET}")
+        string(STRIP "${CONAN_CONFIG_INSTALL_ARGS} --target-folder=${CONAN_TARGET}" CONAN_CONFIG_INSTALL_ARGS)
     endif()
-
-    message(STATUS "Conan: Installing config from ${CONAN_ITEM}")
-    execute_process(COMMAND "${CONAN_CMD} config install" ${CONAN_CONFIG_INSTALL_ARGS} ${CONAN_ITEM})
+    execute_process(COMMAND "${CONAN_CMD} config install" ${CONAN_ITEM} ${CONAN_CONFIG_INSTALL_ARGS})
 endmacro()
