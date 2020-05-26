@@ -606,5 +606,5 @@ macro(conan_config_install)
     endif()
 
     message(STATUS "Conan: Installing config from ${CONAN_ITEM}")
-    execute_process(COMMAND ${CONAN_CMD} config install ${CONAN_CONFIG_INSTALL_ARGS} ${CONAN_ITEM})
+    execute_process(COMMAND "${CONAN_CMD} config install" ${CONAN_CONFIG_INSTALL_ARGS} ${CONAN_ITEM})
 endmacro()
