@@ -223,6 +223,14 @@ function(conan_cmake_settings result)
     foreach(ARG ${_APPLIED_PROFILES})
         set(_SETTINGS ${_SETTINGS} -pr=${ARG})
     endforeach()
+    foreach(ARG ${ARGUMENTS_BUILD_PROFILE})
+        conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
+        set(_SETTINGS ${_SETTINGS} -pr:b=${ARG})
+    endforeach()
+    foreach(ARG ${ARGUMENTS_HOST_PROFILE})
+        conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
+        set(_SETTINGS ${_SETTINGS} -pr:h=${ARG})
+    endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
         set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
@@ -323,7 +331,7 @@ macro(parse_arguments)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
                      PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS CONFIGURATION_TYPES)
+                     INSTALL_ARGS CONFIGURATION_TYPES BUILD_PROFILE HOST_PROFILE)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
@@ -518,23 +526,29 @@ endmacro()
 
 macro(conan_check)
     # Checks conan availability in PATH
-    # Arguments REQUIRED and VERSION are optional
+    # Arguments REQUIRED, DETECT_QUIET and VERSION are optional
     # Example usage:
     #    conan_check(VERSION 1.0.0 REQUIRED)
-    message(STATUS "Conan: checking conan executable")
-    set(options REQUIRED)
+    set(options REQUIRED DETECT_QUIET)
     set(oneValueArgs VERSION)
     cmake_parse_arguments(CONAN "${options}" "${oneValueArgs}" "" ${ARGN})
+    if(NOT CONAN_DETECT_QUIET)
+        message(STATUS "Conan: checking conan executable")
+    endif()
 
     find_program(CONAN_CMD conan)
     if(NOT CONAN_CMD AND CONAN_REQUIRED)
         message(FATAL_ERROR "Conan executable not found!")
     endif()
-    message(STATUS "Conan: Found program ${CONAN_CMD}")
+    if(NOT CONAN_DETECT_QUIET)
+        message(STATUS "Conan: Found program ${CONAN_CMD}")
+    endif()
     execute_process(COMMAND ${CONAN_CMD} --version
                     OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
                     ERROR_VARIABLE CONAN_VERSION_OUTPUT)
-    message(STATUS "Conan: Version found ${CONAN_VERSION_OUTPUT}")
+    if(NOT CONAN_DETECT_QUIET)
+        message(STATUS "Conan: Version found ${CONAN_VERSION_OUTPUT}")
+    endif()
 
     if(DEFINED CONAN_VERSION)
         string(REGEX MATCH ".*Conan version ([0-9]+\.[0-9]+\.[0-9]+)" FOO
