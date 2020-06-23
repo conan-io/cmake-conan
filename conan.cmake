@@ -264,9 +264,13 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
+    # Take into account any compilation flags (e.g. --sysroot)
+    set(compile_flags ${CMAKE_CXX_FLAGS})
+    separate_arguments(compile_flags)
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
-        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
+        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_flags} ${compile_options} -E -dM -
         OUTPUT_VARIABLE string_defines
     )
 
