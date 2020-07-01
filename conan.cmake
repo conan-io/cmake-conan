@@ -528,7 +528,7 @@ macro(conan_check)
 
     find_program(CONAN_CMD conan)
     if(NOT CONAN_CMD AND CONAN_REQUIRED)
-        message(FATAL_ERROR "Conan executable not found!")
+        message(FATAL_ERROR "Conan executable not found! Please install conan.")
     endif()
     message(STATUS "Conan: Found program ${CONAN_CMD}")
     execute_process(COMMAND ${CONAN_CMD} --version
