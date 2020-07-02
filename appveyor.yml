@@ -7,7 +7,6 @@ environment:
   PYTHON_ARCH: "32"
 
 install:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - set PATH=%PYTHON%/Scripts/;%PYTHON%;%PATH%
   - pip.exe install conan nose
   - conan config set general.revisions_enabled=1
