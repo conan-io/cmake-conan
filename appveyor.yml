@@ -11,6 +11,7 @@ install:
   - pip.exe install conan nose
   - conan config set general.revisions_enabled=1
   - conan install cmake/3.16.4@ -g=virtualrunenv
+  - sleep 600
 
 test_script:
   - activate_run.bat
