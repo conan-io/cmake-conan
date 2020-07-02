@@ -13,6 +13,7 @@ install:
 
 test_script:
   - activate_run.bat
+  - cmake --version
   - nosetests . -A "not cmake39"
   - deactivate_run.bat
   - nosetests . -A "cmake39"
