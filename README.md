@@ -238,6 +238,7 @@ does not identify conan as command, even if it is +x and it is in the path.
 include(conan.cmake)
 conan_cmake_run(...
                 CONAN_COMMAND "path_to_conan")
+```
 
 ## Other macros and functions
 
