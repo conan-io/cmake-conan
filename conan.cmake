@@ -72,7 +72,7 @@ function(conan_cmake_settings result)
 
     message(STATUS "Conan: Automatic detection of conan settings from cmake")
 
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
 
     if(ARGUMENTS_BUILD_TYPE)
         set(_CONAN_SETTING_BUILD_TYPE ${ARGUMENTS_BUILD_TYPE})
@@ -103,7 +103,10 @@ function(conan_cmake_settings result)
         if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
             set(CONAN_SYSTEM_NAME Macos)
         endif()
-        set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD WindowsStore)
+        if(${CMAKE_SYSTEM_NAME} STREQUAL "QNX")
+            set(CONAN_SYSTEM_NAME Neutrino)
+        endif()        
+        set(CONAN_SUPPORTED_PLATFORMS Windows Linux Macos Android iOS FreeBSD WindowsStore WindowsCE watchOS tvOS FreeBSD SunOS AIX Arduino Emscripten Neutrino)
         list (FIND CONAN_SUPPORTED_PLATFORMS "${CONAN_SYSTEM_NAME}" _index)
         if (${_index} GREATER -1)
             #check if the cmake system is a conan supported one
@@ -318,7 +321,7 @@ function(conan_cmake_detect_vs_runtime result)
 endfunction()
 
 
-macro(parse_arguments)
+macro(conan_parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
@@ -333,7 +336,7 @@ function(conan_cmake_install)
     # --build when argument is 'BUILD all' (which builds all packages from source)
     # Argument CONAN_COMMAND, to specify the conan path, e.g. in case of running from source
     # cmake does not identify conan as command, even if it is +x and it is in the path
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
 
     if(CONAN_CMAKE_MULTI)
         set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_multi)
@@ -357,7 +360,11 @@ function(conan_cmake_install)
     endif()
     set(CONAN_OPTIONS "")
     if(ARGUMENTS_CONANFILE)
-      set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      if(IS_ABSOLUTE ${ARGUMENTS_CONANFILE})
+          set(CONANFILE ${ARGUMENTS_CONANFILE})
+      else()
+          set(CONANFILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARGUMENTS_CONANFILE})
+      endif()
       # A conan file has been specified - apply specified options as well if provided
       foreach(ARG ${ARGUMENTS_OPTIONS})
           set(CONAN_OPTIONS ${CONAN_OPTIONS} -o=${ARG})
@@ -406,7 +413,7 @@ endfunction()
 
 
 function(conan_cmake_setup_conanfile)
-  parse_arguments(${ARGV})
+  conan_parse_arguments(${ARGV})
   if(ARGUMENTS_CONANFILE)
     get_filename_component(_CONANFILE_NAME ${ARGUMENTS_CONANFILE} NAME)
     # configure_file will make sure cmake re-runs when conanfile is updated
@@ -421,7 +428,7 @@ function(conan_cmake_generate_conanfile)
   # Generate, writing in disk a conanfile.txt with the requires, options, and imports
   # specified as arguments
   # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR)
-  parse_arguments(${ARGV})
+  conan_parse_arguments(${ARGV})
   set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
 
   file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
@@ -464,7 +471,7 @@ endmacro()
 
 
 macro(conan_cmake_run)
-    parse_arguments(${ARGV})
+    conan_parse_arguments(${ARGV})
     
     if(ARGUMENTS_CONFIGURATION_TYPES AND NOT CMAKE_CONFIGURATION_TYPES)
         message(WARNING "CONFIGURATION_TYPES should only be specified for multi-configuration generators")
@@ -528,7 +535,7 @@ macro(conan_check)
 
     find_program(CONAN_CMD conan)
     if(NOT CONAN_CMD AND CONAN_REQUIRED)
-        message(FATAL_ERROR "Conan executable not found!")
+        message(FATAL_ERROR "Conan executable not found! Please install conan.")
     endif()
     message(STATUS "Conan: Found program ${CONAN_CMD}")
     execute_process(COMMAND ${CONAN_CMD} --version
@@ -537,7 +544,7 @@ macro(conan_check)
     message(STATUS "Conan: Version found ${CONAN_VERSION_OUTPUT}")
 
     if(DEFINED CONAN_VERSION)
-        string(REGEX MATCH ".*Conan version ([0-9]+\.[0-9]+\.[0-9]+)" FOO
+        string(REGEX MATCH ".*Conan version ([0-9]+\\.[0-9]+\\.[0-9]+)" FOO
             "${CONAN_VERSION_OUTPUT}")
         if(${CMAKE_MATCH_1} VERSION_LESS ${CONAN_VERSION})
             message(FATAL_ERROR "Conan outdated. Installed: ${CMAKE_MATCH_1}, \
