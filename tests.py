@@ -436,7 +436,7 @@ class CMakeConanTest(unittest.TestCase):
 
             set(CONAN_DISABLE_CHECK_COMPILER ON)
             include(conan.cmake)
-            conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\")
+            conan_config_install(ITEM \"${PROJECT_SOURCE_DIR}/config/\" VERIFY_SSL false)
         """)
 
         save("config/remotes.txt", "%s %s %r" % (remote_name, remote_url, verify_ssl))
