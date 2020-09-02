@@ -254,9 +254,12 @@ endfunction()
 function(conan_cmake_detect_unix_libcxx result)
     # Take into account any -stdlib in compile options
     get_directory_property(compile_options DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_OPTIONS)
+    string(GENEX_STRIP "${compile_options}" compile_options)
 
     # Take into account any _GLIBCXX_USE_CXX11_ABI in compile definitions
     get_directory_property(defines DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
+    string(GENEX_STRIP "${defines}" defines)
+
     foreach(define ${defines})
         if(define MATCHES "_GLIBCXX_USE_CXX11_ABI")
             if(define MATCHES "^-D")
@@ -267,9 +270,38 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
+    # add additional compiler options ala cmRulePlaceholderExpander::ExpandRuleVariable
+    set(EXPAND_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+    if(CMAKE_CXX_COMPILER_ARG1)
+        # CMake splits CXX="foo bar baz" into CMAKE_CXX_COMPILER="foo", CMAKE_CXX_COMPILER_ARG1="bar baz"
+        # without this, ccache, winegcc, or other wrappers might lose all their arguments
+        separate_arguments(SPLIT_CXX_COMPILER_ARG1 NATIVE_COMMAND ${CMAKE_CXX_COMPILER_ARG1})
+        list(APPEND EXPAND_CXX_COMPILER ${SPLIT_CXX_COMPILER_ARG1})
+    endif()
+
+    if(CMAKE_CXX_COMPILE_OPTIONS_TARGET AND CMAKE_CXX_COMPILER_TARGET)
+        # without --target= we may be calling the wrong underlying GCC
+        list(APPEND EXPAND_CXX_COMPILER "${CMAKE_CXX_COMPILE_OPTIONS_TARGET}${CMAKE_CXX_COMPILER_TARGET}")
+    endif()
+
+    if(CMAKE_CXX_COMPILE_OPTIONS_EXTERNAL_TOOLCHAIN AND CMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN)
+        list(APPEND EXPAND_CXX_COMPILER "${CMAKE_CXX_COMPILE_OPTIONS_EXTERNAL_TOOLCHAIN}${CMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN}")
+    endif()
+
+    if(CMAKE_CXX_COMPILE_OPTIONS_SYSROOT)
+        # without --sysroot= we may find the wrong #include <string>
+        if(CMAKE_SYSROOT_COMPILE)
+            list(APPEND EXPAND_CXX_COMPILER "${CMAKE_CXX_COMPILE_OPTIONS_SYSROOT}${CMAKE_SYSROOT_COMPILE}")
+        elseif(CMAKE_SYSROOT)
+            list(APPEND EXPAND_CXX_COMPILER "${CMAKE_CXX_COMPILE_OPTIONS_SYSROOT}${CMAKE_SYSROOT}")
+        endif()
+    endif()
+
+    separate_arguments(SPLIT_CXX_FLAGS NATIVE_COMMAND ${CMAKE_CXX_FLAGS})
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
-        COMMAND ${CMAKE_CXX_COMPILER} -x c++ ${compile_options} -E -dM -
+        COMMAND ${EXPAND_CXX_COMPILER} ${SPLIT_CXX_FLAGS} -x c++ ${compile_options} -E -dM -
         OUTPUT_VARIABLE string_defines
     )
 
