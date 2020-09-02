@@ -26,7 +26,8 @@ project(FormatOutput CXX)
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
    file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
-                 "${CMAKE_BINARY_DIR}/conan.cmake")
+                 "${CMAKE_BINARY_DIR}/conan.cmake" 
+                 TLS_VERIFY ON)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
@@ -228,6 +229,18 @@ include(conan.cmake)
 conan_cmake_run(...
                 GENERATORS virtualrunenv)
 ```
+
+### CONAN_COMMAND
+
+Use ``CONAN_COMMAND`` argument to specify the conan path, e.g. in case of running from source cmake
+does not identify conan as command, even if it is +x and it is in the path.
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                CONAN_COMMAND "path_to_conan")
+```
+
 ## Other macros and functions
 
 ### conan_check()
