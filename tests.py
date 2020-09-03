@@ -47,6 +47,26 @@ class CMakeConanTest(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.old_env)
 
+    def test_conan_add_remote(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(FormatOutput CXX)
+            include(conan.cmake)            
+            conan_add_remote(NAME someremote 
+                             INDEX 0 
+                             URL http://someremote
+                             VERIFY_SSL False)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        run("conan remote list > output_remotes.txt")
+        with open('output_remotes.txt', 'r') as file:
+            data = file.read()
+            print(data)
+            assert "someremote: http://someremote [Verify SSL: False]" in data      
+
     def test_global_update(self):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
