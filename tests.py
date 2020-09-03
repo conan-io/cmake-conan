@@ -310,7 +310,6 @@ class CMakeConanTest(unittest.TestCase):
                 message(FATAL_ERROR "CONAN_SETTINGS DUPLICATED!")
             endif()            
         """.format(custom_setting, settings_check))
-        print(content)
         save("CMakeLists.txt", content)
 
         os.makedirs("build")
