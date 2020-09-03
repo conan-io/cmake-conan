@@ -286,6 +286,37 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
 
+    # https://github.com/conan-io/cmake-conan/issues/255
+    # Manual settings were added in the end to automatic CMake settings, so they were not
+    # taken into account because only the first one was considered by CMake
+    # This tests that the settings list does only contain the manual specified setting once.
+    def test_settings_removed_from_autodetect(self):
+        if platform.system() == "Windows":
+            settings_check = "compiler.runtime"
+            custom_setting = "{}=MTd".format(settings_check)
+        else:
+            settings_check = "compiler.libcxx"
+            custom_setting = "{}=libstdc++".format(settings_check)
+
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_run(BASIC_SETUP
+                            SETTINGS {})
+            STRING(REGEX MATCHALL "compiler.libcxx" matches "${{settings}}")
+            list(LENGTH matches n_matches)
+            if(NOT n_matches EQUAL 1)
+                message(FATAL_ERROR "CONAN_SETTINGS DUPLICATED!")
+            endif()            
+        """.format(custom_setting, settings_check))
+        print(content)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+
     def test_profile_auto(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
