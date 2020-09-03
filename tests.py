@@ -64,7 +64,6 @@ class CMakeConanTest(unittest.TestCase):
         run("conan remote list > output_remotes.txt")
         with open('output_remotes.txt', 'r') as file:
             data = file.read()
-            print(data)
             assert "someremote: http://someremote [Verify SSL: False]" in data      
 
     def test_global_update(self):
