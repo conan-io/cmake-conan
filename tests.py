@@ -304,7 +304,7 @@ class CMakeConanTest(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
                             SETTINGS {})
-            STRING(REGEX MATCHALL "compiler.libcxx" matches "${{settings}}")
+            STRING(REGEX MATCHALL "{}" matches "${{settings}}")
             list(LENGTH matches n_matches)
             if(NOT n_matches EQUAL 1)
                 message(FATAL_ERROR "CONAN_SETTINGS DUPLICATED!")
