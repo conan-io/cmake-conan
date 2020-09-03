@@ -306,9 +306,13 @@ function(conan_cmake_detect_unix_libcxx result)
 
     separate_arguments(SPLIT_CXX_FLAGS NATIVE_COMMAND ${CMAKE_CXX_FLAGS})
 
+    if(CMAKE_OSX_SYSROOT)
+        set(xcode_sysroot_option "--sysroot=${CMAKE_OSX_SYSROOT}")
+    endif()
+
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E echo "#include <string>"
-        COMMAND ${EXPAND_CXX_COMPILER} ${SPLIT_CXX_FLAGS} -x c++ ${compile_options} -E -dM -
+        COMMAND ${EXPAND_CXX_COMPILER} ${SPLIT_CXX_FLAGS} -x c++ ${xcode_sysroot_option} ${compile_options} -E -dM -
         OUTPUT_VARIABLE string_defines
     )
 

@@ -47,6 +47,30 @@ class CMakeConanTest(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.old_env)
 
+    # https://github.com/conan-io/cmake-conan/issues/159
+    @unittest.skipIf(platform.system() != "Darwin", "Error message appears just in Macos")
+    def test_macos_sysroot_warning(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(FormatOutput CXX)
+            set(CMAKE_CXX_STANDARD 11)
+            include(conan.cmake)
+            conan_cmake_run(REQUIRES fmt/6.1.2
+                            BASIC_SETUP
+                            BUILD missing)
+
+            add_executable(main main.cpp)
+            target_link_libraries(main ${CONAN_LIBS})
+        """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release 2> stderr_output.txt" % generator)
+        with open('stderr_output.txt', 'r') as file:
+            data = file.read()
+            assert "#include_next <string.h>" not in data
+
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
