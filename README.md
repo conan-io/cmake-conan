@@ -256,12 +256,14 @@ conan_check(VERSION 1.0.0 REQUIRED)
 ### conan_add_remote()
 
 Adds a remote.
-Arguments ``URL`` and ``NAME`` are required, ``INDEX`` is optional.
+Arguments ``URL`` and ``NAME`` are required, ``INDEX`` and ``VERIFY_SSL`` are optional.
 
 Example usage:
 ```
-conan_add_remote(NAME bincrafters INDEX 1
-            URL https://api.bintray.com/conan/bincrafters/public-conan)
+conan_add_remote(NAME bincrafters 
+                 INDEX 1
+                 URL https://api.bintray.com/conan/bincrafters/public-conan
+                 VERIFY_SSL True)            
 ```
 
 ### conan_config_install()
