@@ -264,7 +264,7 @@ function(conan_cmake_detect_unix_libcxx result)
         endif()
     endforeach()
 
-    if(APPLE)
+    if(CMAKE_OSX_SYSROOT)
         set(xcode_sysroot_option "--sysroot=${CMAKE_OSX_SYSROOT}")
     endif()
 
