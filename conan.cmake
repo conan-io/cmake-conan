@@ -232,6 +232,13 @@ function(conan_cmake_settings result)
                                    compiler.runtime compiler.libcxx compiler.toolset)
     endif()
 
+    # remove any manually specified settings from the autodetected settings
+    foreach(ARG ${ARGUMENTS_SETTINGS})
+        string(REGEX MATCH "[^=]*" MANUAL_SETTING "${ARG}")
+        message(STATUS "Conan: ${MANUAL_SETTING} was added as an argument. Not using the autodetected one.")
+        list(REMOVE_ITEM ARGUMENTS_PROFILE_AUTO "${MANUAL_SETTING}")
+    endforeach()    
+
     # Automatic from CMake
     foreach(ARG ${ARGUMENTS_PROFILE_AUTO})
         string(TOUPPER ${ARG} _arg_name)
