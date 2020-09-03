@@ -17,22 +17,22 @@ You probably want to use a tagged release to ensure controlled upgrades.
 You can just clone or grab the *conan.cmake* file and put in in your project.
 Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to point to your desired release:
 
-
 ```cmake
 
 cmake_minimum_required(VERSION 2.8)
-project(myproject CXX)
+project(FormatOutput CXX)
 
 # Download automatically, you can also just copy the conan.cmake file
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
    file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
-                 "${CMAKE_BINARY_DIR}/conan.cmake")
+                 "${CMAKE_BINARY_DIR}/conan.cmake" 
+                 TLS_VERIFY ON)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES fmt/6.1.2
                 BASIC_SETUP 
                 BUILD missing)
 
@@ -45,8 +45,8 @@ target_link_libraries(main ${CONAN_LIBS})
 
 ### REQUIRES, OPTIONS
 ```cmake
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
-                         Bye/2.1@otheruser/testing
+conan_cmake_run(REQUIRES fmt/1.9.4
+                         cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
                 )
@@ -61,12 +61,12 @@ If you want to use targets, you could do:
 
 ```cmake
 include(conan.cmake)
-conan_cmake_run(REQUIRES Hello/0.1@memsharded/testing
+conan_cmake_run(REQUIRES fmt/1.9.4
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
 
 add_executable(main main.cpp)
-target_link_libraries(main CONAN_PKG::Hello)
+target_link_libraries(main CONAN_PKG::fmt)
 ```
 
 This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definition.
@@ -229,6 +229,18 @@ include(conan.cmake)
 conan_cmake_run(...
                 GENERATORS virtualrunenv)
 ```
+
+### CONAN_COMMAND
+
+Use ``CONAN_COMMAND`` argument to specify the conan path, e.g. in case of running from source cmake
+does not identify conan as command, even if it is +x and it is in the path.
+
+```cmake
+include(conan.cmake)
+conan_cmake_run(...
+                CONAN_COMMAND "path_to_conan")
+```
+
 ## Other macros and functions
 
 ### conan_check()
@@ -244,12 +256,14 @@ conan_check(VERSION 1.0.0 REQUIRED)
 ### conan_add_remote()
 
 Adds a remote.
-Arguments ``URL`` and ``NAME`` are required, ``INDEX`` is optional.
+Arguments ``URL`` and ``NAME`` are required, ``INDEX`` and ``VERIFY_SSL`` are optional.
 
 Example usage:
 ```
-conan_add_remote(NAME bincrafters INDEX 1
-            URL https://api.bintray.com/conan/bincrafters/public-conan)
+conan_add_remote(NAME bincrafters 
+                 INDEX 1
+                 URL https://api.bintray.com/conan/bincrafters/public-conan
+                 VERIFY_SSL True)            
 ```
 
 ### conan_config_install()
