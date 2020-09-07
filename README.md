@@ -84,6 +84,23 @@ conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
 
 The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
+### BUILD
+
+```cmake
+conan_cmake_run(REQUIRES fmt/6.1.2 boost...
+                BASIC_SETUP 
+                BUILD <value>)
+```
+
+Used to define the build policy used for ``conan install``. Can take different values:
+- ``BUILD all``. Build all the dependencies for the project.
+- ``BUILD missing``. Build packages from source whose binary package is not found.
+- ``BUILD outdated``. Build packages from source whose binary package was not generated from the
+  latest recipe or is not found.
+- ``BUILD cascade``. Build packages from source that have at least one dependency being built from
+  source.
+- ``BUILD [pattern]``. Build packages from source whose package reference matches the pattern. The
+  pattern uses *'fnmatch'* style wildcards.
 
 ### KEEP_RPATHS
 
