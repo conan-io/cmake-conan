@@ -223,13 +223,9 @@ function(conan_cmake_settings result)
     foreach(ARG ${_APPLIED_PROFILES})
         set(_SETTINGS ${_SETTINGS} -pr=${ARG})
     endforeach()
-    foreach(ARG ${ARGUMENTS_BUILD_PROFILE})
+    foreach(ARG ${ARGUMENTS_PROFILE_BUILD})
         conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
         set(_SETTINGS ${_SETTINGS} -pr:b=${ARG})
-    endforeach()
-    foreach(ARG ${ARGUMENTS_HOST_PROFILE})
-        conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
-        set(_SETTINGS ${_SETTINGS} -pr:h=${ARG})
     endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
@@ -331,7 +327,7 @@ macro(parse_arguments)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
                      PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS CONFIGURATION_TYPES BUILD_PROFILE HOST_PROFILE)
+                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
