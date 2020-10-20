@@ -97,7 +97,7 @@ function(conan_cmake_settings result)
         set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
     endif()
     #handle -s os setting
-    if(CMAKE_SYSTEM_NAME)
+    if(CMAKE_SYSTEM_NAME AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
         #use default conan os setting if CMAKE_SYSTEM_NAME is not defined
         set(CONAN_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
         if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
