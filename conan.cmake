@@ -270,7 +270,7 @@ function(conan_cmake_settings result)
     endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
-        set(ARGUMENTS_PROFILE_AUTO arch arch_build build_type compiler compiler.version
+        set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
                                    compiler.runtime compiler.libcxx compiler.toolset)
     endif()
 
