@@ -584,8 +584,14 @@ macro(conan_check)
         message(STATUS "Conan: Found program ${CONAN_CMD}")
     endif()
     execute_process(COMMAND ${CONAN_CMD} --version
+                    RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
                     ERROR_VARIABLE CONAN_VERSION_OUTPUT)
+
+    if(NOT "${return_code}" STREQUAL "0")
+      message(FATAL_ERROR "Conan --version failed='${return_code}'")
+    endif()
+              
     if(NOT CONAN_DETECT_QUIET)
         message(STATUS "Conan: Version found ${CONAN_VERSION_OUTPUT}")
     endif()
@@ -624,7 +630,11 @@ function(conan_add_remote)
         set(CONAN_VERIFY_SSL_ARG ${CONAN_VERIFY_SSL})
     endif()
     message(STATUS "Conan: Adding ${CONAN_NAME} remote repository (${CONAN_URL}) verify ssl (${CONAN_VERIFY_SSL_ARG})")
-    execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_INDEX_ARG} -f ${CONAN_URL} ${CONAN_VERIFY_SSL_ARG})
+    execute_process(COMMAND ${CONAN_CMD} remote add ${CONAN_NAME} ${CONAN_INDEX_ARG} -f ${CONAN_URL} ${CONAN_VERIFY_SSL_ARG}
+                    RESULT_VARIABLE return_code)
+    if(NOT "${return_code}" STREQUAL "0")
+      message(FATAL_ERROR "Conan remote failed='${return_code}'")
+    endif()
 endfunction()
 
 macro(conan_config_install)
@@ -669,5 +679,9 @@ macro(conan_config_install)
 					${CONAN_TARGET_ARGS})
 
     message(STATUS "Conan: Installing config from ${CONAN_ITEM}")
-	execute_process(COMMAND ${CONAN_CMD} config install ${CONAN_ITEM} ${CONAN_CONFIG_INSTALL_ARGS})
+	execute_process(COMMAND ${CONAN_CMD} config install ${CONAN_ITEM} ${CONAN_CONFIG_INSTALL_ARGS}
+                  RESULT_VARIABLE return_code)
+  if(NOT "${return_code}" STREQUAL "0")
+    message(FATAL_ERROR "Conan config failed='${return_code}'")
+  endif()
 endmacro()
