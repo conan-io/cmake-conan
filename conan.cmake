@@ -373,7 +373,7 @@ macro(conan_parse_arguments)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER CONAN_COMMAND)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
                      PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD)
+                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD BUILD_REQUIRES)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
@@ -466,26 +466,71 @@ function(conan_cmake_setup_conanfile)
     configure_file(${ARGUMENTS_CONANFILE} ${CMAKE_CURRENT_BINARY_DIR}/${_CONANFILE_NAME}.junk COPYONLY)
     file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/${_CONANFILE_NAME}.junk)
   else()
-    conan_cmake_generate_conanfile(${ARGV})
+    conan_cmake_generate_conanfile(ON ${ARGV})
   endif()
 endfunction()
 
-function(conan_cmake_generate_conanfile)
-  # Generate, writing in disk a conanfile.txt with the requires, options, and imports
-  # specified as arguments
-  # This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR)
-  conan_parse_arguments(${ARGV})
-  set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
+function(conan_cmake_configure)
+    conan_cmake_generate_conanfile(OFF ${ARGV})
+endfunction()
 
-  file(WRITE ${_FN} "[generators]\ncmake\n\n[requires]\n")
-  foreach(ARG ${ARGUMENTS_REQUIRES})
-    file(APPEND ${_FN} ${ARG} "\n")
-  endforeach()
+# Generate, writing in disk a conanfile.txt with the requires, options, and imports
+# specified as arguments
+# This will be considered as temporary file, generated in CMAKE_CURRENT_BINARY_DIR)
+function(conan_cmake_generate_conanfile DEFAULT_GENERATOR)
 
-  file(APPEND ${_FN} ${ARG} "\n[imports]\n")
-  foreach(ARG ${ARGUMENTS_IMPORTS})
-    file(APPEND ${_FN} ${ARG} "\n")
-  endforeach()
+    conan_parse_arguments(${ARGV})
+
+    message("->${DEFAULT_GENERATOR}")
+    message("->${ARGUMENTS_REQUIRES}")
+    message("->${ARGUMENTS_BUILD_REQUIRES}")
+    message("->${ARGUMENTS_GENERATORS}")
+    message("->${ARGUMENTS_OPTIONS}")
+    message("->${ARGUMENTS_IMPORTS}")
+
+    set(_FN "${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt")
+    file(WRITE ${_FN} "")
+
+    if(DEFINED CONANFILE_REQUIRES)
+        file(APPEND ${_FN} "[requires]\n")
+        foreach(REQUIRE ${CONANFILE_REQUIRES})
+            file(APPEND ${_FN} ${REQUIRE} "\n")
+        endforeach()
+    endif()
+
+    if (DEFAULT_GENERATOR OR DEFINED CONANFILE_GENERATORS)
+        file(APPEND ${_FN} "[generators]\n")
+        if (DEFAULT_GENERATOR)
+            file(APPEND ${_FN} "cmake\n")
+        endif()
+        if (DEFINED CONANFILE_GENERATORS)
+            foreach(GENERATOR ${CONANFILE_GENERATORS})
+                file(APPEND ${_FN} ${GENERATOR} "\n")
+            endforeach()
+        endif()
+    endif()
+
+    if(DEFINED CONANFILE_BUILD_REQUIRES)
+        file(APPEND ${_FN} "[build_requires]\n")
+        foreach(BUILD_REQUIRE ${CONANFILE_BUILD_REQUIRES})
+            file(APPEND ${_FN} ${BUILD_REQUIRE} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED CONANFILE_IMPORTS)
+        file(APPEND ${_FN} "[imports]\n")
+        foreach(IMPORTS ${CONANFILE_IMPORTS})
+            file(APPEND ${_FN} ${IMPORTS} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED CONANFILE_OPTIONS)
+        file(APPEND ${_FN} "[imports]\n")
+        foreach(OPTION ${CONANFILE_OPTIONS})
+            file(APPEND ${_FN} ${OPTION} "\n")
+        endforeach()
+    endif()
+
 endfunction()
 
 
