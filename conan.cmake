@@ -60,18 +60,7 @@ function(_get_msvc_ide_version result)
     endif()
 endfunction()
 
-function(conan_cmake_settings result)
-    #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
-    #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
-    #message(STATUS "VERSION " ${CMAKE_CXX_COMPILER_VERSION})
-    #message(STATUS "FLAGS " ${CMAKE_LANG_FLAGS})
-    #message(STATUS "LIB ARCH " ${CMAKE_CXX_LIBRARY_ARCHITECTURE})
-    #message(STATUS "BUILD TYPE " ${CMAKE_BUILD_TYPE})
-    #message(STATUS "GENERATOR " ${CMAKE_GENERATOR})
-    #message(STATUS "GENERATOR WIN64 " ${CMAKE_CL_64})
-
-    message(STATUS "Conan: Automatic detection of conan settings from cmake")
-
+function(_conan_detect_build_type)
     conan_parse_arguments(${ARGV})
 
     if(ARGUMENTS_BUILD_TYPE)
@@ -92,10 +81,9 @@ function(conan_cmake_settings result)
     elseif(_CONAN_SETTING_BUILD_TYPE_UPPER STREQUAL "MINSIZEREL")
         set(_CONAN_SETTING_BUILD_TYPE "MinSizeRel")
     endif()
+endfunction()
 
-    if(ARGUMENTS_ARCH)
-        set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
-    endif()
+function(_conan_check_system_name)
     #handle -s os setting
     if(CMAKE_SYSTEM_NAME AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
         #use default conan os setting if CMAKE_SYSTEM_NAME is not defined
@@ -115,16 +103,27 @@ function(conan_cmake_settings result)
             message(FATAL_ERROR "cmake system ${CONAN_SYSTEM_NAME} is not supported by conan. Use one of ${CONAN_SUPPORTED_PLATFORMS}")
         endif()
     endif()
+endfunction()
 
+function(_conan_check_language)
     get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
     if (";${_languages};" MATCHES ";CXX;")
-        set(LANGUAGE CXX)
-        set(USING_CXX 1)
+        set(LANGUAGE CXX PARENT_SCOPE)
+        set(USING_CXX 1 PARENT_SCOPE)
     elseif (";${_languages};" MATCHES ";C;")
-        set(LANGUAGE C)
-        set(USING_CXX 0)
+        set(LANGUAGE C PARENT_SCOPE)
+        set(USING_CXX 0 PARENT_SCOPE)
     else ()
         message(FATAL_ERROR "Conan: Neither C or C++ was detected as a language for the project. Unabled to detect compiler version.")
+    endif()
+endfunction()
+
+macro(_conan_detect_compiler)
+
+    conan_parse_arguments(${ARGV})
+
+    if(ARGUMENTS_ARCH)
+        set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
     endif()
 
     if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL GNU)
@@ -206,9 +205,33 @@ function(conan_cmake_settings result)
         elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
             set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
         endif()
-    else()
+        else()
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
+
+endmacro()
+
+function(conan_cmake_settings result)
+    #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
+    #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
+    #message(STATUS "VERSION " ${CMAKE_CXX_COMPILER_VERSION})
+    #message(STATUS "FLAGS " ${CMAKE_LANG_FLAGS})
+    #message(STATUS "LIB ARCH " ${CMAKE_CXX_LIBRARY_ARCHITECTURE})
+    #message(STATUS "BUILD TYPE " ${CMAKE_BUILD_TYPE})
+    #message(STATUS "GENERATOR " ${CMAKE_GENERATOR})
+    #message(STATUS "GENERATOR WIN64 " ${CMAKE_CL_64})
+
+    message(STATUS "Conan: Automatic detection of conan settings from cmake")
+
+    conan_parse_arguments(${ARGV})
+
+    _conan_detect_build_type(${ARGV})
+
+    _conan_check_system_name()
+
+    _conan_check_language()
+
+    _conan_detect_compiler(${ARGV})
 
     # If profile is defined it is used
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND ARGUMENTS_DEBUG_PROFILE)
@@ -367,6 +390,15 @@ function(conan_cmake_detect_vs_runtime result)
     endif()
 endfunction()
 
+# function(conan_cmake_autodetect DETECTED_SETTINGS)
+#     if(DEFINED CMAKE_BUILD_TYPE)
+#         set(DETECTED_SETTINGS ${DETECTED_SETTINGS} --settings build_type=${CMAKE_BUILD_TYPE})
+#     else()
+#         message(FATAL_ERROR "Please specify in command line CMAKE_BUILD_TYPE (-DCMAKE_BUILD_TYPE=Release)")
+#     endif()    endif()
+#     conan_cmake_settings(settings ${ARGV})
+#     set(${DETECTED_SETTINGS} "Autodetected settings" PARENT_SCOPE)
+# endfunction()
 
 macro(conan_parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
