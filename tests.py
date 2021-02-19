@@ -141,26 +141,6 @@ class CMakeConanTest(unittest.TestCase):
             data = file.read()
             assert data in result_conanfile
 
-    def test_conan_cmake_install_raw_args(self):
-        content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
-            project(FormatOutput CXX)
-            add_definitions("-std=c++11")
-            include(conan.cmake)
-            conan_cmake_configure(REQUIRES fmt/6.1.2)
-            conan_cmake_install(RAW_ARGUMENTS "conanfile.txt --generator cmake --build missing --profile default -r conan-center")
-            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-            conan_basic_setup(TARGETS)
-            add_executable(main main.cpp)
-            target_link_libraries(main CONAN_PKG::fmt)
-        """)
-        save("CMakeLists.txt", content)
-        os.makedirs("build")
-        os.chdir("build")
-        run("conan profile new default --detect")
-        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
-        run("cmake --build .")
-
     def test_conan_cmake_install_args(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 3.5)
@@ -168,10 +148,12 @@ class CMakeConanTest(unittest.TestCase):
             add_definitions("-std=c++11")
             include(conan.cmake)
             conan_cmake_configure(REQUIRES fmt/6.1.2)
+            conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 GENERATOR cmake
                                 BUILD missing
-                                REMOTE conan-center)
+                                REMOTE conan-center
+                                SETTINGS ${settings})
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
             conan_basic_setup(TARGETS)
             add_executable(main main.cpp)
@@ -180,7 +162,6 @@ class CMakeConanTest(unittest.TestCase):
         save("CMakeLists.txt", content)
         os.makedirs("build")
         os.chdir("build")
-        run("conan profile new default --detect")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build .")
         
