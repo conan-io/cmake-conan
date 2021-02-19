@@ -148,7 +148,6 @@ class CMakeConanTest(unittest.TestCase):
             add_definitions("-std=c++11")
             include(conan.cmake)
             conan_cmake_configure(REQUIRES fmt/6.1.2)
-            set(CONAN_COMMAND /Users/carlos/Documents/developer/conan-develop/virtualenvs/conan_python3/bin/conan)
             conan_cmake_install(RAW_ARGUMENTS "conanfile.txt --generator cmake --build missing --profile default -r conan-center")
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
             conan_basic_setup(TARGETS)
@@ -158,7 +157,7 @@ class CMakeConanTest(unittest.TestCase):
         save("CMakeLists.txt", content)
         os.makedirs("build")
         os.chdir("build")
-        run("conan profile new default --detect --force")
+        run("conan profile new default --detect")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build .")
 
@@ -169,7 +168,6 @@ class CMakeConanTest(unittest.TestCase):
             add_definitions("-std=c++11")
             include(conan.cmake)
             conan_cmake_configure(REQUIRES fmt/6.1.2)
-            set(CONAN_COMMAND /Users/carlos/Documents/developer/conan-develop/virtualenvs/conan_python3/bin/conan)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 GENERATOR cmake
                                 BUILD missing
@@ -182,7 +180,7 @@ class CMakeConanTest(unittest.TestCase):
         save("CMakeLists.txt", content)
         os.makedirs("build")
         os.chdir("build")
-        run("conan profile new default --detect --force")
+        run("conan profile new default --detect")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build .")
         
