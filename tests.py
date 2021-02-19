@@ -164,7 +164,7 @@ class CMakeConanTest(unittest.TestCase):
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
-        run("cmake --build .")
+        run("cmake --build . --config Release")
         
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
