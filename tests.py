@@ -90,6 +90,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
             conan_cmake_run(REQUIRES fmt/6.1.2
+                            NO_IMPORTS
                             BASIC_SETUP
                             BUILD missing)
 
@@ -159,6 +160,30 @@ class CMakeConanTest(unittest.TestCase):
             conan_basic_setup(TARGETS)
             add_executable(main main.cpp)
             target_link_libraries(main CONAN_PKG::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        run("cmake --build . --config Release")
+        
+    def test_conan_cmake_install_find_package(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+             add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conan-center
+                                SETTINGS ${settings})
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
         """)
         save("CMakeLists.txt", content)
         os.makedirs("build")
