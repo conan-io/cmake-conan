@@ -173,7 +173,7 @@ class CMakeConanTest(unittest.TestCase):
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-             add_definitions("-std=c++11")
+            add_definitions("-std=c++11")
             include(conan.cmake)
             conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
             conan_cmake_autodetect(settings)
