@@ -667,7 +667,7 @@ function(conan_cmake_generate_conanfile DEFAULT_GENERATOR)
     endif()
 
     if(DEFINED ARGUMENTS_OPTIONS)
-        file(APPEND ${_FN} "[imports]\n")
+        file(APPEND ${_FN} "[options]\n")
         foreach(OPTION ${ARGUMENTS_OPTIONS})
             file(APPEND ${_FN} ${OPTION} "\n")
         endforeach()

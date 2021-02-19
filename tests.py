@@ -77,6 +77,7 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release > output.txt" % generator)
         with open('output.txt', 'r') as file:
             data = file.read()
+            print(data)
             assert "-o=fmt:shared=True" in data
             assert "[options]\nfmt:shared=True" in data
 
@@ -129,7 +130,7 @@ class CMakeConanTest(unittest.TestCase):
             [imports]
             bin, *.dll -> ./bin
             lib, *.dylib* -> ./bin
-            [imports]
+            [options]
             poco:shared=True
             openssl:shared=True
         """)
