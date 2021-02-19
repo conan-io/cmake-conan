@@ -104,6 +104,88 @@ class CMakeConanTest(unittest.TestCase):
             data = file.read()
             assert "#include_next <string.h>" not in data
 
+    def test_conan_cmake_configure(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 2.8)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES poco/1.9.4 zlib/1.2.11
+                                  BUILD_REQUIRES 7zip/16.00
+                                  GENERATORS xcode cmake qmake
+                                  OPTIONS poco:shared=True openssl:shared=True
+                                  IMPORTS "bin, *.dll -> ./bin"
+                                  IMPORTS "lib, *.dylib* -> ./bin")
+        """)
+        result_conanfile = textwrap.dedent("""
+            [requires]
+            poco/1.9.4
+            zlib/1.2.11
+            [generators]
+            xcode
+            cmake
+            qmake
+            [build_requires]
+            7zip/16.00
+            [imports]
+            bin, *.dll -> ./bin
+            lib, *.dylib* -> ./bin
+            [imports]
+            poco:shared=True
+            openssl:shared=True
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        with open('conanfile.txt', 'r') as file:
+            data = file.read()
+            assert data in result_conanfile
+
+    def test_conan_cmake_install_raw_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2)
+            set(CONAN_COMMAND /Users/carlos/Documents/developer/conan-develop/virtualenvs/conan_python3/bin/conan)
+            conan_cmake_install(RAW_ARGUMENTS "conanfile.txt --generator cmake --build missing --profile default -r conan-center")
+            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+            conan_basic_setup(TARGETS)
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("conan profile new default --detect --force")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        run("cmake --build .")
+
+    def test_conan_cmake_install_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2)
+            set(CONAN_COMMAND /Users/carlos/Documents/developer/conan-develop/virtualenvs/conan_python3/bin/conan)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                GENERATOR cmake
+                                BUILD missing
+                                REMOTE conan-center)
+            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+            conan_basic_setup(TARGETS)
+            add_executable(main main.cpp)
+            target_link_libraries(main CONAN_PKG::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("conan profile new default --detect --force")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        run("cmake --build .")
+        
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
