@@ -15,7 +15,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``v0.16`` tag in the URL, change it to point to your desired release:
 
 ```cmake
 
@@ -29,7 +29,7 @@ add_definitions("-std=c++11")
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/develop/conan.cmake"
+  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16/conan.cmake"
                 "${CMAKE_BINARY_DIR}/conan.cmake"
                 TLS_VERIFY ON)
 endif()
@@ -61,7 +61,8 @@ functions were introduced.
 
 ## conan_cmake_configure()
 
-Will accept the same arguments as the sections of the [conanfile.txt](https://docs.conan.io/en/latest/reference/conanfile_txt.html).
+This function will accept the same arguments as the sections of the
+[conanfile.txt](https://docs.conan.io/en/latest/reference/conanfile_txt.html).
 
 ```cmake
 conan_cmake_configure(REQUIRES fmt/6.1.2 
@@ -75,9 +76,9 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
 
 ## conan_cmake_autodetect()
 
-Will return the auto-detected settings (things like build_type, compiler or system name) so you can
-pass that to `conan_cmake_install`. This step is optional as you may want to rely on profiles,
-lockfiles or other way of assigning value to settings. 
+This function will return the auto-detected settings (things like *build_type*, *compiler* or *system
+name*) so you can pass that information to `conan_cmake_install`. This step is optional as you may
+want to rely on profiles, lockfiles or any other way of passing that information. 
 
 ```cmake
 conan_cmake_autodetect(settings)
@@ -85,15 +86,15 @@ conan_cmake_autodetect(settings)
 
 ## conan_cmake_install() options
 
-This is a wrapper for the [conan
+This function is a wrapper for the [conan
 install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) command. You can
 pass all the arguments that the command supports. Also, you can pass the auto-detected settings from
 `conan_cmake_autodetect` in the `SETTINGS` argument.
 
-`conan_cmake_run supports` as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`,
+It can receive as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`,
 `REMOTE`, `LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`,
 `ENV`, `ENV_HOST`, `ENV_BUILD`, `OPTIONS_HOST`, `OPTIONS`, `OPTIONS_BUILD`, `PROFILE`,
-`PROFILE_HOST`, `PROFILE_BUILD`, `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information
+`PROFILE_HOST`, `PROFILE_BUILD`, `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, 
 check [conan install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html)
 documentation.
 
@@ -112,7 +113,7 @@ near future. It will make the configure, auto-detect and install in one step so 
 any new Conan features like lockfiles or build and host profiles it's possible that the auto-detected
 settings collide with the call to conan install. 
 
-## conan_cmake_run() options
+### conan_cmake_run() options:
 
 ### REQUIRES, OPTIONS
 ```cmake
