@@ -19,29 +19,100 @@ Or it can be used in this way. Note the ``v0.15`` tag in the URL, change it to p
 
 ```cmake
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 project(FormatOutput CXX)
 
-# Download automatically, you can also just copy the conan.cmake file
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+add_definitions("-std=c++11")
+
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-   file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
-                 "${CMAKE_BINARY_DIR}/conan.cmake" 
-                 TLS_VERIFY ON)
+  message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/develop/conan.cmake"
+                "${CMAKE_BINARY_DIR}/conan.cmake"
+                TLS_VERIFY ON)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_run(REQUIRES fmt/6.1.2
-                BASIC_SETUP 
-                BUILD missing)
+include(conan.cmake)
+
+conan_cmake_configure(REQUIRES fmt/6.1.2 
+                      GENERATORS cmake_find_package)
+
+conan_cmake_autodetect(settings)
+
+conan_cmake_install(PATH_OR_REFERENCE .
+                    BUILD missing
+                    REMOTE conan-center
+                    SETTINGS ${settings})
+
+find_package(fmt)
 
 add_executable(main main.cpp)
-target_link_libraries(main ${CONAN_LIBS})
+target_link_libraries(main fmt::fmt)  
 ```
 
-## conan_cmake_run() options
+There are different functions you can use from your CMake project to use Conan from there. The
+recommended flow to use cmake-conan is successively calling to `conan_cmake_configure`,
+`conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
+functions were introduced.
 
+## conan_cmake_configure()
+
+Will accept the same arguments as the sections of the [conanfile.txt](https://docs.conan.io/en/latest/reference/conanfile_txt.html).
+
+```cmake
+conan_cmake_configure(REQUIRES fmt/6.1.2 
+                      GENERATORS cmake_find_package
+                      BUILD_REQUIRES cmake/3.15.7
+                      IMPORTS "bin, *.dll -> ./bin"
+                      IMPORTS "lib, *.dylib* -> ./bin")
+                      OPTIONS fmt:shared=True)
+
+```
+
+## conan_cmake_autodetect()
+
+Will return the auto-detected settings (things like build_type, compiler or system name) so you can
+pass that to `conan_cmake_install`. This step is optional as you may want to rely on profiles,
+lockfiles or other way of assigning value to settings. 
+
+```cmake
+conan_cmake_autodetect(settings)
+```
+
+## conan_cmake_install() options
+
+This is a wrapper for the [conan
+install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) command. You can
+pass all the arguments that the command supports. Also, you can pass the auto-detected settings from
+`conan_cmake_autodetect` in the `SETTINGS` argument.
+
+`conan_cmake_run supports` as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`,
+`REMOTE`, `LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`,
+`ENV`, `ENV_HOST`, `ENV_BUILD`, `OPTIONS_HOST`, `OPTIONS`, `OPTIONS_BUILD`, `PROFILE`,
+`PROFILE_HOST`, `PROFILE_BUILD`, `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information
+check [conan install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html)
+documentation.
+
+```cmake
+conan_cmake_run(REQUIRES fmt/1.9.4
+                         cgal/5.0.2
+                OPTIONS Pkg:shared=True
+                        OtherPkg:option=value
+                )
+```
+
+## conan_cmake_run() high level wrapper
+
+This function is not the recommended way of using cmake-conan any more and will be deprecated in the
+near future. It will make the configure, auto-detect and install in one step so if you plan to use
+any new Conan features like lockfiles or build and host profiles it's possible that the auto-detected
+settings collide with the call to conan install. 
+
+## conan_cmake_run() options
 
 ### REQUIRES, OPTIONS
 ```cmake
@@ -328,8 +399,9 @@ if(CONAN_EXPORTED) # in conan local cache
 else() # in user space
     include(conan.cmake)
     # Make sure to use conanfile.py to define dependencies, to stay consistent
-    conan_cmake_run(CONANFILE conanfile.py
-                    BASIC_SETUP)
+    conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+    conan_cmake_autodetect(settings)
+    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conan-center SETTINGS ${settings})
 endif()
 ```
 
