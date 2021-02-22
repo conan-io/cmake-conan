@@ -89,7 +89,6 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
             conan_cmake_run(REQUIRES fmt/6.1.2
-                            NO_IMPORTS
                             BASIC_SETUP
                             BUILD missing)
 
