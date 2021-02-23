@@ -84,7 +84,7 @@ want to rely on profiles, lockfiles or any other way of passing that information
 conan_cmake_autodetect(settings)
 ```
 
-## conan_cmake_install() options
+## conan_cmake_install()
 
 This function is a wrapper for the [conan
 install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) command. You can
@@ -103,7 +103,7 @@ conan_cmake_run(REQUIRES fmt/1.9.4
                          cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
-                )
+                SETTINGS build_type=Debug)
 ```
 
 ## conan_cmake_run() high level wrapper
