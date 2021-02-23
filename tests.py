@@ -340,18 +340,20 @@ class CMakeConanTest(unittest.TestCase):
                 message(FATAL_ERROR "CMAKE BUILD TYPE is not {0}!")
             endif()
         """)
-        save("CMakeLists.txt", content.format("None"))
-        with ch_build_dir():
-            run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
-
         save("CMakeLists.txt", content.format("Release"))
         with ch_build_dir():
-            run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug" % (generator))
+            run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug > output.txt" % (generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "build_type=Release" in data
 
         # https://github.com/conan-io/cmake-conan/issues/89
-        save("CMakeLists.txt", content.format("Release"))
+        save("CMakeLists.txt", content.format("Debug"))
         with ch_build_dir():
-            run("cmake .. %s" % (generator))
+            run("cmake .. %s > output.txt" % (generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "build_type=Release" in data
 
     def test_settings(self):
         content = textwrap.dedent("""
