@@ -91,12 +91,12 @@ install](https://docs.conan.io/en/latest/reference/commands/consumer/install.htm
 pass all the arguments that the command supports. Also, you can pass the auto-detected settings from
 `conan_cmake_autodetect` in the `SETTINGS` argument.
 
-It can receive as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`,
-`REMOTE`, `LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`,
-`ENV`, `ENV_HOST`, `ENV_BUILD`, `OPTIONS_HOST`, `OPTIONS`, `OPTIONS_BUILD`, `PROFILE`,
-`PROFILE_HOST`, `PROFILE_BUILD`, `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, 
-check [conan install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html)
-documentation.
+It can receive as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`, `REMOTE`,
+`LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD` (if this
+parameter takes the `all` value, Conan will build everything from source), `ENV`, `ENV_HOST`,
+`ENV_BUILD`, `OPTIONS_HOST`, `OPTIONS`, `OPTIONS_BUILD`, `PROFILE`, `PROFILE_HOST`, `PROFILE_BUILD`,
+`SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, check [conan
+install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) documentation.
 
 ```cmake
 conan_cmake_run(REQUIRES fmt/1.9.4
