@@ -353,7 +353,7 @@ class CMakeConanTest(unittest.TestCase):
             run("cmake .. %s > output.txt" % (generator))
             with open('output.txt', 'r') as file:
                 data = file.read()
-                assert "build_type=Release" in data
+                assert "build_type=Debug" in data
 
     def test_settings(self):
         content = textwrap.dedent("""
