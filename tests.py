@@ -343,17 +343,17 @@ class CMakeConanTest(unittest.TestCase):
         save("CMakeLists.txt", content.format("Release"))
         with ch_build_dir():
             run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug > output.txt" % (generator))
-        with open('output.txt', 'r') as file:
-            data = file.read()
-            assert "build_type=Release" in data
+            with open('output.txt', 'r') as file:
+                data = file.read()
+                assert "build_type=Release" in data
 
         # https://github.com/conan-io/cmake-conan/issues/89
         save("CMakeLists.txt", content.format("Debug"))
         with ch_build_dir():
             run("cmake .. %s > output.txt" % (generator))
-        with open('output.txt', 'r') as file:
-            data = file.read()
-            assert "build_type=Release" in data
+            with open('output.txt', 'r') as file:
+                data = file.read()
+                assert "build_type=Release" in data
 
     def test_settings(self):
         content = textwrap.dedent("""
