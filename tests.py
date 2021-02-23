@@ -5,6 +5,7 @@ import platform
 import shutil
 import json
 import textwrap
+from contextlib import contextmanager 
 
 from nose.plugins.attrib import attr
 
@@ -28,6 +29,16 @@ if platform.system() == "Windows":
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
+
+@contextmanager
+def ch_build_dir():
+    os.makedirs("build")
+    os.chdir("build")
+    try:
+        yield
+    finally:
+        os.chdir("../")
+        shutil.rmtree("build")
 
 class CMakeConanTest(unittest.TestCase):
 
@@ -403,22 +414,31 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
             cmake_minimum_required(VERSION 2.8)
-            project(FormatOutput CXX)
-            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+            project(conan_wrapper CXX)
+            message(STATUS "CMAKE VERSION: ${{CMAKE_VERSION}}")
 
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
-                            BUILD_TYPE None)
+                            BUILD_TYPE {0})
 
-            if(NOT ${CONAN_SETTINGS_BUILD_TYPE} STREQUAL "None")
-                message(FATAL_ERROR "CMAKE BUILD TYPE is not None!")
+            if(NOT ${{CONAN_SETTINGS_BUILD_TYPE}} STREQUAL "{0}")
+                message(FATAL_ERROR "CMAKE BUILD TYPE is not {0}!")
             endif()
         """)
-        save("CMakeLists.txt", content)
+        save("CMakeLists.txt", content.format("Release"))
+        with ch_build_dir():
+            run("cmake .. %s  -DCMAKE_BUILD_TYPE=Debug > output.txt" % (generator))
+            with open('output.txt', 'r') as file:
+                data = file.read()
+                assert "build_type=Release" in data
 
-        os.makedirs("build")
-        os.chdir("build")
-        run("cmake .. %s  -DCMAKE_BUILD_TYPE=Release" % (generator))
+        # https://github.com/conan-io/cmake-conan/issues/89
+        save("CMakeLists.txt", content.format("Debug"))
+        with ch_build_dir():
+            run("cmake .. %s > output.txt" % (generator))
+            with open('output.txt', 'r') as file:
+                data = file.read()
+                assert "build_type=Debug" in data
 
     def test_settings(self):
         content = textwrap.dedent("""
