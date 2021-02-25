@@ -444,7 +444,7 @@ macro(conan_parse_arguments)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
-function(_conan_cmake_install)
+function(old_conan_cmake_install)
     # Calls "conan install"
     # Argument BUILD is equivalant to --build={missing, PkgName,...} or
     # --build when argument is 'BUILD all' (which builds all packages from source)
@@ -531,13 +531,11 @@ function(conan_cmake_install)
         conan_check(REQUIRED)
     endif()
 
-    set(installOptions UPDATE NO_IMPORTS)
+    set(installOptions UPDATE NO_IMPORTS OUTPUT_QUIET ERROR_QUIET)
     set(installOneValueArgs PATH_OR_REFERENCE REFERENCE REMOTE LOCKFILE LOCKFILE_OUT LOCKFILE_NODE_ID INSTALL_FOLDER)
     set(installMultiValueArgs GENERATOR BUILD ENV ENV_HOST ENV_BUILD OPTIONS_HOST OPTIONS OPTIONS_BUILD PROFILE
                               PROFILE_HOST PROFILE_BUILD SETTINGS SETTINGS_HOST SETTINGS_BUILD)
     cmake_parse_arguments(ARGS "${installOptions}" "${installOneValueArgs}" "${installMultiValueArgs}" ${ARGN})
-    conan_parse_arguments(${ARGV})
-
     foreach(arg ${installOptions})
         if(ARGS_${arg})
             set(${arg} ${${arg}} ${ARGS_${arg}})
@@ -612,20 +610,26 @@ function(conan_cmake_install)
 
     string(REPLACE ";" " " _install_args "${install_args}")
     message(STATUS "Conan executing: ${CONAN_CMD} ${_install_args}")
+    
     if(ARGS_OUTPUT_QUIET)
-        execute_process(COMMAND ${CONAN_CMD} ${install_args}
-                        RESULT_VARIABLE return_code
-                        OUTPUT_VARIABLE conan_output
-                        ERROR_VARIABLE conan_output
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    else()
-        execute_process(COMMAND ${CONAN_CMD} ${install_args}
-                        RESULT_VARIABLE return_code
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+      set(OUTPUT_OPT OUTPUT_QUIET)
+    endif()
+    if(ARGS_ERROR_QUIET)
+      set(ERROR_OPT ERROR_QUIET)
     endif()
 
+    execute_process(COMMAND ${CONAN_CMD} ${install_args}
+                    RESULT_VARIABLE return_code
+                    ${OUTPUT_OPT}
+                    ${ERROR_OPT}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
     if(NOT "${return_code}" STREQUAL "0")
-      message(FATAL_ERROR "Conan install failed='${return_code}'")
+        if (ARGS_ERROR_QUIET)
+            message(WARNING "Conan install failed='${return_code}'")
+        else()
+            message(FATAL_ERROR "Conan install failed='${return_code}'")
+        endif()
     endif()
 
 endfunction()
@@ -747,12 +751,12 @@ macro(conan_cmake_run)
             foreach(CMAKE_BUILD_TYPE ${ARGUMENTS_CONFIGURATION_TYPES})
                 set(ENV{CONAN_IMPORT_PATH} ${CMAKE_BUILD_TYPE})
                 conan_cmake_settings(settings ${ARGV})
-                _conan_cmake_install(SETTINGS ${settings} ${ARGV})
+                old_conan_cmake_install(SETTINGS ${settings} ${ARGV})
             endforeach()
             set(CMAKE_BUILD_TYPE)
         else()
             conan_cmake_settings(settings ${ARGV})
-            _conan_cmake_install(SETTINGS ${settings} ${ARGV})
+            old_conan_cmake_install(SETTINGS ${settings} ${ARGV})
         endif()
     endif()
 
