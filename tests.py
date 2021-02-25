@@ -241,6 +241,55 @@ class CMakeConanTest(unittest.TestCase):
         os.makedirs("build")
         os.chdir("build")
         run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+        
+    def test_conan_cmake_install_quiet(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conan-center
+                                SETTINGS ${settings}
+                                OUTPUT_QUIET ERROR_QUIET)
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert not "conanfile.txt: Installing package" in data      
+        
+    def test_conan_cmake_error_quiet(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            set (CONAN_COMMAND not_existing_conan)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conan-center
+                                SETTINGS ${settings}
+                                ERROR_QUIET)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
 
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
