@@ -444,7 +444,7 @@ macro(conan_parse_arguments)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
-function(_conan_cmake_install)
+function(old_conan_cmake_install)
     # Calls "conan install"
     # Argument BUILD is equivalant to --build={missing, PkgName,...} or
     # --build when argument is 'BUILD all' (which builds all packages from source)
@@ -751,12 +751,12 @@ macro(conan_cmake_run)
             foreach(CMAKE_BUILD_TYPE ${ARGUMENTS_CONFIGURATION_TYPES})
                 set(ENV{CONAN_IMPORT_PATH} ${CMAKE_BUILD_TYPE})
                 conan_cmake_settings(settings ${ARGV})
-                _conan_cmake_install(SETTINGS ${settings} ${ARGV})
+                old_conan_cmake_install(SETTINGS ${settings} ${ARGV})
             endforeach()
             set(CMAKE_BUILD_TYPE)
         else()
             conan_cmake_settings(settings ${ARGV})
-            _conan_cmake_install(SETTINGS ${settings} ${ARGV})
+            old_conan_cmake_install(SETTINGS ${settings} ${ARGV})
         endif()
     endif()
 
