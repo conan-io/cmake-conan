@@ -98,6 +98,9 @@ parameter takes the `all` value, Conan will build everything from source), `ENV`
 `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, check [conan
 install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) documentation.
 
+It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it runs the `conan install`
+command the output is quiet or the error is bypassed (or both).
+
 ```cmake
 conan_cmake_run(REQUIRES fmt/1.9.4
                          cgal/5.0.2
