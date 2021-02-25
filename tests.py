@@ -199,7 +199,49 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
-        
+
+    # https://github.com/conan-io/cmake-conan/issues/315
+    def test_issue_315(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(MyProject)
+            set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+            include(conan.cmake)
+            conan_cmake_run(CONANFILE conanfile.py
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+            add_subdirectory(Tests)
+        """)
+        save("CMakeLists.txt", content)
+        save("conanfile.py", textwrap.dedent("""
+            from conans import ConanFile
+            class Pkg(ConanFile):
+                pass
+        """))
+
+        os.makedirs("Tests")
+        os.chdir("Tests")
+
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(Tests)
+
+            include(../conan.cmake)
+            conan_cmake_run(CONANFILE conanfile.py
+                            BASIC_SETUP CMAKE_TARGETS
+                            BUILD missing)
+        """)
+        save("CMakeLists.txt", content)
+        save("conanfile.py", textwrap.dedent("""
+            from conans import ConanFile
+            class Pkg(ConanFile):
+                pass
+        """))
+        os.chdir("../")
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release" % generator)
+
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 2.8)
