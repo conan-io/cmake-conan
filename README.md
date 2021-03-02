@@ -102,11 +102,9 @@ It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it r
 command the output is quiet or the error is bypassed (or both).
 
 ```cmake
-conan_cmake_run(REQUIRES fmt/1.9.4
-                         cgal/5.0.2
-                OPTIONS Pkg:shared=True
-                        OtherPkg:option=value
-                SETTINGS build_type=Debug)
+conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py
+                    LOCKFILE ${CMAKE_CURRENT_BINARY_DIR}/conan.lock
+)
 ```
 
 ## conan_cmake_run() high level wrapper
