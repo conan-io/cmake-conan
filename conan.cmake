@@ -33,7 +33,7 @@
 # but it is only necessary on the end-user side. It is not necessary to create conan
 # packages, in fact it shouldn't be use for that. Check the project documentation.
 
-# version: 0.17.0-dev
+# version: 0.16.1
 
 include(CMakeParseArguments)
 
@@ -807,7 +807,8 @@ macro(conan_check)
     endif()
               
     if(NOT CONAN_DETECT_QUIET)
-        message(STATUS "Conan: Version found ${CONAN_VERSION_OUTPUT}")
+        string(STRIP "${CONAN_VERSION_OUTPUT}" _CONAN_VERSION_OUTPUT)
+        message(STATUS "Conan: Version found ${_CONAN_VERSION_OUTPUT}")
     endif()
 
     if(DEFINED CONAN_VERSION)
@@ -837,7 +838,7 @@ function(conan_add_remote)
     if(DEFINED CONAN_COMMAND)
         set(CONAN_CMD ${CONAN_COMMAND})
     else()
-        conan_check(REQUIRED)
+        conan_check(REQUIRED DETECT_QUIET)
     endif()
     set(CONAN_VERIFY_SSL_ARG "True")
     if(DEFINED CONAN_VERIFY_SSL)
