@@ -957,7 +957,7 @@ class LocalTests(unittest.TestCase):
             endforeach()
             find_package(fmt CONFIG)
             add_executable(main main.cpp)
-            target_link_libraries(main fmt::fmt)
+            target_link_libraries(main hello::hello)
             """)
         save("CMakeLists.txt", content)
         self._build_multi(["Release", "Debug", "MinSizeRel", "RelWithDebInfo"])
