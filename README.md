@@ -123,7 +123,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 add_definitions("-std=c++11")
 include(conan.cmake)
+
 conan_cmake_configure(REQUIRES hello/1.0 GENERATORS cmake_find_package_multi)
+
 foreach(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES})
     conan_cmake_autodetect(settings)
     conan_cmake_install(PATH_OR_REFERENCE .
@@ -131,6 +133,7 @@ foreach(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES})
                         REMOTE conan-center
                         SETTINGS ${settings})
 endforeach()
+
 find_package(hello CONFIG)
 add_executable(main main.cpp)
 target_link_libraries(main hello::hello)
