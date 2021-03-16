@@ -955,7 +955,7 @@ class LocalTests(unittest.TestCase):
                                     REMOTE conan-center
                                     SETTINGS ${settings})
             endforeach()
-            find_package(fmt CONFIG)
+            find_package(hello CONFIG)
             add_executable(main main.cpp)
             target_link_libraries(main hello::hello)
             """)
