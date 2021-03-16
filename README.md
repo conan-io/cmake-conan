@@ -112,8 +112,8 @@ conan_cmake_run(REQUIRES fmt/1.9.4
 ## Using conan_cmake_autodetect() and conan_cmake_install() with Multi Configuration generators
 
 The recommended approach when using Multi Configuration generators like Visual Studio or Xcode is
-looping through the `CMAKE_CONFIGURATION_TYPES` in your CMakeLists.txt and calling
-conan_cmake_autodetect and conan_cmake_install for each one using a Conan multiconfig generator like
+looping through the `CMAKE_CONFIGURATION_TYPES` in your _CMakeLists.txt_ and calling
+`conan_cmake_autodetect` and `conan_cmake_install` for each one using a Conan multiconfig generator like
 `cmake_find_package_multi`. Please check the example:
 
 ```cmake
