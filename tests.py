@@ -948,8 +948,8 @@ class LocalTests(unittest.TestCase):
             add_definitions("-std=c++11")
             include(conan.cmake)
             conan_cmake_configure(REQUIRES hello/1.0 GENERATORS cmake_find_package_multi)
-            foreach(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES})
-                conan_cmake_autodetect(settings)
+            foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+                conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
                 conan_cmake_install(PATH_OR_REFERENCE .
                                     BUILD missing
                                     REMOTE conan-center
