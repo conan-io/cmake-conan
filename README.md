@@ -79,7 +79,7 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
 This function will return the auto-detected settings (things like *build_type*, *compiler* or *system
 name*) so you can pass that information to `conan_cmake_install`. This step is optional as you may
 want to rely on profiles, lockfiles or any other way of passing that information. This function will
-also accept as arguments `BUILD_TYPE` and `ARCH`. Settings those arguments will force that settings
+also accept as arguments `BUILD_TYPE` and `ARCH`. Setting those arguments will force that settings
 to the value provided (this can be useful for the multi-configuration generator scenario below).
 
 ```cmake
