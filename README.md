@@ -78,7 +78,9 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
 
 This function will return the auto-detected settings (things like *build_type*, *compiler* or *system
 name*) so you can pass that information to `conan_cmake_install`. This step is optional as you may
-want to rely on profiles, lockfiles or any other way of passing that information. 
+want to rely on profiles, lockfiles or any other way of passing that information. This function will
+also accept as arguments `BUILD_TYPE` and `ARCH`. Settings those arguments will force that settings
+to the value provided (this can be useful for the multi-configuration generator scenario below).
 
 ```cmake
 conan_cmake_autodetect(settings)
@@ -113,8 +115,8 @@ conan_cmake_run(REQUIRES fmt/1.9.4
 
 The recommended approach when using Multi Configuration generators like Visual Studio or Xcode is
 looping through the `CMAKE_CONFIGURATION_TYPES` in your _CMakeLists.txt_ and calling
-`conan_cmake_autodetect` and `conan_cmake_install` for each one using a Conan multiconfig generator like
-`cmake_find_package_multi`. Please check the example:
+`conan_cmake_autodetect` with the `BUILD_TYPE` argument and `conan_cmake_install` for each one using
+a Conan multiconfig generator like `cmake_find_package_multi`. Please check the example:
 
 ```cmake
 cmake_minimum_required(VERSION 3.5)
@@ -126,8 +128,8 @@ include(conan.cmake)
 
 conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package_multi)
 
-foreach(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES})
-    conan_cmake_autodetect(settings)
+foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+    conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
     conan_cmake_install(PATH_OR_REFERENCE .
                         BUILD missing
                         REMOTE conan-center
