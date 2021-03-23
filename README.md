@@ -102,12 +102,31 @@ It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it r
 command the output is quiet or the error is bypassed (or both).
 
 ```cmake
-conan_cmake_run(REQUIRES fmt/1.9.4
+conan_cmake_install(REQUIRES fmt/1.9.4
                          cgal/5.0.2
                 OPTIONS Pkg:shared=True
                         OtherPkg:option=value
                 SETTINGS build_type=Debug)
 ```
+
+## conan_cmake_lock_create()
+
+This function is an additional wrapper for the [conan lock
+create](https://docs.conan.io/en/latest/reference/commands/misc/lock.html#conan-lock-create)
+sub-command of conan lock command to enable lockfile based workflows. You can pass all the arguments
+that the command supports. Also, you can pass the auto-detected settings from
+`conan_cmake_autodetect` in the `SETTINGS` argument.
+
+It can receive as arguments: `PATH`, `REFERENCE`, `UPDATE`, `BASE`, `REMOTE`, `LOCKFILE`,
+`LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`, `ENV`, `ENV_HOST`,
+`ENV_BUILD`, `OPTIONS`, `OPTIONS_HOST`, `OPTIONS_BUILD`, `PROFILE`, `PROFILE_HOST`, `PROFILE_BUILD`,
+`SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, check [conan lock
+create](https://docs.conan.io/en/latest/reference/commands/misc/lock.html#conan-lock-create)
+documentation.
+
+It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it runs the `conan
+install` command the output is quiet or the error is bypassed (or both).
+
 
 ## conan_cmake_run() high level wrapper
 
