@@ -939,6 +939,30 @@ class LocalTests(unittest.TestCase):
         run(cmd)
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_new_flow(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(HelloProject CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES hello/1.0 GENERATORS cmake_find_package_multi)
+            foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+                conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
+                conan_cmake_install(PATH_OR_REFERENCE .
+                                    BUILD missing
+                                    REMOTE conan-center
+                                    SETTINGS ${settings})
+            endforeach()
+            find_package(hello CONFIG)
+            add_executable(main main.cpp)
+            target_link_libraries(main hello::hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug", "MinSizeRel", "RelWithDebInfo"])
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi(self):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
