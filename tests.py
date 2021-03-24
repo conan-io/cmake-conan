@@ -213,7 +213,8 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_lock_create(PATH conanfile.txt LOCKFILE_OUT mylockfile.lock SETTINGS ${settings})
             conan_cmake_install(PATH_OR_REFERENCE .
                                 REMOTE conan-center
-                                LOCKFILE mylockfile.lock)
+                                LOCKFILE mylockfile.lock
+                                BUILD missing)
             find_package(fmt)
             add_executable(main main.cpp)
             target_link_libraries(main fmt::fmt)
