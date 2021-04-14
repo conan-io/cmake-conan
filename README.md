@@ -10,7 +10,7 @@ This cmake module allows to launch ``conan install`` from cmake.
 The branches in this repo are:
 - **develop**: PR are merged to this branch. Latest state of development
 - **master**: Latest release
-- **tagged releases**: https://github.com/conan-io/cmake-conan/releases. 
+- **tagged releases**: https://github.com/conan-io/cmake-conan/releases.
 
 You probably want to use a tagged release to ensure controlled upgrades.
 
@@ -28,6 +28,7 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16.1/conan.cmake"
                 "${CMAKE_BINARY_DIR}/conan.cmake"
+                EXPECTED_HASH SHA256=396e16d0f5eabdc6a14afddbcfff62a54a7ee75c6da23f32f7a31bc85db23484
                 TLS_VERIFY ON)
 endif()
 
@@ -144,7 +145,7 @@ target_compile_features(main PRIVATE cxx_std_11)
 This function is not the recommended way of using cmake-conan any more and will be deprecated in the
 near future. It will make the configure, auto-detect and install in one step so if you plan to use
 any new Conan features like lockfiles or build and host profiles it's possible that the auto-detected
-settings collide with the call to conan install. 
+settings collide with the call to conan install.
 
 ### conan_cmake_run() options:
 
@@ -193,7 +194,7 @@ The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
 ```cmake
 conan_cmake_run(REQUIRES fmt/6.1.2 boost...
-                BASIC_SETUP 
+                BASIC_SETUP
                 BUILD <value>)
 ```
 
@@ -402,10 +403,10 @@ Arguments ``URL`` and ``NAME`` are required, ``INDEX`` and ``VERIFY_SSL`` are op
 
 Example usage:
 ```
-conan_add_remote(NAME bincrafters 
+conan_add_remote(NAME bincrafters
                  INDEX 1
                  URL https://api.bintray.com/conan/bincrafters/public-conan
-                 VERIFY_SSL True)            
+                 VERIFY_SSL True)
 ```
 
 ### conan_config_install()
