@@ -409,6 +409,18 @@ conan_add_remote(NAME bincrafters
                  VERIFY_SSL True)
 ```
 
+### conan_add_user()
+
+Adds a user for a remote.
+Arguments ``USERNAME`` and ``PASSWORD`` are required, ``REMOTE`` is optional.
+
+Example usage:
+```
+conan_add_user(USERN user
+               PASSWORD password
+               REMOTE bincrafters)
+```
+
 ### conan_config_install()
 
 Installs a full configuration from a local or remote zip file.

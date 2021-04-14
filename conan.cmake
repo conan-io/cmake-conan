@@ -852,6 +852,32 @@ function(conan_add_remote)
     endif()
 endfunction()
 
+function(conan_add_user)
+    # Adds a user for a remote
+    # Arguments USER and PASSWORD are required, argument REMOTE is optional
+    # Example usage:
+    #    conan_add_user(USERN user PASSWORD password REMOTE bincrafters)
+    set(oneValueArgs USER PASSWORD REMOTE)
+    cmake_parse_arguments(CONAN "" "${oneValueArgs}" "" ${ARGN})
+
+    find_program(CONAN_CMD conan)
+    if(NOT CONAN_CMD AND CONAN_REQUIRED)
+        message(FATAL_ERROR "Conan executable not found!")
+    endif()
+
+    if(DEFINED CONAN_REMOTE)
+        set(CONAN_REMOTE_ARG "--remote=${CONAN_REMOTE}")
+    endif()
+
+    message(STATUS "Conan: Adding user ${CONAN_USER}")
+    execute_process(COMMAND ${CONAN_CMD} user --password=${CONAN_PASSWORD} ${CONAN_REMOTE_ARG} ${CONAN_USER}
+        RESULT_VARIABLE return_code)
+
+    if(NOT "${return_code}" STREQUAL "0")
+        message(FATAL_ERROR "Conan adding user failed='${return_code}'")
+    endif()
+endfunction()
+
 macro(conan_config_install)
     # install a full configuration from a local or remote zip file
     # Argument ITEM is required, arguments TYPE, SOURCE, TARGET and VERIFY_SSL are optional
