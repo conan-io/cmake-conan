@@ -900,3 +900,65 @@ macro(conan_config_install)
     message(FATAL_ERROR "Conan config failed='${return_code}'")
   endif()
 endmacro()
+
+function(conan_imports)
+    # Calls "conan imports"
+    # Argument PATH is required, INSTALL_FOLDER, IMPORT_FOLDER and UNDO are optional
+    # Example usage:
+    #    conan_imports(PATH . IMPORT_FOLDER ${IMPORT_FOLDER})
+    if(DEFINED CONAN_COMMAND)
+        set(CONAN_CMD ${CONAN_COMMAND})
+    else()
+        conan_check(REQUIRED)
+    endif()
+
+    set(options UNDO OUTPUT_QUIET ERROR_QUIET)
+    set(oneValueArgs PATH INSTALL_FOLDER IMPORT_FOLDER)
+    cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    foreach(arg ${options})
+        if(ARGS_${arg})
+            set(${arg} ${${arg}} ${ARGS_${arg}})
+        endif()
+    endforeach()
+
+    foreach(arg ${oneValueArgs})
+        if(DEFINED ARGS_${arg})
+            if("${arg}" STREQUAL "INSTALL_FOLDER")
+                set(flag "--install-folder")
+            elseif("${arg}" STREQUAL "IMPORT_FOLDER")
+                set(flag "--import-folder")
+            endif()
+            set(${arg} ${${arg}} ${flag} ${ARGS_${arg}})
+        endif()
+    endforeach()
+
+    if(DEFINED UNDO)
+        set(UNDO "--undo")
+    endif()
+
+    set(imports_args imports ${PATH} ${INSTALL_FOLDER} ${IMPORT_FOLDER} ${UNDO})
+    string(REPLACE ";" " " _imports_args "${imports_args}")
+    message(STATUS "Conan executing: ${CONAN_CMD} ${_imports_args}")
+
+    if(ARGS_OUTPUT_QUIET)
+      set(OUTPUT_OPT OUTPUT_QUIET)
+    endif()
+    if(ARGS_ERROR_QUIET)
+      set(ERROR_OPT ERROR_QUIET)
+    endif()
+
+    execute_process(COMMAND ${CONAN_CMD} ${imports_args}
+                    RESULT_VARIABLE return_code
+                    ${OUTPUT_OPT}
+                    ${ERROR_OPT}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    if(NOT "${return_code}" STREQUAL "0")
+        if (ARGS_ERROR_QUIET)
+            message(WARNING "Conan imports failed='${return_code}'")
+        else()
+            message(FATAL_ERROR "Conan imports failed='${return_code}'")
+        endif()
+    endif()
+endfunction()
