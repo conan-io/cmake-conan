@@ -10,7 +10,7 @@ This cmake module allows to launch ``conan install`` from cmake.
 The branches in this repo are:
 - **develop**: PR are merged to this branch. Latest state of development
 - **master**: Latest release
-- **tagged releases**: https://github.com/conan-io/cmake-conan/releases. 
+- **tagged releases**: https://github.com/conan-io/cmake-conan/releases.
 
 You probably want to use a tagged release to ensure controlled upgrades.
 
@@ -31,14 +31,13 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16.1/conan.cmake"
                 "${CMAKE_BINARY_DIR}/conan.cmake"
+                EXPECTED_HASH SHA256=396e16d0f5eabdc6a14afddbcfff62a54a7ee75c6da23f32f7a31bc85db23484
                 TLS_VERIFY ON)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-include(conan.cmake)
-
-conan_cmake_configure(REQUIRES fmt/6.1.2 
+conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
@@ -51,7 +50,7 @@ conan_cmake_install(PATH_OR_REFERENCE .
 find_package(fmt)
 
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)  
+target_link_libraries(main fmt::fmt)
 ```
 
 There are different functions you can use from your CMake project to use Conan from there. The
@@ -65,7 +64,7 @@ This function will accept the same arguments as the sections of the
 [conanfile.txt](https://docs.conan.io/en/latest/reference/conanfile_txt.html).
 
 ```cmake
-conan_cmake_configure(REQUIRES fmt/6.1.2 
+conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package
                       BUILD_REQUIRES cmake/3.15.7
                       IMPORTS "bin, *.dll -> ./bin"
@@ -78,7 +77,9 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
 
 This function will return the auto-detected settings (things like *build_type*, *compiler* or *system
 name*) so you can pass that information to `conan_cmake_install`. This step is optional as you may
-want to rely on profiles, lockfiles or any other way of passing that information. 
+want to rely on profiles, lockfiles or any other way of passing that information. This function will
+also accept as arguments `BUILD_TYPE` and `ARCH`. Setting those arguments will force that settings
+to the value provided (this can be useful for the multi-configuration generator scenario below).
 
 ```cmake
 conan_cmake_autodetect(settings)
@@ -107,12 +108,42 @@ conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py
 )
 ```
 
+## Using conan_cmake_autodetect() and conan_cmake_install() with Multi Configuration generators
+
+The recommended approach when using Multi Configuration generators like Visual Studio or Xcode is
+looping through the `CMAKE_CONFIGURATION_TYPES` in your _CMakeLists.txt_ and calling
+`conan_cmake_autodetect` with the `BUILD_TYPE` argument and `conan_cmake_install` for each one using
+a Conan multiconfig generator like `cmake_find_package_multi`. Please check the example:
+
+```cmake
+cmake_minimum_required(VERSION 3.5)
+project(FormatOutput CXX)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+add_definitions("-std=c++11")
+include(conan.cmake)
+
+conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package_multi)
+
+foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+    conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
+    conan_cmake_install(PATH_OR_REFERENCE .
+                        BUILD missing
+                        REMOTE conan-center
+                        SETTINGS ${settings})
+endforeach()
+
+find_package(fmt CONFIG)
+add_executable(main main.cpp)
+target_link_libraries(main fmt::fmt)
+```
+
 ## conan_cmake_run() high level wrapper
 
 This function is not the recommended way of using cmake-conan any more and will be deprecated in the
 near future. It will make the configure, auto-detect and install in one step so if you plan to use
 any new Conan features like lockfiles or build and host profiles it's possible that the auto-detected
-settings collide with the call to conan install. 
+settings collide with the call to conan install.
 
 ### conan_cmake_run() options:
 
@@ -161,7 +192,7 @@ The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
 ```cmake
 conan_cmake_run(REQUIRES fmt/6.1.2 boost...
-                BASIC_SETUP 
+                BASIC_SETUP
                 BUILD <value>)
 ```
 
@@ -370,10 +401,10 @@ Arguments ``URL`` and ``NAME`` are required, ``INDEX`` and ``VERIFY_SSL`` are op
 
 Example usage:
 ```
-conan_add_remote(NAME bincrafters 
+conan_add_remote(NAME bincrafters
                  INDEX 1
                  URL https://api.bintray.com/conan/bincrafters/public-conan
-                 VERIFY_SSL True)            
+                 VERIFY_SSL True)
 ```
 
 ### conan_config_install()
