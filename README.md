@@ -58,6 +58,21 @@ recommended flow to use cmake-conan is successively calling to `conan_cmake_conf
 `conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
 functions were introduced.
 
+The example above is using the Conan `cmake_find_package` generator which is less intrusive than the
+`cmake` generator and more aligned with the direction Conan is taking for the 2.0 version. If you
+want to continue using the `cmake` generator with `conan_cmake_configure`, `conan_cmake_autodetect`
+and `conan_cmake_install` flow, you should manually include the `conanbuildinfo.cmake` file generated
+and also call to `conan_basic_setup`:
+
+```cmake
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) 
+conan_basic_setup(TARGETS) 
+```
+
+Please [check the cmake generator documentation](https://docs.conan.io/en/latest/integrations/build_system/cmake/cmake_generator.html#cmake-generator)
+for further details.
+
 ## conan_cmake_configure()
 
 This function will accept the same arguments as the sections of the
@@ -103,11 +118,10 @@ It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it r
 command the output is quiet or the error is bypassed (or both).
 
 ```cmake
-conan_cmake_run(REQUIRES fmt/1.9.4
-                         cgal/5.0.2
-                OPTIONS Pkg:shared=True
-                        OtherPkg:option=value
-                SETTINGS build_type=Debug)
+conan_cmake_install(PATH_OR_REFERENCE .
+                    BUILD missing
+                    REMOTE conan-center
+                    SETTINGS ${settings})
 ```
 
 ## Using conan_cmake_autodetect() and conan_cmake_install() with Multi Configuration generators
