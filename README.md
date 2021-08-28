@@ -10,7 +10,7 @@ This cmake module allows to launch ``conan install`` from cmake.
 The branches in this repo are:
 - **develop**: PR are merged to this branch. Latest state of development
 - **master**: Latest release
-- **tagged releases**: https://github.com/conan-io/cmake-conan/releases. 
+- **tagged releases**: https://github.com/conan-io/cmake-conan/releases.
 
 You probably want to use a tagged release to ensure controlled upgrades.
 
@@ -31,14 +31,13 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
   file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16.1/conan.cmake"
                 "${CMAKE_BINARY_DIR}/conan.cmake"
+                EXPECTED_HASH SHA256=396e16d0f5eabdc6a14afddbcfff62a54a7ee75c6da23f32f7a31bc85db23484
                 TLS_VERIFY ON)
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-include(conan.cmake)
-
-conan_cmake_configure(REQUIRES fmt/6.1.2 
+conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
@@ -51,7 +50,7 @@ conan_cmake_install(PATH_OR_REFERENCE .
 find_package(fmt)
 
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)  
+target_link_libraries(main fmt::fmt)
 ```
 
 There are different functions you can use from your CMake project to use Conan from there. The
@@ -59,13 +58,28 @@ recommended flow to use cmake-conan is successively calling to `conan_cmake_conf
 `conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
 functions were introduced.
 
+The example above is using the Conan `cmake_find_package` generator which is less intrusive than the
+`cmake` generator and more aligned with the direction Conan is taking for the 2.0 version. If you
+want to continue using the `cmake` generator with `conan_cmake_configure`, `conan_cmake_autodetect`
+and `conan_cmake_install` flow, you should manually include the `conanbuildinfo.cmake` file generated
+and also call to `conan_basic_setup`:
+
+```cmake
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) 
+conan_basic_setup(TARGETS) 
+```
+
+Please [check the cmake generator documentation](https://docs.conan.io/en/latest/integrations/build_system/cmake/cmake_generator.html#cmake-generator)
+for further details.
+
 ## conan_cmake_configure()
 
 This function will accept the same arguments as the sections of the
 [conanfile.txt](https://docs.conan.io/en/latest/reference/conanfile_txt.html).
 
 ```cmake
-conan_cmake_configure(REQUIRES fmt/6.1.2 
+conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package
                       BUILD_REQUIRES cmake/3.15.7
                       IMPORTS "bin, *.dll -> ./bin"
@@ -104,11 +118,10 @@ It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it r
 command the output is quiet or the error is bypassed (or both).
 
 ```cmake
-conan_cmake_install(REQUIRES fmt/1.9.4
-                         cgal/5.0.2
-                OPTIONS Pkg:shared=True
-                        OtherPkg:option=value
-                SETTINGS build_type=Debug)
+conan_cmake_install(PATH_OR_REFERENCE .
+                    BUILD missing
+                    REMOTE conan-center
+                    SETTINGS ${settings})
 ```
 
 ## conan_cmake_lock_create()
@@ -164,7 +177,7 @@ target_link_libraries(main fmt::fmt)
 This function is not the recommended way of using cmake-conan any more and will be deprecated in the
 near future. It will make the configure, auto-detect and install in one step so if you plan to use
 any new Conan features like lockfiles or build and host profiles it's possible that the auto-detected
-settings collide with the call to conan install. 
+settings collide with the call to conan install.
 
 ### conan_cmake_run() options:
 
@@ -213,7 +226,7 @@ The resolution of the path will be relative to the root ``CMakeLists.txt`` file.
 
 ```cmake
 conan_cmake_run(REQUIRES fmt/6.1.2 boost...
-                BASIC_SETUP 
+                BASIC_SETUP
                 BUILD <value>)
 ```
 
@@ -422,10 +435,10 @@ Arguments ``URL`` and ``NAME`` are required, ``INDEX`` and ``VERIFY_SSL`` are op
 
 Example usage:
 ```
-conan_add_remote(NAME bincrafters 
+conan_add_remote(NAME bincrafters
                  INDEX 1
                  URL https://api.bintray.com/conan/bincrafters/public-conan
-                 VERIFY_SSL True)            
+                 VERIFY_SSL True)
 ```
 
 ### conan_config_install()
