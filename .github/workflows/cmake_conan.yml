@@ -1,8 +1,18 @@
 on: [push, pull_request]
 
 jobs:
-  test_windows:
-    runs-on: windows-2019
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2019, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-2019
+            ENV_CMAKE: ./activate_run.ps1
+          - os: macos-latest
+            ENV_CMAKE: source activate_run.sh
+          - os: ubuntu-latest
+            ENV_CMAKE: source activate_run.sh
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -12,46 +22,6 @@ jobs:
       - name: Install Conan
         run: pip install conan pytest && conan --version
       - name: Install CMake
-        run: | 
-          conan install cmake/3.16.4@ -g=virtualrunenv
+        run: conan install cmake/3.16.4@ -g=virtualrunenv
       - name: Run Tests
-        run:  | 
-          ./activate_run.ps1 && 
-          pytest tests.py -rA -v && 
-          ./deactivate_run.ps1
-  test_linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install Conan
-        run: pip install conan pytest && conan --version
-      - name: Install CMake
-        run: | 
-          conan install cmake/3.16.4@ -g=virtualrunenv
-      - name: Run Tests
-        run:  | 
-          source activate_run.sh && 
-          pytest tests.py -rA -v && 
-          source deactivate_run.sh
-  test_osx:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - name: Install Conan
-        run: pip install conan pytest && conan --version
-      - name: Install CMake
-        run: | 
-          conan install cmake/3.16.4@ -g=virtualrunenv
-      - name: Run Tests
-        run:  | 
-          source activate_run.sh && 
-          pytest tests.py -rA -v && 
-          source deactivate_run.sh
+        run: ${{matrix.ENV_CMAKE}} && pytest tests.py -rA -v
