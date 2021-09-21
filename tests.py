@@ -163,7 +163,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_install(PATH_OR_REFERENCE .
                                 GENERATOR cmake
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
             conan_basic_setup(TARGETS)
@@ -188,7 +188,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             find_package(fmt)
             add_executable(main main.cpp)
@@ -254,7 +254,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 OUTPUT_QUIET ERROR_QUIET)
             find_package(fmt)
@@ -282,7 +282,7 @@ class CMakeConanTest(unittest.TestCase):
             set (CONAN_COMMAND not_existing_conan)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 ERROR_QUIET)
         """)
@@ -952,7 +952,7 @@ class LocalTests(unittest.TestCase):
                 conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
                 conan_cmake_install(PATH_OR_REFERENCE .
                                     BUILD missing
-                                    REMOTE conan-center
+                                    REMOTE conancenter
                                     SETTINGS ${settings})
             endforeach()
             find_package(hello CONFIG)

@@ -44,7 +44,7 @@ conan_cmake_autodetect(settings)
 
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
-                    REMOTE conan-center
+                    REMOTE conancenter
                     SETTINGS ${settings})
 
 find_package(fmt)
@@ -120,7 +120,7 @@ command the output is quiet or the error is bypassed (or both).
 ```cmake
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
-                    REMOTE conan-center
+                    REMOTE conancenter
                     SETTINGS ${settings})
 ```
 
@@ -145,7 +145,7 @@ foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
     conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
     conan_cmake_install(PATH_OR_REFERENCE .
                         BUILD missing
-                        REMOTE conan-center
+                        REMOTE conancenter
                         SETTINGS ${settings})
 endforeach()
 
@@ -450,7 +450,7 @@ else() # in user space
     # Make sure to use conanfile.py to define dependencies, to stay consistent
     conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
     conan_cmake_autodetect(settings)
-    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conan-center SETTINGS ${settings})
+    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conancenter SETTINGS ${settings})
 endif()
 ```
 
