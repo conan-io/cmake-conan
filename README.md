@@ -459,8 +459,8 @@ Please check the source code for other options and arguments.
 
 ## Development, contributors
 
-There are some tests, you can run in python, with nosetests, for example:
+There are some tests, you can run in python, with pytest, for example:
 
 ```bash
-$ nosetests . --nocapture
+$ pytest tests.py -rA
 ```
