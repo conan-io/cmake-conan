@@ -1,0 +1,47 @@
+on: [push, pull_request]
+
+jobs:
+  test_windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Check Python
+        run: python --version && python --version
+  test_linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: 16.9
+      - name: Check Python
+        run: python --version && python --version
+  test_osx:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: 16.9
+      - name: Check Python
+        run: python --version && python --version
