@@ -1,16 +1,24 @@
 on: [push, pull_request]
 
 jobs:
-  # test_windows:
-  #   runs-on: windows-2019
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: 3.7
-  #     - name: Check Python
-  #       run: python --version && python --version
+  test_windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install Conan
+        run: pip install conan pytest && conan --version
+      - name: Install CMake
+        run: | 
+          conan install cmake/3.16.4@ -g=virtualrunenv
+      - name: Run Tests
+        run:  | 
+          activate_run.bat && 
+          pytest tests.py -rf && 
+          deactivate_run.bat
   test_linux:
     runs-on: ubuntu-latest
     steps:
@@ -20,21 +28,30 @@ jobs:
         with:
           python-version: 3.7
       - name: Install Conan
-        run: pip install conan nose && conan --version
+        run: pip install conan pytest && conan --version
       - name: Install CMake
         run: | 
-          conan install cmake/3.16.4@ -g=virtualrunenv && 
-          source activate_run.sh && 
-          cmake --version
+          conan install cmake/3.16.4@ -g=virtualrunenv
       - name: Run Tests
-        run:  nosetests .
-  # test_osx:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: 3.7
-  #     - name: Check Python
-  #       run: python --version && python --version
+        run:  | 
+          source activate_run.sh && 
+          pytest tests.py -rf && 
+          source deactivate_run.sh
+  test_osx:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install Conan
+        run: pip install conan pytest && conan --version
+      - name: Install CMake
+        run: | 
+          conan install cmake/3.16.4@ -g=virtualrunenv
+      - name: Run Tests
+        run:  | 
+          source activate_run.sh && 
+          pytest tests.py -rf && 
+          source deactivate_run.sh
