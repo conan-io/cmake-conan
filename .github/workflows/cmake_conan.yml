@@ -16,9 +16,9 @@ jobs:
           conan install cmake/3.16.4@ -g=virtualrunenv
       - name: Run Tests
         run:  | 
-          activate_run.bat && 
+          ./activate_run.ps1 && 
           pytest tests.py -rf && 
-          deactivate_run.bat
+          ./deactivate_run.ps1
   test_linux:
     runs-on: ubuntu-latest
     steps:
