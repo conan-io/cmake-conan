@@ -24,8 +24,7 @@ jobs:
       - name: Install CMake
         run: | 
           conan install cmake/3.16.4@ -g=virtualrunenv && 
-          chmod +x activate_run.sh && 
-          ./activate_run.sh &&
+          source activate_run.sh && 
           cmake --version
       # - name: Run Tests
       #   run:  nosetests .
