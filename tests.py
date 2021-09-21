@@ -443,7 +443,7 @@ class CMakeConanTest(unittest.TestCase):
         os.makedirs("build")
         os.chdir("build")
         # Only works cmake>=3.9
-        run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
+        run("cmake .. %s -T v142,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
@@ -768,7 +768,7 @@ class LocalTests(unittest.TestCase):
         run("conan create .")
         run("conan create . -s build_type=Debug")
         if platform.system() == "Windows":
-            cls.generator = '-G "Visual Studio 16 2019"'
+            cls.generator = '-G "Visual Studio 16 2019" -A x64'
         else:
             cls.generator = '-G "Unix Makefiles"'
 
@@ -932,7 +932,7 @@ class LocalTests(unittest.TestCase):
 
         os.makedirs("build")
         os.chdir("build")
-        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
+        run("cmake .. %s -T v142 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
