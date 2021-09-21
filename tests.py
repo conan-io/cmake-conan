@@ -24,7 +24,7 @@ def run(cmd, ignore_errors=False):
         raise Exception("Command failed: %s" % cmd)
 
 if platform.system() == "Windows":
-    generator = '-G "Visual Studio 15"'
+    generator = '-G "Visual Studio 16 2019"'
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
@@ -768,7 +768,7 @@ class LocalTests(unittest.TestCase):
         run("conan create .")
         run("conan create . -s build_type=Debug")
         if platform.system() == "Windows":
-            cls.generator = '-G "Visual Studio 15 Win64"'
+            cls.generator = '-G "Visual Studio 16 2019"'
         else:
             cls.generator = '-G "Unix Makefiles"'
 

@@ -17,7 +17,7 @@ jobs:
       - name: Run Tests
         run:  | 
           ./activate_run.ps1 && 
-          pytest tests.py -rf && 
+          pytest tests.py -rA -v && 
           ./deactivate_run.ps1
   test_linux:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
       - name: Run Tests
         run:  | 
           source activate_run.sh && 
-          pytest tests.py -rf && 
+          pytest tests.py -rA -v && 
           source deactivate_run.sh
   test_osx:
     runs-on: macos-latest
@@ -53,5 +53,5 @@ jobs:
       - name: Run Tests
         run:  | 
           source activate_run.sh && 
-          pytest tests.py -rf && 
+          pytest tests.py -rA -v && 
           source deactivate_run.sh
