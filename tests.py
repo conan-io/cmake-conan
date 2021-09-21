@@ -7,7 +7,6 @@ import json
 import textwrap
 from contextlib import contextmanager 
 
-from nose.plugins.attrib import attr
 
 def save(filename, content):
     try:
@@ -421,7 +420,7 @@ class CMakeConanTest(unittest.TestCase):
         run("conan install . --build Test --build=missing")
         run("conan remove -f Test/0.1@test/testing")
 
-    @attr("cmake39")
+    # Only works cmake>=3.9
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
             return
