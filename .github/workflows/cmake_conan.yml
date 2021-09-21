@@ -22,9 +22,13 @@ jobs:
       - name: Install Conan
         run: pip install conan nose && conan --version
       - name: Install CMake
-        run: conan install cmake/3.16.4@ -g=virtualrunenv && chmod +x activate_run.sh && ./activate_run.sh
-      - name: Run Tests
-        run:  nosetests .
+        run: | 
+          conan install cmake/3.16.4@ -g=virtualrunenv && 
+          chmod +x activate_run.sh && 
+          ./activate_run.sh &&
+          cmake --version
+      # - name: Run Tests
+      #   run:  nosetests .
   # test_osx:
   #   runs-on: macos-latest
   #   steps:
