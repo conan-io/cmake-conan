@@ -26,8 +26,8 @@ jobs:
           conan install cmake/3.16.4@ -g=virtualrunenv && 
           source activate_run.sh && 
           cmake --version
-      # - name: Run Tests
-      #   run:  nosetests .
+      - name: Run Tests
+        run:  nosetests .
   # test_osx:
   #   runs-on: macos-latest
   #   steps:
