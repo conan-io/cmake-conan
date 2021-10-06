@@ -428,7 +428,7 @@ function(_collect_settings result)
     set(${result} ${detected_setings} PARENT_SCOPE)
 endfunction()
 
-function(conan_cmake_autodetect detected_settings ${ARGV})
+function(conan_cmake_autodetect detected_settings)
     _conan_detect_build_type(${ARGV})
     _conan_check_system_name()
     _conan_check_language()
