@@ -200,6 +200,32 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
 
+    def test_conan_cmake_autodetect_cxx_standard(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            set(CMAKE_CXX_STANDARD 14)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conancenter
+                                SETTINGS ${settings})
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "compiler.cppstd=14" in data
+
     # https://github.com/conan-io/cmake-conan/issues/315
     def test_issue_315(self):
         content = textwrap.dedent("""
