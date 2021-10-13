@@ -1,6 +1,6 @@
 # cmake-conan
 
-[![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/master?svg=true&passingText=master%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/develop?svg=true&passingText=develop%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/develop) [![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
+![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg)
 
 CMake wrapper for the Conan C and C++ package manager.
 
@@ -44,7 +44,7 @@ conan_cmake_autodetect(settings)
 
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
-                    REMOTE conan-center
+                    REMOTE conancenter
                     SETTINGS ${settings})
 
 find_package(fmt)
@@ -57,6 +57,21 @@ There are different functions you can use from your CMake project to use Conan f
 recommended flow to use cmake-conan is successively calling to `conan_cmake_configure`,
 `conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
 functions were introduced.
+
+The example above is using the Conan `cmake_find_package` generator which is less intrusive than the
+`cmake` generator and more aligned with the direction Conan is taking for the 2.0 version. If you
+want to continue using the `cmake` generator with `conan_cmake_configure`, `conan_cmake_autodetect`
+and `conan_cmake_install` flow, you should manually include the `conanbuildinfo.cmake` file generated
+and also call to `conan_basic_setup`:
+
+```cmake
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) 
+conan_basic_setup(TARGETS) 
+```
+
+Please [check the cmake generator documentation](https://docs.conan.io/en/latest/integrations/build_system/cmake/cmake_generator.html#cmake-generator)
+for further details.
 
 ## conan_cmake_configure()
 
@@ -103,11 +118,10 @@ It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it r
 command the output is quiet or the error is bypassed (or both).
 
 ```cmake
-conan_cmake_run(REQUIRES fmt/1.9.4
-                         cgal/5.0.2
-                OPTIONS Pkg:shared=True
-                        OtherPkg:option=value
-                SETTINGS build_type=Debug)
+conan_cmake_install(PATH_OR_REFERENCE .
+                    BUILD missing
+                    REMOTE conancenter
+                    SETTINGS ${settings})
 ```
 
 ## Using conan_cmake_autodetect() and conan_cmake_install() with Multi Configuration generators
@@ -131,7 +145,7 @@ foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
     conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
     conan_cmake_install(PATH_OR_REFERENCE .
                         BUILD missing
-                        REMOTE conan-center
+                        REMOTE conancenter
                         SETTINGS ${settings})
 endforeach()
 
@@ -436,7 +450,7 @@ else() # in user space
     # Make sure to use conanfile.py to define dependencies, to stay consistent
     conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
     conan_cmake_autodetect(settings)
-    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conan-center SETTINGS ${settings})
+    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conancenter SETTINGS ${settings})
 endif()
 ```
 
@@ -445,8 +459,8 @@ Please check the source code for other options and arguments.
 
 ## Development, contributors
 
-There are some tests, you can run in python, with nosetests, for example:
+There are some tests, you can run in python, with pytest, for example:
 
 ```bash
-$ nosetests . --nocapture
+$ pytest tests.py -rA
 ```
