@@ -7,7 +7,6 @@ import json
 import textwrap
 from contextlib import contextmanager 
 
-from nose.plugins.attrib import attr
 
 def save(filename, content):
     try:
@@ -25,7 +24,7 @@ def run(cmd, ignore_errors=False):
         raise Exception("Command failed: %s" % cmd)
 
 if platform.system() == "Windows":
-    generator = '-G "Visual Studio 15"'
+    generator = '-G "Visual Studio 16 2019"'
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
@@ -163,7 +162,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_install(PATH_OR_REFERENCE .
                                 GENERATOR cmake
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
             conan_basic_setup(TARGETS)
@@ -188,7 +187,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             find_package(fmt)
             add_executable(main main.cpp)
@@ -254,7 +253,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 OUTPUT_QUIET ERROR_QUIET)
             find_package(fmt)
@@ -282,7 +281,7 @@ class CMakeConanTest(unittest.TestCase):
             set (CONAN_COMMAND not_existing_conan)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 ERROR_QUIET)
         """)
@@ -421,7 +420,7 @@ class CMakeConanTest(unittest.TestCase):
         run("conan install . --build Test --build=missing")
         run("conan remove -f Test/0.1@test/testing")
 
-    @attr("cmake39")
+    # Only works cmake>=3.9
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
             return
@@ -444,7 +443,7 @@ class CMakeConanTest(unittest.TestCase):
         os.makedirs("build")
         os.chdir("build")
         # Only works cmake>=3.9
-        run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
+        run("cmake .. %s -T v142,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
@@ -769,7 +768,7 @@ class LocalTests(unittest.TestCase):
         run("conan create .")
         run("conan create . -s build_type=Debug")
         if platform.system() == "Windows":
-            cls.generator = '-G "Visual Studio 15 Win64"'
+            cls.generator = '-G "Visual Studio 16 2019" -A x64'
         else:
             cls.generator = '-G "Unix Makefiles"'
 
@@ -933,7 +932,7 @@ class LocalTests(unittest.TestCase):
 
         os.makedirs("build")
         os.chdir("build")
-        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
+        run("cmake .. %s -T v142 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
@@ -952,7 +951,7 @@ class LocalTests(unittest.TestCase):
                 conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
                 conan_cmake_install(PATH_OR_REFERENCE .
                                     BUILD missing
-                                    REMOTE conan-center
+                                    REMOTE conancenter
                                     SETTINGS ${settings})
             endforeach()
             find_package(hello CONFIG)

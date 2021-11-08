@@ -1,6 +1,6 @@
 # cmake-conan
 
-[![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/master?svg=true&passingText=master%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/master) [![Build status](https://ci.appveyor.com/api/projects/status/xufl3dbdfrlnuhcp/branch/develop?svg=true&passingText=develop%20-%20OK)](https://ci.appveyor.com/project/ConanOrgCI/cmake-conan/branch/develop) [![Build Status](https://travis-ci.org/conan-io/cmake-conan.svg?branch=master)](https://travis-ci.org/conan-io/cmake-conan)
+![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg)
 
 CMake wrapper for the Conan C and C++ package manager.
 
@@ -44,7 +44,7 @@ conan_cmake_autodetect(settings)
 
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
-                    REMOTE conan-center
+                    REMOTE conancenter
                     SETTINGS ${settings})
 
 find_package(fmt)
@@ -120,7 +120,7 @@ command the output is quiet or the error is bypassed (or both).
 ```cmake
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
-                    REMOTE conan-center
+                    REMOTE conancenter
                     SETTINGS ${settings})
 ```
 
@@ -145,7 +145,7 @@ foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
     conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
     conan_cmake_install(PATH_OR_REFERENCE .
                         BUILD missing
-                        REMOTE conan-center
+                        REMOTE conancenter
                         SETTINGS ${settings})
 endforeach()
 
@@ -450,7 +450,7 @@ else() # in user space
     # Make sure to use conanfile.py to define dependencies, to stay consistent
     conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
     conan_cmake_autodetect(settings)
-    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conan-center SETTINGS ${settings})
+    conan_cmake_install(PATH_OR_REFERENCE . BUILD missing REMOTE conancenter SETTINGS ${settings})
 endif()
 ```
 
@@ -459,8 +459,8 @@ Please check the source code for other options and arguments.
 
 ## Development, contributors
 
-There are some tests, you can run in python, with nosetests, for example:
+There are some tests, you can run in python, with pytest, for example:
 
 ```bash
-$ nosetests . --nocapture
+$ pytest tests.py -rA
 ```
