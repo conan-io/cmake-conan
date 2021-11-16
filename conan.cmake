@@ -128,6 +128,10 @@ macro(_conan_detect_compiler)
         set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
     endif()
 
+    if(USING_CXX)
+        set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
+    endif()
+
     if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL GNU)
         # using GCC
         # TODO: Handle other params
@@ -417,7 +421,8 @@ endfunction()
 
 function(_collect_settings result)
     set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
-                            compiler.runtime compiler.libcxx compiler.toolset)
+                            compiler.runtime compiler.libcxx compiler.toolset
+                            compiler.cppstd)
     foreach(ARG ${ARGUMENTS_PROFILE_AUTO})
         string(TOUPPER ${ARG} _arg_name)
         string(REPLACE "." "_" _arg_name ${_arg_name})
