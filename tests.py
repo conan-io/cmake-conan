@@ -7,7 +7,6 @@ import json
 import textwrap
 from contextlib import contextmanager 
 
-from nose.plugins.attrib import attr
 
 def save(filename, content):
     try:
@@ -25,7 +24,7 @@ def run(cmd, ignore_errors=False):
         raise Exception("Command failed: %s" % cmd)
 
 if platform.system() == "Windows":
-    generator = '-G "Visual Studio 15"'
+    generator = '-G "Visual Studio 16 2019"'
 else:
     generator = '-G "Unix Makefiles"'
 # TODO: Test Xcode
@@ -163,7 +162,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_install(PATH_OR_REFERENCE .
                                 GENERATOR cmake
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
             conan_basic_setup(TARGETS)
@@ -188,7 +187,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings})
             find_package(fmt)
             add_executable(main main.cpp)
@@ -199,6 +198,32 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
+
+    def test_conan_cmake_autodetect_cxx_standard(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            set(CMAKE_CXX_STANDARD 14)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conancenter
+                                SETTINGS ${settings})
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "compiler.cppstd=14" in data
 
     # https://github.com/conan-io/cmake-conan/issues/315
     def test_issue_315(self):
@@ -254,7 +279,7 @@ class CMakeConanTest(unittest.TestCase):
             conan_cmake_autodetect(settings)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 OUTPUT_QUIET ERROR_QUIET)
             find_package(fmt)
@@ -282,7 +307,7 @@ class CMakeConanTest(unittest.TestCase):
             set (CONAN_COMMAND not_existing_conan)
             conan_cmake_install(PATH_OR_REFERENCE .
                                 BUILD missing
-                                REMOTE conan-center
+                                REMOTE conancenter
                                 SETTINGS ${settings}
                                 ERROR_QUIET)
         """)
@@ -421,7 +446,7 @@ class CMakeConanTest(unittest.TestCase):
         run("conan install . --build Test --build=missing")
         run("conan remove -f Test/0.1@test/testing")
 
-    @attr("cmake39")
+    # Only works cmake>=3.9
     def test_vs_toolset_host_x64(self):
         if platform.system() != "Windows":
             return
@@ -444,7 +469,7 @@ class CMakeConanTest(unittest.TestCase):
         os.makedirs("build")
         os.chdir("build")
         # Only works cmake>=3.9
-        run("cmake .. %s -T v140,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
+        run("cmake .. %s -T v142,host=x64 -DCMAKE_BUILD_TYPE=Release" % (generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
@@ -769,7 +794,7 @@ class LocalTests(unittest.TestCase):
         run("conan create .")
         run("conan create . -s build_type=Debug")
         if platform.system() == "Windows":
-            cls.generator = '-G "Visual Studio 15 Win64"'
+            cls.generator = '-G "Visual Studio 16 2019" -A x64'
         else:
             cls.generator = '-G "Unix Makefiles"'
 
@@ -933,10 +958,34 @@ class LocalTests(unittest.TestCase):
 
         os.makedirs("build")
         os.chdir("build")
-        run("cmake .. %s -T v140 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
+        run("cmake .. %s -T v142 -DCMAKE_BUILD_TYPE=Release" % (self.generator))
         run("cmake --build . --config Release")
         cmd = os.sep.join([".", "bin", "main"])
         run(cmd)
+
+    @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
+    def test_multi_new_flow(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(HelloProject CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES hello/1.0 GENERATORS cmake_find_package_multi)
+            foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+                conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
+                conan_cmake_install(PATH_OR_REFERENCE .
+                                    BUILD missing
+                                    REMOTE conancenter
+                                    SETTINGS ${settings})
+            endforeach()
+            find_package(hello CONFIG)
+            add_executable(main main.cpp)
+            target_link_libraries(main hello::hello)
+            """)
+        save("CMakeLists.txt", content)
+        self._build_multi(["Release", "Debug", "MinSizeRel", "RelWithDebInfo"])
 
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi(self):
