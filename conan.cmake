@@ -793,7 +793,7 @@ macro(conan_check)
     endif()
 
     find_program(CONAN_CMD conan
-            HINTS ~/.local/bin)
+            PATHS ~/.local/bin)
     if(NOT CONAN_CMD AND CONAN_REQUIRED)
         message(FATAL_ERROR "Conan executable not found! Please install conan.")
     endif()
@@ -866,7 +866,7 @@ macro(conan_config_install)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     find_program(CONAN_CMD conan
-            HINTS ~/.local/bin)
+            PATHS ~/.local/bin)
     if(NOT CONAN_CMD AND CONAN_REQUIRED)
         message(FATAL_ERROR "Conan executable not found!")
     endif()
