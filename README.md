@@ -27,35 +27,18 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 add_definitions("-std=c++11")
 
-set (CONAN_CMAKE_VERSION "0.17.0")
-set (CONAN_CMAKE_HASH 3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef)
-
-set (DOWNLOAD_CONAN_CMAKE false)
-
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-  set (DOWNLOAD_CONAN_CMAKE true)
+message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/0.17.0/conan.cmake"
+	"${CMAKE_BINARY_DIR}/conan.cmake"
+	EXPECTED_HASH SHA256=3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef
+	TLS_VERIFY ON
+	STATUS DOWNLOAD_STATUS)
+		
+list(GET DOWNLOAD_STATUS 0 DOWNLOAD_STATUS_CODE)
+if(NOT ${DOWNLOAD_STATUS_CODE} EQUAL 0)
+	message(FATAL_ERROR "Error downloading conan.cmake: ${DOWNLOAD_STATUS}")
 else()
-  message(STATUS "Checking version of existing conan.cmake file")
-  file(READ "${CMAKE_BINARY_DIR}/conan.cmake" FILE_CONTENTS)
-  string(FIND "${FILE_CONTENTS}" "# version: ${CONAN_CMAKE_VERSION}" MATCH_RESULT)
-
-  if(${MATCH_RESULT} EQUAL -1)
-    set (DOWNLOAD_CONAN_CMAKE true)
-  endif()
-endif()
-
-if (${DOWNLOAD_CONAN_CMAKE})
-  message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/${CONAN_CMAKE_VERSION}/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake"
-    EXPECTED_HASH SHA256=${CONAN_CMAKE_HASH}
-    TLS_VERIFY ON
-    STATUS DOWNLOAD_STATUS)
-
-  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-  if(NOT ${STATUS_CODE} EQUAL 0)
-    message(FATAL_ERROR "Error downloading conan.cmake: ${DOWNLOAD_STATUS}")
-  endif()
+	message(STATUS "Download result: ${DOWNLOAD_STATUS}")
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
