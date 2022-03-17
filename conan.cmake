@@ -228,6 +228,112 @@ macro(_conan_detect_compiler)
 
 endmacro()
 
+function(_conan_create_android_toolchain result)
+    if (NOT DEFINED ANDROID_ABI)
+        message(FATAL_ERROR "ANDROID_ABI is required to build for Android")
+    endif()
+    if (NOT DEFINED ANDROID_PLATFORM)
+        message(FATAL_ERROR "ANDROID_PLATFORM is required to build for Android")
+    endif()
+    if (NOT IS_DIRECTORY ${ANDROID_NDK})
+        message(FATAL_ERROR "ANDROID_NDK directory is required to build for Android")
+    endif()
+
+    macro(_forward_var var)
+        if (DEFINED ${var})
+            list(APPEND TOOLCHAIN_BODY "set(${var} ${${var}})")
+        endif()
+    endmacro()
+    _forward_var(ANDROID_ABI)
+    _forward_var(ANDROID_PLATFORM)
+    _forward_var(ANDROID_LD)
+    _forward_var(ANDROID_STL)
+    _forward_var(ANDROID_CPP_FEATURES)
+
+    list(APPEND TOOLCHAIN_BODY "include(@ANDROID_NDK@/build/cmake/android.toolchain.cmake)")
+    list(JOIN TOOLCHAIN_BODY "\n" CONTENT)
+
+    set(TOOLCHAIN_PATH "${CMAKE_BINARY_DIR}/conan.toolchain.cmake")
+    message(STATUS "Conan: Generate CMake Android toolchain ${TOOLCHAIN_PATH}")
+
+    file(CONFIGURE OUTPUT ${TOOLCHAIN_PATH}
+        CONTENT ${CONTENT}
+        @ONLY
+    )
+    set(${result} ${TOOLCHAIN_PATH} PARENT_SCOPE)
+endfunction()
+
+function(_conan_create_android_profile result)
+    macro(_set_abi_dependent_names abi binutils_prefix compiler_prefix)
+        set(_CONAN_HOST_ARCH ${abi})
+        set(_CONAN_HOST_BINUTILS_PREFIX ${binutils_prefix}-linux-androideabi)
+        set(_CONAN_HOST_COMPILER_PREFIX ${compiler_prefix}-linux-androideabi)
+    endmacro()
+    if (${CMAKE_ANDROID_ARCH_ABI} STREQUAL "armeabi-v7a")
+        _set_abi_dependent_names(armv7 arm armv7a)
+    elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
+        _set_abi_dependent_names(armv8 aarch64 aarch64)
+    elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "x86")
+        _set_abi_dependent_names(x86 i686 i686)
+    elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "x86_64")
+        _set_abi_dependent_names(x86_64 x86_64 x86_64)
+    else()
+        message(FATAL_ERROR "The ${CMAKE_ANDROID_ARCH_ABI} Android ABI is not supported")
+    endif()
+
+    string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+    list(GET VERSION_LIST 0 _CONAN_HOST_COMPILER_VERSION)
+
+    _conan_detect_build_type()
+
+    set(PROFILE_PATH "${CMAKE_BINARY_DIR}/conan-profile")
+    message(STATUS "Conan: Generate profile ${PROFILE_PATH}")
+
+    file (
+        CONFIGURE OUTPUT ${PROFILE_PATH}
+        CONTENT "\
+compiler_prefix=@_CONAN_HOST_COMPILER_PREFIX@
+binutils_prefix=@_CONAN_HOST_BINUTILS_PREFIX@
+android_ndk=@CMAKE_ANDROID_NDK@
+api_level=@ANDROID_NATIVE_API_LEVEL@
+
+[settings]
+os=Android
+os.api_level=$api_level
+arch=@_CONAN_HOST_ARCH@
+
+compiler=clang
+compiler.libcxx=@CMAKE_ANDROID_STL_TYPE@
+compiler.version=@_CONAN_HOST_COMPILER_VERSION@
+cppstd=@CMAKE_CXX_STANDARD@
+
+build_type=@_CONAN_SETTING_BUILD_TYPE@
+
+[env]
+# cmake
+CONAN_CMAKE_TOOLCHAIN_FILE=@CONAN_CMAKE_TOOLCHAIN_FILE@
+
+# autotools
+PATH=[@ANDROID_TOOLCHAIN_ROOT@/bin]
+TOOLCHAIN=@ANDROID_TOOLCHAIN_ROOT@
+
+API=$api_level
+AR=$binutils_prefix-ar
+AS=$binutils_prefix-as
+CC=$compiler_prefix$api_level-clang
+CHOST=$compiler_prefix
+CXX=$compiler_prefix$api_level-clang++
+LD=$binutils_prefix-ld
+RANLIB=$binutils_prefix-ranlib
+STRIP=$binutils_prefix-strip
+SYSROOT=$android_ndk/sysroot
+TARGET=$compiler_prefix
+"
+        @ONLY
+    )
+    set(${result} ${PROFILE_PATH} PARENT_SCOPE)
+endfunction()
+
 function(conan_cmake_settings result)
     #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER})
     #message(STATUS "COMPILER " ${CMAKE_CXX_COMPILER_ID})
@@ -440,6 +546,13 @@ function(conan_cmake_autodetect detected_settings)
     _conan_detect_compiler(${ARGV})
     _collect_settings(collected_settings)
     set(${detected_settings} ${collected_settings} PARENT_SCOPE)
+endfunction()
+
+function(conan_cmake_setup_android_profile result)
+    _conan_create_android_toolchain(CONAN_CMAKE_TOOLCHAIN_FILE)
+    _conan_create_android_profile(CONAN_ANDROID_PROFILE)
+
+    set(${result} ${CONAN_ANDROID_PROFILE} PARENT_SCOPE)
 endfunction()
 
 macro(conan_parse_arguments)
