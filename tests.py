@@ -5,6 +5,7 @@ import platform
 import shutil
 import json
 import textwrap
+import itertools
 from contextlib import contextmanager 
 
 
@@ -38,6 +39,16 @@ def ch_build_dir():
     finally:
         os.chdir("../")
         shutil.rmtree("build")
+
+@contextmanager
+def pushd(new_dir):
+    previous_dir = os.getcwd()
+    os.chdir(new_dir)
+    try:
+        yield
+    finally:
+        os.chdir(previous_dir)
+
 
 class CMakeConanTest(unittest.TestCase):
 
@@ -1088,17 +1099,11 @@ class AndroidTests(unittest.TestCase):
     def setUpClass(cls):
         ndk = os.getenv("ANDROID_NDK")
         assert os.path.isdir(ndk), "Android NDK directory {} does not exist".format(ndk)
+        cls.ndk = ndk
 
         toolchain = "{}/build/cmake/android.toolchain.cmake".format(ndk)
         assert os.path.isfile(toolchain), "Android CMake Toolchain file {} does not exist".format(toolchain)
-
-        # todo: ABI and platform setup
-        cls.cmake_android_args = " ".join([
-            "-DANDROID_ABI=arm64-v8a",
-            "-DANDROID_PLATFORM=android-21",
-            "-DANDROID_NDK={}".format(ndk),
-            "-DCMAKE_TOOLCHAIN_FILE={}".format(toolchain)
-        ])
+        cls.toolchain = toolchain
 
     def setUp(self):
         self.old_folder = os.getcwd()
@@ -1114,6 +1119,15 @@ class AndroidTests(unittest.TestCase):
         os.chdir(self.old_folder)
         os.environ.clear()
         os.environ.update(self.old_env)
+
+    def cmake_android_args(self, build_type="Release", abi="arm64-v8a", platform="android-21"):
+        return " ".join([
+            "-DCMAKE_BUILD_TYPE={}".format(build_type),
+            "-DANDROID_ABI={}".format(abi),
+            "-DANDROID_PLATFORM={}".format(platform),
+            "-DANDROID_NDK={}".format(self.__class__.ndk),
+            "-DCMAKE_TOOLCHAIN_FILE={}".format(self.__class__.toolchain)
+        ])
 
     def test_conan_android_build(self):
         content = textwrap.dedent("""
@@ -1145,8 +1159,20 @@ class AndroidTests(unittest.TestCase):
             target_link_libraries(main CONAN_PKG::fmt)
         """)
         save("CMakeLists.txt", content)
-        os.makedirs("build")
-        os.chdir("build")
 
-        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release ".format(generator) + AndroidTests.cmake_android_args)
-        run("cmake --build . --config Release")
+        abis = ("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        build_types = ("Release", "Debug", "RelWithDebInfo", "MinSizeRel")
+
+        for variant in itertools.product(abis, build_types):
+            with self.subTest(variant = variant):
+                abi = variant[0]
+                build_type = variant[1]
+
+                build_dir = os.path.join("build", abi, build_type)
+                os.makedirs(build_dir)
+
+                with pushd(build_dir):
+                    cmake_args = self.cmake_android_args(build_type, abi)
+
+                    run("cmake ../../.. {} ".format(generator) + cmake_args)
+                    run("cmake --build .")
