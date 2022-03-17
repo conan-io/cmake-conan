@@ -780,46 +780,6 @@ class CMakeConanTest(unittest.TestCase):
             assert remote["url"] == remote_url, "Invalid remote url"
             assert remote["verify_ssl"] == verify_ssl, "Invalid verify_ssl"
 
-    @unittest.skipIf(os.getenv("ANDROID_NDK") == None, "We need Android NDK directory to run the test")
-    def test_conan_android_build(self):
-        content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
-            project(FormatOutput CXX)
-            set(CMAKE_CXX_STANDARD 14)
-            set(CMAKE_CXX_STANDARD_REQUIRED ON)
-            include(conan.cmake)
-            conan_cmake_configure(REQUIRES fmt/6.1.2)
-            conan_cmake_autodetect(settings)
-            conan_cmake_install(PATH_OR_REFERENCE .
-                                GENERATOR cmake
-                                BUILD missing
-                                REMOTE conancenter
-                                SETTINGS ${settings})
-            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-            conan_basic_setup(TARGETS)
-
-            add_library(main SHARED main.cpp)
-            target_link_libraries(main CONAN_PKG::fmt)
-        """)
-        save("CMakeLists.txt", content)
-        os.makedirs("build")
-        os.chdir("build")
-
-        ndk = os.getenv("ANDROID_NDK")
-        assert os.path.isdir(ndk), "Android NDK directory {} does not exist".format(ndk)
-
-        toolchain = "{}/build/cmake/android.toolchain.cmake".format(ndk)
-        assert os.path.isfile(toolchain), "Android CMake Toolchain file {} does not exist".format(toolchain)
-
-        extra_args = " ".join([
-            "-DANDROID_ABI=arm64-v8a",
-            "-DANDROID_PLATFORM=android-21",
-            "-DANDROID_NDK={}".format(ndk),
-            "-DCMAKE_TOOLCHAIN_FILE={}".format(toolchain)
-        ])
-        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release ".format(generator) + extra_args)
-        run("cmake --build . --config Release")
-
 
 class LocalTests(unittest.TestCase):
 
@@ -1119,3 +1079,74 @@ class LocalTests(unittest.TestCase):
             """)
         save("CMakeLists.txt", content)
         self._build_multi(["Release", "Debug", "RelWithDebInfo"])
+
+
+@unittest.skipIf(os.getenv("ANDROID_NDK") == None, "We need Android NDK directory to run the test")
+class AndroidTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        ndk = os.getenv("ANDROID_NDK")
+        assert os.path.isdir(ndk), "Android NDK directory {} does not exist".format(ndk)
+
+        toolchain = "{}/build/cmake/android.toolchain.cmake".format(ndk)
+        assert os.path.isfile(toolchain), "Android CMake Toolchain file {} does not exist".format(toolchain)
+
+        # todo: ABI and platform setup
+        cls.cmake_android_args = " ".join([
+            "-DANDROID_ABI=arm64-v8a",
+            "-DANDROID_PLATFORM=android-21",
+            "-DANDROID_NDK={}".format(ndk),
+            "-DCMAKE_TOOLCHAIN_FILE={}".format(toolchain)
+        ])
+
+    def setUp(self):
+        self.old_folder = os.getcwd()
+        CONAN_TEST_FOLDER = os.getenv('CONAN_TEST_FOLDER', None)
+        folder = tempfile.mkdtemp(suffix='conan', dir=CONAN_TEST_FOLDER)
+        shutil.copy2("conan.cmake", os.path.join(folder, "conan.cmake"))
+        shutil.copy2("main.cpp", os.path.join(folder, "main.cpp"))
+        os.chdir(folder)
+        self.old_env = dict(os.environ)
+        os.environ.update({"CONAN_USER_HOME": folder})
+
+    def tearDown(self):
+        os.chdir(self.old_folder)
+        os.environ.clear()
+        os.environ.update(self.old_env)
+
+    def test_conan_android_build(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            set(CMAKE_CXX_STANDARD 14)
+            set(CMAKE_CXX_STANDARD_REQUIRED ON)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2)
+
+            if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+                conan_cmake_setup_android_profile(profile_host)
+            else()
+                conan_cmake_autodetect(settings)
+            endif()
+
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                GENERATOR cmake
+                                BUILD missing
+                                REMOTE conancenter
+                                SETTINGS ${settings}
+                                PROFILE_BUILD default
+                                PROFILE_HOST ${profile_host}
+                                )
+            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+            conan_basic_setup(TARGETS)
+
+            add_library(main SHARED main.cpp)
+            target_link_libraries(main CONAN_PKG::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release ".format(generator) + AndroidTests.cmake_android_args)
+        run("cmake --build . --config Release")
