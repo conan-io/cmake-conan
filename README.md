@@ -66,8 +66,8 @@ and also call to `conan_basic_setup`:
 
 ```cmake
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) 
-conan_basic_setup(TARGETS) 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
 ```
 
 Please [check the cmake generator documentation](https://docs.conan.io/en/latest/integrations/build_system/cmake/cmake_generator.html#cmake-generator)
@@ -108,7 +108,7 @@ pass all the arguments that the command supports. Also, you can pass the auto-de
 `conan_cmake_autodetect` in the `SETTINGS` argument.
 
 It can receive as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`, `REMOTE`,
-`LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD` (if this
+`LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `OUTPUT_FOLDER`, `GENERATOR`, `BUILD` (if this
 parameter takes the `all` value, Conan will build everything from source), `ENV`, `ENV_HOST`,
 `ENV_BUILD`, `OPTIONS_HOST`, `OPTIONS`, `OPTIONS_BUILD`, `PROFILE`, `PROFILE_HOST`, `PROFILE_BUILD`,
 `SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, check [conan
@@ -268,9 +268,9 @@ include(conan.cmake)
 conan_cmake_run(CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
 ```
 
-Use it to set the different configurations when using multi-configuration generators. The default 
-configurations used for multi-configuration generators are `Debug` and `Release` if the argument 
-`CONFIGURATION_TYPES` is not specified  The build types passed through this argument should exist 
+Use it to set the different configurations when using multi-configuration generators. The default
+configurations used for multi-configuration generators are `Debug` and `Release` if the argument
+`CONFIGURATION_TYPES` is not specified  The build types passed through this argument should exist
 in *settings.yml*.
 
 ### PROFILE
