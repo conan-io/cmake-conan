@@ -18,14 +18,11 @@ You can just clone or grab the *conan.cmake* file and put in in your project.
 Or it can be used in this way. Note the ``v0.16.1`` tag in the URL, change it to point to your desired release:
 
 ```cmake
-
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 project(FormatOutput CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-
-add_definitions("-std=c++11")
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
@@ -35,7 +32,7 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
                 TLS_VERIFY ON)
 endif()
 
-include(${CMAKE_BINARY_DIR}/conan.cmake)
+include(conan)
 
 conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package)
@@ -47,10 +44,11 @@ conan_cmake_install(PATH_OR_REFERENCE .
                     REMOTE conancenter
                     SETTINGS ${settings})
 
-find_package(fmt)
+find_package(fmt REQUIRED)
 
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)
+target_link_libraries(main PRIVATE fmt::fmt)
+target_compile_features(main PRIVATE cxx_std_11)
 ```
 
 There are different functions you can use from your CMake project to use Conan from there. The
@@ -132,12 +130,13 @@ looping through the `CMAKE_CONFIGURATION_TYPES` in your _CMakeLists.txt_ and cal
 a Conan multiconfig generator like `cmake_find_package_multi`. Please check the example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 project(FormatOutput CXX)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-add_definitions("-std=c++11")
-include(conan.cmake)
+
+include(conan)
 
 conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package_multi)
 
@@ -149,9 +148,10 @@ foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
                         SETTINGS ${settings})
 endforeach()
 
-find_package(fmt CONFIG)
+find_package(fmt REQUIRED CONFIG)
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)
+target_link_libraries(main PRIVATE fmt::fmt)
+target_compile_features(main PRIVATE cxx_std_11)
 ```
 
 ## conan_cmake_run() high level wrapper
@@ -180,7 +180,7 @@ it with the ``CONANFILE`` argument
 If you want to use targets, you could do:
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(REQUIRES fmt/1.9.4
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
@@ -196,7 +196,7 @@ This will do a ``conan_basic_setup(TARGETS)`` for modern CMake targets definitio
 If you want to use your own ``conanfile.txt`` or ``conanfile.py`` instead of generating a temporary one, you could do:
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(CONANFILE conanfile.txt  # or relative build/conanfile.txt
                 BASIC_SETUP CMAKE_TARGETS
                 BUILD missing)
@@ -225,7 +225,7 @@ Used to define the build policy used for ``conan install``. Can take different v
 ### KEEP_RPATHS
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP KEEP_RPATHS)
 ```
@@ -233,7 +233,7 @@ conan_cmake_run(CONANFILE conanfile.txt
 ### NO_OUTPUT_DIRS
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(CONANFILE conanfile.txt
                 BASIC_SETUP NO_OUTPUT_DIRS)
 ```
@@ -243,7 +243,7 @@ Pass to ``conan_basic_setup(NO_OUTPUT_DIRS)`` so *conanbuildinfo.cmake* does not
 ### ARCH
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(ARCH armv7)
 ```
 
@@ -254,7 +254,7 @@ exist in *settings.yml*.
 ### BUILD_TYPE
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(BUILD_TYPE "None")
 ```
 
@@ -264,7 +264,7 @@ exist in *settings.yml*.
 ### CONFIGURATION_TYPES
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo")
 ```
 
@@ -275,7 +275,7 @@ in *settings.yml*.
 
 ### PROFILE
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(PROFILE default)
 ```
 
@@ -285,7 +285,7 @@ and are overridden by the values from the profile.
 
 ### PROFILE_AUTO
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(PROFILE default
                 PROFILE_AUTO build_type)
 ```
@@ -304,7 +304,7 @@ The ``ALL`` value is used to use all detected settings from CMake, instead of th
 defined in the profile:
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(PROFILE default
                 PROFILE_AUTO ALL)
 ```
@@ -321,7 +321,7 @@ If the ``BUILD_TYPE`` is explictly passed to ``conan_cmake_run()``, then single 
 
 ### SETTINGS
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 SETTINGS arch=armv6
                 SETTINGS compiler.cppstd=14)
@@ -329,7 +329,7 @@ conan_cmake_run(...
 
 ### ENV
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 ENV env_var=value
                 ENV Pkg:env_var2=value2)
@@ -351,7 +351,7 @@ have higher precedence, so these values would be used instead of the profiles on
 Provide the ``conan install --install-folder=[folder]`` argument:
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 INSTALL_FOLDER myfolder
                 )
@@ -362,7 +362,7 @@ conan_cmake_run(...
 Add additional [generators](https://docs.conan.io/en/latest/reference/generators.html?highlight=generator). It may useful to add the [virtualrunenv](https://docs.conan.io/en/latest/mastering/virtualenv.html#virtualrunenv-generator)-generator:
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 GENERATORS virtualrunenv)
 ```
@@ -382,7 +382,7 @@ conan_cmake_run(...
 Use ``NO_LOAD`` argument to avoid loading the _conanbuildinfo.cmake_ generated by the default ``cmake`` generator.
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 NO_LOAD)
 ```
@@ -393,7 +393,7 @@ Use ``CONAN_COMMAND`` argument to specify the conan path, e.g. in case of runnin
 does not identify conan as command, even if it is +x and it is in the path.
 
 ```cmake
-include(conan.cmake)
+include(conan)
 conan_cmake_run(...
                 CONAN_COMMAND "path_to_conan")
 ```
@@ -446,7 +446,7 @@ if(CONAN_EXPORTED) # in conan local cache
     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
 else() # in user space
-    include(conan.cmake)
+    include(conan)
     # Make sure to use conanfile.py to define dependencies, to stay consistent
     conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
     conan_cmake_autodetect(settings)

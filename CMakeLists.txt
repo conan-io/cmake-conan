@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 project(FormatOutput CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-
-add_definitions("-std=c++11")
 
 # if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 #   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
@@ -17,7 +15,7 @@ add_definitions("-std=c++11")
 
 include(conan.cmake)
 
-conan_cmake_configure(REQUIRES fmt/6.1.2 
+conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
@@ -27,7 +25,8 @@ conan_cmake_install(PATH_OR_REFERENCE .
                     REMOTE conancenter
                     SETTINGS ${settings})
 
-find_package(fmt)
+find_package(fmt REQUIRED)
 
 add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)                    
+target_link_libraries(main PRIVATE fmt::fmt)
+target_compile_features(main PRIVATE cxx_std_11)
