@@ -882,9 +882,10 @@ macro(conan_config_install)
     set(multiValueArgs ARGS)
     cmake_parse_arguments(CONAN "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    find_program(CONAN_CMD conan)
-    if(NOT CONAN_CMD AND CONAN_REQUIRED)
-        message(FATAL_ERROR "Conan executable not found!")
+    if(DEFINED CONAN_COMMAND)
+        set(CONAN_CMD ${CONAN_COMMAND})
+    else()
+        conan_check(REQUIRED)
     endif()
 
     if(DEFINED CONAN_VERIFY_SSL)
