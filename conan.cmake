@@ -241,7 +241,7 @@ function(_conan_create_android_toolchain result)
 
     macro(_forward_var var)
         if (DEFINED ${var})
-            list(APPEND TOOLCHAIN_BODY "set(${var} ${${var}})")
+            list(APPEND TOOLCHAIN_BODY "set(${var} \"${${var}}\")")
         endif()
     endmacro()
     _forward_var(ANDROID_ABI)
@@ -250,72 +250,84 @@ function(_conan_create_android_toolchain result)
     _forward_var(ANDROID_STL)
     _forward_var(ANDROID_CPP_FEATURES)
 
-    list(APPEND TOOLCHAIN_BODY "include(@ANDROID_NDK@/build/cmake/android.toolchain.cmake)")
+    list(APPEND TOOLCHAIN_BODY "include(\"${ANDROID_NDK}/build/cmake/android.toolchain.cmake\")\n")
     list(JOIN TOOLCHAIN_BODY "\n" CONTENT)
 
     set(TOOLCHAIN_PATH "${CMAKE_BINARY_DIR}/conan.toolchain.cmake")
     message(STATUS "Conan: Generate CMake Android toolchain ${TOOLCHAIN_PATH}")
 
-    file(CONFIGURE OUTPUT ${TOOLCHAIN_PATH}
-        CONTENT ${CONTENT}
-        @ONLY
-    )
+    file(WRITE ${TOOLCHAIN_PATH} ${CONTENT})
+
     set(${result} ${TOOLCHAIN_PATH} PARENT_SCOPE)
 endfunction()
 
 function(_conan_create_android_profile result)
+    set(options BUILD_TYPE PROFILE_HOST)
+    cmake_parse_arguments(ARG "" "${options}" "" ${ARGN})
+
     macro(_set_abi_dependent_names abi binutils_prefix compiler_prefix)
-        set(_CONAN_HOST_ARCH ${abi})
-        set(_CONAN_HOST_BINUTILS_PREFIX ${binutils_prefix}-linux-androideabi)
-        set(_CONAN_HOST_COMPILER_PREFIX ${compiler_prefix}-linux-androideabi)
+        set(CONAN_HOST_ARCH ${abi})
+        set(CONAN_HOST_BINUTILS_PREFIX ${binutils_prefix})
+        set(CONAN_HOST_COMPILER_PREFIX ${compiler_prefix})
     endmacro()
     if (${CMAKE_ANDROID_ARCH_ABI} STREQUAL "armeabi-v7a")
-        _set_abi_dependent_names(armv7 arm armv7a)
+        _set_abi_dependent_names(armv7 arm-linux-androideabi armv7a-linux-androideabi)
     elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
-        _set_abi_dependent_names(armv8 aarch64 aarch64)
+        _set_abi_dependent_names(armv8 aarch64-linux-android aarch64-linux-android)
     elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "x86")
-        _set_abi_dependent_names(x86 i686 i686)
+        _set_abi_dependent_names(x86 i686-linux-android i686-linux-android)
     elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "x86_64")
-        _set_abi_dependent_names(x86_64 x86_64 x86_64)
+        _set_abi_dependent_names(x86_64 x86_64-linux-android x86_64-linux-android)
     else()
         message(FATAL_ERROR "The ${CMAKE_ANDROID_ARCH_ABI} Android ABI is not supported")
     endif()
 
     string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
-    list(GET VERSION_LIST 0 _CONAN_HOST_COMPILER_VERSION)
+    list(GET VERSION_LIST 0 CONAN_HOST_COMPILER_VERSION)
 
-    _conan_detect_build_type()
+    if (DEFINED ARG_BUILD_TYPE)
+        set(CONAN_BUILD_TYPE ${ARG_BUILD_TYPE})
+    elseif (DEFINED CMAKE_BUILD_TYPE)
+        set(CONAN_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+    else()
+        message(FATAL_ERROR "Please specify in command line CMAKE_BUILD_TYPE (-DCMAKE_BUILD_TYPE=Release)")
+    endif()
+    set(BUILD_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel")
+    list(FIND BUILD_TYPES ${CONAN_BUILD_TYPE} IDX_FOUND)
+    if (NOT ${IDX_FOUND} GREATER -1)
+        message(FATAL_ERROR "Unexpected build type: ${CONAN_BUILD_TYPE}")
+    endif()
 
-    set(PROFILE_PATH "${CMAKE_BINARY_DIR}/conan-profile")
-    message(STATUS "Conan: Generate profile ${PROFILE_PATH}")
+    string(TOLOWER ${CONAN_BUILD_TYPE} SUFFIX)
+    set(SUFFIX "-${SUFFIX}")
+    set(PROFILE_PATH "${CMAKE_BINARY_DIR}/conan-profile${SUFFIX}")
+    message(STATUS "Conan: Generate Android profile ${PROFILE_PATH}")
 
-    file (
-        CONFIGURE OUTPUT ${PROFILE_PATH}
-        CONTENT "\
-compiler_prefix=@_CONAN_HOST_COMPILER_PREFIX@
-binutils_prefix=@_CONAN_HOST_BINUTILS_PREFIX@
-android_ndk=@CMAKE_ANDROID_NDK@
-api_level=@ANDROID_NATIVE_API_LEVEL@
+    file(WRITE ${PROFILE_PATH} "\
+compiler_prefix=${CONAN_HOST_COMPILER_PREFIX}
+binutils_prefix=${CONAN_HOST_BINUTILS_PREFIX}
+android_ndk=${CMAKE_ANDROID_NDK}
+api_level=${ANDROID_NATIVE_API_LEVEL}
 
 [settings]
 os=Android
 os.api_level=$api_level
-arch=@_CONAN_HOST_ARCH@
+arch=${CONAN_HOST_ARCH}
 
 compiler=clang
-compiler.libcxx=@CMAKE_ANDROID_STL_TYPE@
-compiler.version=@_CONAN_HOST_COMPILER_VERSION@
-cppstd=@CMAKE_CXX_STANDARD@
+compiler.libcxx=${CMAKE_ANDROID_STL_TYPE}
+compiler.version=${CONAN_HOST_COMPILER_VERSION}
+cppstd=${CMAKE_CXX_STANDARD}
 
-build_type=@_CONAN_SETTING_BUILD_TYPE@
+build_type=${CONAN_BUILD_TYPE}
 
 [env]
 # cmake
-CONAN_CMAKE_TOOLCHAIN_FILE=@CONAN_CMAKE_TOOLCHAIN_FILE@
+CONAN_CMAKE_TOOLCHAIN_FILE=${CONAN_CMAKE_TOOLCHAIN_FILE}
 
 # autotools
-PATH=[@ANDROID_TOOLCHAIN_ROOT@/bin]
-TOOLCHAIN=@ANDROID_TOOLCHAIN_ROOT@
+PATH=[${ANDROID_TOOLCHAIN_ROOT}/bin]
+TOOLCHAIN=${ANDROID_TOOLCHAIN_ROOT}
 
 API=$api_level
 AR=$binutils_prefix-ar
@@ -328,9 +340,7 @@ RANLIB=$binutils_prefix-ranlib
 STRIP=$binutils_prefix-strip
 SYSROOT=$android_ndk/sysroot
 TARGET=$compiler_prefix
-"
-        @ONLY
-    )
+")
     set(${result} ${PROFILE_PATH} PARENT_SCOPE)
 endfunction()
 
@@ -548,9 +558,14 @@ function(conan_cmake_autodetect detected_settings)
     set(${detected_settings} ${collected_settings} PARENT_SCOPE)
 endfunction()
 
-function(conan_cmake_setup_android_profile result)
+function(conan_cmake_generate_android_profile result)
+    set(options)
+    set(oneValueArgs BUILD_TYPE PROFILE_HOST)
+    set(multiValueArgs)
+    cmake_parse_arguments(_CONAN_PROFILE_GENERATOR_ "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
     _conan_create_android_toolchain(CONAN_CMAKE_TOOLCHAIN_FILE)
-    _conan_create_android_profile(CONAN_ANDROID_PROFILE)
+    _conan_create_android_profile(CONAN_ANDROID_PROFILE ${ARGN})
 
     set(${result} ${CONAN_ANDROID_PROFILE} PARENT_SCOPE)
 endfunction()

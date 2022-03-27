@@ -1092,7 +1092,7 @@ class LocalTests(unittest.TestCase):
         self._build_multi(["Release", "Debug", "RelWithDebInfo"])
 
 
-@unittest.skipIf(os.getenv("ANDROID_NDK") == None, "We need Android NDK directory to run the test")
+@unittest.skipIf(os.getenv("ANDROID_NDK") == None, "We need Android NDK directory to run tests")
 class AndroidTests(unittest.TestCase):
 
     @classmethod
@@ -1120,14 +1120,16 @@ class AndroidTests(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.old_env)
 
-    def cmake_android_args(self, build_type="Release", abi="arm64-v8a", platform="android-21"):
-        return " ".join([
-            "-DCMAKE_BUILD_TYPE={}".format(build_type),
+    def cmake_android_args(self, build_type=None, abi="arm64-v8a", platform="android-21"):
+        args = [
             "-DANDROID_ABI={}".format(abi),
             "-DANDROID_PLATFORM={}".format(platform),
             "-DANDROID_NDK={}".format(self.__class__.ndk),
             "-DCMAKE_TOOLCHAIN_FILE={}".format(self.__class__.toolchain)
-        ])
+        ]
+        if build_type:
+            args.append("-DCMAKE_BUILD_TYPE={}".format(build_type))
+        return " ".join(args)
 
     def test_conan_android_build(self):
         content = textwrap.dedent("""
@@ -1137,9 +1139,8 @@ class AndroidTests(unittest.TestCase):
             set(CMAKE_CXX_STANDARD_REQUIRED ON)
             include(conan.cmake)
             conan_cmake_configure(REQUIRES fmt/6.1.2)
-
             if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-                conan_cmake_setup_android_profile(profile_host)
+                conan_cmake_generate_android_profile(profile_host)
             else()
                 conan_cmake_autodetect(settings)
             endif()
@@ -1176,3 +1177,44 @@ class AndroidTests(unittest.TestCase):
 
                     run("cmake ../../.. {} ".format(generator) + cmake_args)
                     run("cmake --build .")
+
+    def test_conan_android_ninja_multi(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.17)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_FIND_ROOT_PATH ${CMAKE_BINARY_DIR})
+            set(CMAKE_CXX_STANDARD 14)
+            set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package_multi)
+
+            foreach(TYPE ${CMAKE_CONFIGURATION_TYPES})
+                conan_cmake_generate_android_profile(profile_host
+                    BUILD_TYPE ${TYPE})
+                conan_cmake_install(
+                    PATH_OR_REFERENCE .
+                    BUILD missing
+                    REMOTE conancenter
+                    PROFILE_BUILD default
+                    PROFILE_HOST ${profile_host})
+            endforeach()
+
+            find_package(fmt CONFIG REQUIRED)
+
+            add_library(main SHARED main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+
+        cmake_args = self.cmake_android_args()
+        run("cmake .. -G\"Ninja Multi-Config\" " + cmake_args)
+
+        build_types = ("Release", "Debug", "RelWithDebInfo")
+
+        for variant in build_types:
+            with self.subTest(variant = variant):
+                run("cmake --build . --config {}".format(variant))
