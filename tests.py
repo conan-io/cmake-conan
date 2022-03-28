@@ -60,7 +60,7 @@ class CMakeConanTest(unittest.TestCase):
     # https://github.com/conan-io/cmake-conan/issues/279
     def test_options_override_profile(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
@@ -94,7 +94,7 @@ class CMakeConanTest(unittest.TestCase):
     @unittest.skipIf(platform.system() != "Darwin", "Error message appears just in Macos")
     def test_macos_sysroot_warning(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
@@ -116,7 +116,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_configure(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)
             conan_cmake_configure(REQUIRES poco/1.9.4 zlib/1.2.11
@@ -342,7 +342,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)            
             conan_add_remote(NAME someremote 
@@ -363,7 +363,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -390,7 +390,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -430,7 +430,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -476,7 +476,7 @@ class CMakeConanTest(unittest.TestCase):
             return
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -503,7 +503,7 @@ class CMakeConanTest(unittest.TestCase):
             #set(CMAKE_CXX_COMPILER_WORKS 1)
             #set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -528,7 +528,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -553,7 +553,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(conan_wrapper CXX)
             message(STATUS "CMAKE VERSION: ${{CMAKE_VERSION}}")
 
@@ -585,7 +585,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -620,7 +620,7 @@ class CMakeConanTest(unittest.TestCase):
             custom_setting = "{}=libstdc++".format(settings_check)
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
@@ -639,7 +639,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_profile_auto(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -691,7 +691,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_profile_auto_all(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -743,7 +743,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_multi_profile(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -781,7 +781,7 @@ class CMakeConanTest(unittest.TestCase):
         verify_ssl = False
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -856,7 +856,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -881,7 +881,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -906,7 +906,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -933,7 +933,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -966,7 +966,7 @@ class LocalTests(unittest.TestCase):
     def test_vs_toolset(self):
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1016,7 +1016,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1041,7 +1041,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1067,7 +1067,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1087,7 +1087,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
