@@ -174,7 +174,31 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
-        
+
+    def test_conan_cmake_install_outputfolder(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.15)
+            project(MyProject)
+            include(conan.cmake)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_SOURCE_DIR}/conanfile.py
+                                GENERATOR CMakeDeps
+                                OUTPUT_FOLDER myoutputfolder
+                                SETTINGS ${settings})
+        """)
+        save("CMakeLists.txt", content)
+        save("conanfile.py", textwrap.dedent("""
+            from conans import ConanFile
+            class Pkg(ConanFile):
+                settings = "os", "compiler", "build_type", "arch"
+                def layout(self):
+                    pass
+        """))
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        assert os.path.isdir("myoutputfolder")
+
     def test_conan_cmake_install_find_package(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 3.5)
