@@ -19,7 +19,7 @@ Or it can be used in this way. Note the ``v0.16.1`` tag in the URL, change it to
 
 ```cmake
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 project(FormatOutput CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
@@ -132,7 +132,7 @@ looping through the `CMAKE_CONFIGURATION_TYPES` in your _CMakeLists.txt_ and cal
 a Conan multiconfig generator like `cmake_find_package_multi`. Please check the example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 project(FormatOutput CXX)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})

@@ -153,7 +153,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_install_args(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             include(conan.cmake)
@@ -201,7 +201,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_install_find_package(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -225,7 +225,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_autodetect_cxx_standard(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -252,7 +252,7 @@ class CMakeConanTest(unittest.TestCase):
     # https://github.com/conan-io/cmake-conan/issues/315
     def test_issue_315(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(MyProject)
             set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
             include(conan.cmake)
@@ -272,7 +272,7 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("Tests")
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(Tests)
 
             include(../conan.cmake)
@@ -293,7 +293,7 @@ class CMakeConanTest(unittest.TestCase):
         
     def test_conan_cmake_install_quiet(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -320,7 +320,7 @@ class CMakeConanTest(unittest.TestCase):
         
     def test_conan_cmake_error_quiet(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -990,7 +990,7 @@ class LocalTests(unittest.TestCase):
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi_new_flow(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
