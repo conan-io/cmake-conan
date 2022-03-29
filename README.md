@@ -124,6 +124,24 @@ conan_cmake_install(PATH_OR_REFERENCE .
                     SETTINGS ${settings})
 ```
 
+## conan_cmake_lock_create()
+
+This function is an additional wrapper for the [conan lock
+create](https://docs.conan.io/en/latest/reference/commands/misc/lock.html#conan-lock-create)
+sub-command of conan lock command to enable lockfile based workflows. You can pass all the arguments
+that the command supports. Also, you can pass the auto-detected settings from
+`conan_cmake_autodetect` in the `SETTINGS` argument.
+
+It can receive as arguments: `PATH`, `REFERENCE`, `UPDATE`, `BASE`, `REMOTE`, `LOCKFILE`,
+`LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`, `ENV`, `ENV_HOST`,
+`ENV_BUILD`, `OPTIONS`, `OPTIONS_HOST`, `OPTIONS_BUILD`, `PROFILE`, `PROFILE_HOST`, `PROFILE_BUILD`,
+`SETTINGS`, `SETTINGS_HOST`, `SETTINGS_BUILD`. For more information, check [conan lock
+create](https://docs.conan.io/en/latest/reference/commands/misc/lock.html#conan-lock-create)
+documentation.
+
+It will also accept `OUTPUT_QUIET` and `ERROR_QUIET` arguments so that when it runs the `conan
+install` command the output is quiet or the error is bypassed (or both).
+
 ## Using conan_cmake_autodetect() and conan_cmake_install() with Multi Configuration generators
 
 The recommended approach when using Multi Configuration generators like Visual Studio or Xcode is

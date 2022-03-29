@@ -223,6 +223,33 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
 
+    def test_conan_lock_create(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_lock_create(PATH conanfile.txt LOCKFILE_OUT mylockfile.lock SETTINGS ${settings})
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                REMOTE conancenter
+                                LOCKFILE mylockfile.lock
+                                BUILD missing)
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        assert os.path.exists("mylockfile.lock")
+        run("cmake --build . --config Release")
+
     def test_conan_cmake_autodetect_cxx_standard(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 3.9)
