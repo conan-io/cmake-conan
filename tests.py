@@ -60,7 +60,7 @@ class CMakeConanTest(unittest.TestCase):
     # https://github.com/conan-io/cmake-conan/issues/279
     def test_options_override_profile(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
@@ -94,7 +94,7 @@ class CMakeConanTest(unittest.TestCase):
     @unittest.skipIf(platform.system() != "Darwin", "Error message appears just in Macos")
     def test_macos_sysroot_warning(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             set(CMAKE_CXX_STANDARD 11)
             include(conan.cmake)
@@ -116,7 +116,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_configure(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)
             conan_cmake_configure(REQUIRES poco/1.9.4 zlib/1.2.11
@@ -153,7 +153,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_cmake_install_args(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             include(conan.cmake)
@@ -174,10 +174,34 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
-        
+
+    def test_conan_cmake_install_outputfolder(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.15)
+            project(MyProject)
+            include(conan.cmake)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_SOURCE_DIR}/conanfile.py
+                                GENERATOR CMakeDeps
+                                OUTPUT_FOLDER myoutputfolder
+                                SETTINGS ${settings})
+        """)
+        save("CMakeLists.txt", content)
+        save("conanfile.py", textwrap.dedent("""
+            from conans import ConanFile
+            class Pkg(ConanFile):
+                settings = "os", "compiler", "build_type", "arch"
+                def layout(self):
+                    pass
+        """))
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        assert os.path.isdir("myoutputfolder")
+
     def test_conan_cmake_install_find_package(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -199,9 +223,36 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
 
-    def test_conan_cmake_autodetect_cxx_standard(self):
+    def test_conan_lock_create(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 3.5)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+            add_definitions("-std=c++11")
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_lock_create(PATH conanfile.txt LOCKFILE_OUT mylockfile.lock SETTINGS ${settings})
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                REMOTE conancenter
+                                LOCKFILE mylockfile.lock
+                                BUILD missing)
+            find_package(fmt)
+            add_executable(main main.cpp)
+            target_link_libraries(main fmt::fmt)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        assert os.path.exists("mylockfile.lock")
+        run("cmake --build . --config Release")
+
+    def test_conan_cmake_autodetect_cxx_standard(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -228,7 +279,7 @@ class CMakeConanTest(unittest.TestCase):
     # https://github.com/conan-io/cmake-conan/issues/315
     def test_issue_315(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(MyProject)
             set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
             include(conan.cmake)
@@ -248,7 +299,7 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("Tests")
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(Tests)
 
             include(../conan.cmake)
@@ -269,7 +320,7 @@ class CMakeConanTest(unittest.TestCase):
         
     def test_conan_cmake_install_quiet(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -296,7 +347,7 @@ class CMakeConanTest(unittest.TestCase):
         
     def test_conan_cmake_error_quiet(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -318,7 +369,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_conan_add_remote(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)            
             conan_add_remote(NAME someremote 
@@ -339,7 +390,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -366,7 +417,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -406,7 +457,7 @@ class CMakeConanTest(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             add_definitions("-std=c++11")
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
@@ -452,7 +503,7 @@ class CMakeConanTest(unittest.TestCase):
             return
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -479,7 +530,7 @@ class CMakeConanTest(unittest.TestCase):
             #set(CMAKE_CXX_COMPILER_WORKS 1)
             #set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -504,7 +555,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -529,7 +580,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(conan_wrapper CXX)
             message(STATUS "CMAKE VERSION: ${{CMAKE_VERSION}}")
 
@@ -561,7 +612,7 @@ class CMakeConanTest(unittest.TestCase):
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -596,7 +647,7 @@ class CMakeConanTest(unittest.TestCase):
             custom_setting = "{}=libstdc++".format(settings_check)
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
@@ -615,7 +666,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_profile_auto(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -667,7 +718,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_profile_auto_all(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -719,7 +770,7 @@ class CMakeConanTest(unittest.TestCase):
 
     def test_multi_profile(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -757,7 +808,7 @@ class CMakeConanTest(unittest.TestCase):
         verify_ssl = False
 
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(FormatOutput CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -832,7 +883,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -857,7 +908,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -882,7 +933,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -909,7 +960,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -942,7 +993,7 @@ class LocalTests(unittest.TestCase):
     def test_vs_toolset(self):
         content = textwrap.dedent("""
             message(STATUS "COMPILING-------")
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -966,7 +1017,7 @@ class LocalTests(unittest.TestCase):
     @unittest.skipIf(platform.system() != "Windows", "Multi-config only in Windows")
     def test_multi_new_flow(self):
         content = textwrap.dedent("""
-            cmake_minimum_required(VERSION 3.5)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
             list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
@@ -992,7 +1043,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1017,7 +1068,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1043,7 +1094,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(ProjectHello CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
@@ -1063,7 +1114,7 @@ class LocalTests(unittest.TestCase):
         content = textwrap.dedent("""
             set(CMAKE_CXX_COMPILER_WORKS 1)
             set(CMAKE_CXX_ABI_COMPILED 1)
-            cmake_minimum_required(VERSION 2.8)
+            cmake_minimum_required(VERSION 3.9)
             project(HelloProject CXX)
             message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
 
