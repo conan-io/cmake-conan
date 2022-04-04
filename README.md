@@ -15,7 +15,7 @@ The branches in this repo are:
 You probably want to use a tagged release to ensure controlled upgrades.
 
 You can just clone or grab the *conan.cmake* file and put in in your project.
-Or it can be used in this way. Note the ``0.18.0`` tag in the URL, change it to point to your desired release:
+Or it can be used in this way. Note the ``0.18.1`` tag in the URL, change it to point to your desired release:
 
 ```cmake
 
