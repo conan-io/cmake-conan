@@ -33,7 +33,7 @@
 # but it is only necessary on the end-user side. It is not necessary to create conan
 # packages, in fact it shouldn't be use for that. Check the project documentation.
 
-# version: 0.18.0
+# version: 0.18.1
 
 include(CMakeParseArguments)
 
