@@ -33,7 +33,7 @@
 # but it is only necessary on the end-user side. It is not necessary to create conan
 # packages, in fact it shouldn't be use for that. Check the project documentation.
 
-# version: 0.19.0-dev
+# version: 19.0-dev
 
 include(CMakeParseArguments)
 
@@ -430,14 +430,15 @@ function(_collect_settings result)
     set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
                             compiler.runtime compiler.libcxx compiler.toolset
                             compiler.cppstd)
+    set(detected_settings "")
     foreach(ARG ${ARGUMENTS_PROFILE_AUTO})
         string(TOUPPER ${ARG} _arg_name)
         string(REPLACE "." "_" _arg_name ${_arg_name})
         if(_CONAN_SETTING_${_arg_name})
-            set(detected_setings ${detected_setings} ${ARG}=${_CONAN_SETTING_${_arg_name}})
+            set(detected_settings ${detected_settings} ${ARG}=${_CONAN_SETTING_${_arg_name}})
         endif()
     endforeach()
-    set(${result} ${detected_setings} PARENT_SCOPE)
+    set(${result} ${detected_settings} PARENT_SCOPE)
 endfunction()
 
 function(conan_cmake_autodetect detected_settings)
@@ -557,10 +558,14 @@ function(conan_cmake_install)
     foreach(arg ${installOptions})
         if(ARGS_${arg})
             set(${arg} ${${arg}} ${ARGS_${arg}})
+        else()
+            set(${arg} "")
         endif()
     endforeach()
     foreach(arg ${installOneValueArgs})
+        set(${arg} "")
         if(DEFINED ARGS_${arg})
+            set(flag "")
             if("${arg}" STREQUAL "REMOTE")
                 set(flag "--remote")
             elseif("${arg}" STREQUAL "LOCKFILE")
@@ -578,7 +583,9 @@ function(conan_cmake_install)
         endif()
     endforeach()
     foreach(arg ${installMultiValueArgs})
+        set(${arg} "")
         if(DEFINED ARGS_${arg})
+            set(flag "")
             if("${arg}" STREQUAL "GENERATOR")
                 set(flag "--generator")
             elseif("${arg}" STREQUAL "BUILD")
@@ -609,6 +616,8 @@ function(conan_cmake_install)
                 set(flag "--settings:build")
             endif()
             list(LENGTH ARGS_${arg} numargs)
+
+            set(${arg} "")
             foreach(item ${ARGS_${arg}})
                 if(${item} STREQUAL "all" AND ${arg} STREQUAL "BUILD")
                     set(${arg} "--build")
@@ -624,6 +633,15 @@ function(conan_cmake_install)
     if(DEFINED NO_IMPORTS)
         set(NO_IMPORTS --no-imports)
     endif()
+    
+    if (NOT DEFINED OUTPUT_OPT)
+        set(OUTPUT_OPT "")
+    endif()
+
+    if(NOT DEFINED ERROR_OPT)
+        set(ERROR_OPT "")
+    endif()
+
     set(install_args install ${PATH_OR_REFERENCE} ${REFERENCE} ${UPDATE} ${NO_IMPORTS} ${REMOTE} ${LOCKFILE} ${LOCKFILE_OUT} ${LOCKFILE_NODE_ID} ${INSTALL_FOLDER} ${OUTPUT_FOLDER}
                                 ${GENERATOR} ${BUILD} ${ENV} ${ENV_HOST} ${ENV_BUILD} ${OPTIONS} ${OPTIONS_HOST} ${OPTIONS_BUILD}
                                 ${PROFILE} ${PROFILE_HOST} ${PROFILE_BUILD} ${SETTINGS} ${SETTINGS_HOST} ${SETTINGS_BUILD})
@@ -1024,3 +1042,7 @@ macro(conan_config_install)
     message(FATAL_ERROR "Conan config failed='${return_code}'")
   endif()
 endmacro()
+
+set(0)
+set(_CONAN_ACTUAL_TARGETS "")
+set(_CONAN_FOUND_SYSTEM_LIBS "")
