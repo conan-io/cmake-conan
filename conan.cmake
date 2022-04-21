@@ -1042,7 +1042,3 @@ macro(conan_config_install)
     message(FATAL_ERROR "Conan config failed='${return_code}'")
   endif()
 endmacro()
-
-set(0)
-set(_CONAN_ACTUAL_TARGETS "")
-set(_CONAN_FOUND_SYSTEM_LIBS "")
