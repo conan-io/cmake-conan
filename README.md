@@ -4,6 +4,9 @@
 
 CMake wrapper for the Conan C and C++ package manager.
 
+> :warning: **Compatibility with Conan 2.0**: cmake-conan is not compatible with Conan 2.0
+> for the moment. Once Conan 2.0 is GA the compatibility between both will be analyzed
+> again.
 
 This cmake module allows to launch ``conan install`` from cmake.
 
