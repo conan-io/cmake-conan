@@ -21,14 +21,14 @@ You can just clone or grab the *conan.cmake* file and put in in your project.
 Or it can be used in this way. Note the ``0.18.1`` tag in the URL, change it to point to your desired release:
 
 ```cmake
+cmake_minimum_required(VERSION 3.15)
 
-cmake_minimum_required(VERSION 3.9)
-project(FormatOutput CXX)
+project(Project1 CXX)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-
-add_definitions("-std=c++11")
+# Add the ${CMAKE_BINARY_DIR} to CMAKE_MODULE_PATH AND CMAKE_PREFIX_PATH
+# So CMake could find and use conan generated CMake FindXXX.cmake files.
+list(PREPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(PREPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
   message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
@@ -39,26 +39,44 @@ endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_cmake_configure(REQUIRES fmt/6.1.2
+conan_check(REQUIRED)
+
+# Install the fmt package
+conan_cmake_configure(REQUIRES fmt/8.1.1
                       GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
 
-conan_cmake_install(PATH_OR_REFERENCE .
+conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_BINARY_DIR}
                     BUILD missing
                     REMOTE conancenter
                     SETTINGS ${settings})
 
-find_package(fmt)
+# Install the SQLite3 package
+conan_cmake_configure(REQUIRES sqlite3/3.38.5
+                      BASIC_SETUP CMAKE_TARGETS
+                      GENERATORS cmake_find_package
+                      BUILD missing)
 
-add_executable(main main.cpp)
-target_link_libraries(main fmt::fmt)
+conan_cmake_autodetect(settings)
+
+conan_cmake_install(PATH_OR_REFERENCE ${CMAKE_BINARY_DIR}
+                    BUILD missing
+                    REMOTE conancenter
+                    SETTINGS ${settings})
+
+find_package(fmt REQUIRED)
+find_package(SQLite3 REQUIRED)
+
+add_executable(main)
+target_sources(main PRIVATE main.cpp)
+target_link_libraries(main PRIVATE fmt::fmt SQLite::SQLite)
+set_property(TARGET main PROPERTY CXX_STANDARD 17)
 ```
 
 There are different functions you can use from your CMake project to use Conan from there. The
 recommended flow to use cmake-conan is successively calling to `conan_cmake_configure`,
-`conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
-functions were introduced.
+`conan_cmake_autodetect` and `conan_cmake_install` for each needed package. This flow is recommended from v0.16 where these functions were introduced.
 
 The example above is using the Conan `cmake_find_package` generator which is less intrusive than the
 `cmake` generator and more aligned with the direction Conan is taking for the 2.0 version. If you
