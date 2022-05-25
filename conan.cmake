@@ -524,6 +524,7 @@ function(old_conan_cmake_install)
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${CONAN_CMD} ${_conan_args}")
 
+    set(ENV{CONAN_CMAKE_PROGRAM} ${CMAKE_COMMAND})
     if(ARGUMENTS_OUTPUT_QUIET)
         execute_process(COMMAND ${CONAN_CMD} ${conan_args}
                         RESULT_VARIABLE return_code
@@ -638,6 +639,7 @@ function(conan_cmake_install)
       set(ERROR_OPT ERROR_QUIET)
     endif()
 
+    set(ENV{CONAN_CMAKE_PROGRAM} ${CMAKE_COMMAND})
     execute_process(COMMAND ${CONAN_CMD} ${install_args}
                     RESULT_VARIABLE return_code
                     ${OUTPUT_OPT}
@@ -742,6 +744,7 @@ function(conan_cmake_lock_create)
       set(ERROR_OPT ERROR_QUIET)
     endif()
 
+    set(ENV{CONAN_CMAKE_PROGRAM} ${CMAKE_COMMAND})
     execute_process(COMMAND ${CONAN_CMD} ${lock_create_Args}
                     RESULT_VARIABLE return_code
                     ${OUTPUT_OPT}
