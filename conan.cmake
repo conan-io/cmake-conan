@@ -467,9 +467,21 @@ function(old_conan_cmake_install)
     conan_parse_arguments(${ARGV})
 
     if(CONAN_CMAKE_MULTI)
-        set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_multi)
+        if(NOT cmake_multi IN_LIST ARGUMENTS_GENERATORS)
+            set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_multi)
+        endif()
+        if(cmake_find_package IN_LIST ARGUMENTS_GENERATORS 
+            AND NOT cmake_find_package_multi IN_LIST ARGUMENTS_GENERATORS)
+            set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_find_package_multi)
+        endif()
     else()
-        set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake)
+        if(NOT cmake IN_LIST ARGUMENTS_GENERATORS)
+            set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake)
+        endif()
+        if(cmake_find_package_multi IN_LIST ARGUMENTS_GENERATORS 
+            AND NOT cmake_find_package IN_LIST ARGUMENTS_GENERATORS)
+            set(ARGUMENTS_GENERATORS ${ARGUMENTS_GENERATORS} cmake_find_package)
+        endif()
     endif()
 
     set(CONAN_BUILD_POLICY "")
