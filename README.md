@@ -7,7 +7,7 @@ CMake wrapper for the Conan C and C++ package manager.
 > :warning: **Compatibility with Conan 2.0**: cmake-conan is not compatible with Conan 2.0
 > for the moment. Once Conan 2.0 is GA the compatibility between both will be analyzed
 > again. Also, please note that CMakeToolchain is not compatible with cmake-conan. If you
-> need to use it, we would recommend not using cmake-conan but just doing a ``conan install``
+> need to use it, we would recommend not using cmake-conan but doing a ``conan install``
 > directly.
 
 
