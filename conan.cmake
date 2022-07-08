@@ -132,18 +132,22 @@ macro(_conan_detect_compiler)
         set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
     endif()
 
-    if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL GNU)
-        # using GCC
+    if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL GNU OR ${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL QCC)
+        # using GCC or QCC
         # TODO: Handle other params
         string(REPLACE "." ";" VERSION_LIST ${CMAKE_${LANGUAGE}_COMPILER_VERSION})
         list(GET VERSION_LIST 0 MAJOR)
         list(GET VERSION_LIST 1 MINOR)
         set(COMPILER_VERSION ${MAJOR}.${MINOR})
-        if(${MAJOR} GREATER 4)
-            set(COMPILER_VERSION ${MAJOR})
-        endif()
-        set(_CONAN_SETTING_COMPILER gcc)
+
+        if (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL GNU)
+            set(_CONAN_SETTING_COMPILER gcc)
+        elseif (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL QCC)
+            set(_CONAN_SETTING_COMPILER qcc)
+        endif ()
+
         set(_CONAN_SETTING_COMPILER_VERSION ${COMPILER_VERSION})
+
         if (USING_CXX)
             conan_cmake_detect_unix_libcxx(_LIBCXX)
             set(_CONAN_SETTING_COMPILER_LIBCXX ${_LIBCXX})
