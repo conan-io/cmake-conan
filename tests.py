@@ -831,6 +831,29 @@ class CMakeConanTest(unittest.TestCase):
             assert remote["url"] == remote_url, "Invalid remote url"
             assert remote["verify_ssl"] == verify_ssl, "Invalid verify_ssl"
 
+    def test_conan_config_install_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_config_install(ITEM https://github.com/conan-io/cmake-conan.git
+                                 TYPE git
+                                 ARGS -b v0.5)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "Repo cloned!" in data
+            assert "Copying file" in data
+
+
 class LocalTests(unittest.TestCase):
 
     @classmethod
