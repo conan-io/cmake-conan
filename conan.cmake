@@ -1004,7 +1004,9 @@ macro(conan_config_install)
     endif()
 
     if(DEFINED CONAN_ARGS)
-	set(CONAN_ARGS_ARGS "--args=\"${CONAN_ARGS}\"")
+	# Convert ; seperated multi arg list into space seperated string
+	string(REPLACE ";" " " l_CONAN_ARGS "${CONAN_ARGS}")
+	set(CONAN_ARGS_ARGS "--args=${l_CONAN_ARGS}")
     endif()
 
     if(DEFINED CONAN_SOURCE)
