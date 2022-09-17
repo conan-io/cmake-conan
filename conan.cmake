@@ -634,13 +634,12 @@ function(conan_cmake_install)
     if(DEFINED NO_IMPORTS)
         set(NO_IMPORTS --no-imports)
     endif()
-    set(install_args install 
-        ${PATH_OR_REFERENCE} ${REFERENCE} ${UPDATE} ${NO_IMPORTS} ${REMOTE} 
-        ${LOCKFILE} ${LOCKFILE_OUT} ${LOCKFILE_NODE_ID} ${INSTALL_FOLDER} 
-        ${OUTPUT_FOLDER} ${GENERATOR} ${BUILD} ${ENV} ${ENV_HOST} ${ENV_BUILD} 
-        ${OPTIONS} ${OPTIONS_HOST} ${OPTIONS_BUILD} ${PROFILE} ${PROFILE_HOST} 
-        ${PROFILE_BUILD} ${SETTINGS} ${SETTINGS_HOST} ${SETTINGS_BUILD} 
-        ${CONF} ${CONF_HOST} ${CONF_BUILD})
+    set(install_args install  ${PATH_OR_REFERENCE} ${REFERENCE} ${UPDATE} ${NO_IMPORTS} ${REMOTE} 
+                              ${LOCKFILE} ${LOCKFILE_OUT} ${LOCKFILE_NODE_ID} ${INSTALL_FOLDER} 
+                              ${OUTPUT_FOLDER} ${GENERATOR} ${BUILD} ${ENV} ${ENV_HOST} ${ENV_BUILD} 
+                              ${OPTIONS} ${OPTIONS_HOST} ${OPTIONS_BUILD} ${PROFILE} ${PROFILE_HOST} 
+                              ${PROFILE_BUILD} ${SETTINGS} ${SETTINGS_HOST} ${SETTINGS_BUILD} 
+                              ${CONF} ${CONF_HOST} ${CONF_BUILD})
 
     string(REPLACE ";" " " _install_args "${install_args}")
     message(STATUS "Conan executing: ${CONAN_CMD} ${_install_args}")
