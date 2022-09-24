@@ -37,6 +37,28 @@
 
 include(CMakeParseArguments)
 
+
+function(_get_conan_version result)
+    set(${result} "" PARENT_SCOPE)
+
+    if(NOT DEFINED ${CONAN_CMD})
+        conan_check(DETECT_QUIET)
+    endif()
+
+    execute_process(COMMAND ${CONAN_CMD} --version
+                    RESULT_VARIABLE return_code
+                    OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
+                    ERROR_VARIABLE CONAN_VERSION_OUTPUT)
+    if(NOT "${return_code}" STREQUAL "0")
+        message(FATAL_ERROR "Conan --version failed='${return_code}'")
+    endif()
+    
+    string(REGEX MATCH ".*Conan version ([0-9]+\\.[0-9]+\\.[0-9]+)" FOO
+      "${CONAN_VERSION_OUTPUT}")
+    set(${result} ${CMAKE_MATCH_1} PARENT_SCOPE)
+endfunction()
+
+
 function(_get_msvc_ide_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
