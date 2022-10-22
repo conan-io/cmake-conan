@@ -882,7 +882,7 @@ class CMakeConanTest(unittest.TestCase):
             project(FormatOutput CXX)
             include(conan.cmake)
             conan_cmake_profile(
-                PROFILE_PATH  "${CMAKE_BINARY_DIR}/profile"
+                FILEPATH      "${CMAKE_BINARY_DIR}/profile"
                 SETTINGS      os=Windows
                               arch=x86_64
                               build_type=Debug
