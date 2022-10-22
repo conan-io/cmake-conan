@@ -455,10 +455,11 @@ endfunction()
 
 macro(conan_parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
-  set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER OUTPUT_FOLDER CONAN_COMMAND)
+  set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER OUTPUT_FOLDER CONAN_COMMAND PROFILE_PATH)
   set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
                      PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD BUILD_REQUIRES)
+                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD BUILD_REQUIRES TOOL_REQUIRES 
+                     CONF BUILDENV RUNENV)
   cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
@@ -1054,3 +1055,66 @@ macro(conan_config_install)
     message(FATAL_ERROR "Conan config failed='${return_code}'")
   endif()
 endmacro()
+
+
+function(conan_cmake_profile)
+
+  conan_parse_arguments(${ARGV})
+
+  if(DEFINED ARGUMENTS_PROFILE_PATH)  
+    set(_FN "${ARGUMENTS_PROFILE_PATH}")
+  else()
+    set(_FN "${CMAKE_CURRENT_BINARY_DIR}/template.profile")
+  endif()
+  file(WRITE ${_FN} "")
+
+  if(DEFINED ARGUMENTS_SETTINGS)
+    file(APPEND ${_FN} "[settings]\n")
+    foreach(SETTING ${ARGUMENTS_SETTINGS})
+      file(APPEND ${_FN} ${SETTING} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_OPTIONS)
+    file(APPEND ${_FN} "[options]\n")
+    foreach(OPTION ${ARGUMENTS_OPTIONS})
+      file(APPEND ${_FN} ${OPTION} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_CONF)
+    file(APPEND ${_FN} "[conf]\n")
+    foreach(CONF ${ARGUMENTS_CONF})
+      file(APPEND ${_FN} ${CONF} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_ENV)
+    file(APPEND ${_FN} "[env]\n")
+    foreach(ENV ${ARGUMENTS_ENV})
+      file(APPEND ${_FN} ${ENV} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_BUILDENV)
+    file(APPEND ${_FN} "[buildenv]\n")
+    foreach(BUILDENV ${ARGUMENTS_BUILDENV})
+      file(APPEND ${_FN} ${BUILDENV} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_RUNENV)
+    file(APPEND ${_FN} "[runenv]\n")
+    foreach(RUNENV ${ARGUMENTS_RUNENV})
+      file(APPEND ${_FN} ${RUNENV} "\n")
+    endforeach()
+  endif()
+
+  if(DEFINED ARGUMENTS_TOOL_REQUIRES)
+    file(APPEND ${_FN} "[tool_requires]\n")
+    foreach(TOOL_REQUIRE ${ARGUMENTS_TOOL_REQUIRES})
+      file(APPEND ${_FN} ${TOOL_REQUIRE} "\n")
+    endforeach()
+  endif()
+
+endfunction()
