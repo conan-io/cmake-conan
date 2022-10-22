@@ -876,6 +876,71 @@ class CMakeConanTest(unittest.TestCase):
             assert "Repo cloned!" in data
             assert "Copying file" in data
 
+    def test_conan_cmake_profile(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_profile(
+                PROFILE_PATH  "${CMAKE_BINARY_DIR}/profile"
+                SETTINGS      os=Windows
+                              arch=x86_64
+                              build_type=Debug
+                              compiler=msvc
+                              compiler.version=192
+                              compiler.runtime=dynamic
+                              compiler.runtime_type=Debug
+                              compiler.cppstd=14
+                OPTIONS       fmt:shared=True
+                              fmt:header_only=False
+                CONF          tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
+                              tools.cmake.cmaketoolchain:toolset_arch=x64
+                              tools.cmake.build:jobs=10
+                ENV           "MyPath1=(path)/some/path11"
+                              "MyPath1=+(path)/other/path12"
+                BUILDENV      "MyPath2=(path)/some/path21"
+                              "MyPath2=+(path)/other/path22"
+                RUNENV        "MyPath3=(path)/some/path31"
+                              "MyPath3=+(path)/other/path32"
+                TOOL_REQUIRES cmake/3.16.3
+            )
+        """)
+        result_conanfile = textwrap.dedent("""
+            [settings]
+            os=Windows
+            arch=x86_64
+            build_type=Debug
+            compiler=msvc
+            compiler.version=192
+            compiler.runtime=dynamic
+            compiler.runtime_type=Debug
+            compiler.cppstd=14
+            [options]
+            fmt:shared=True
+            fmt:header_only=False
+            [conf]
+            tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
+            tools.cmake.cmaketoolchain:toolset_arch=x64
+            tools.cmake.build:jobs=10
+            [env]
+            MyPath1=(path)/some/path11
+            MyPath1=+(path)/other/path12
+            [buildenv]
+            MyPath2=(path)/some/path21
+            MyPath2=+(path)/other/path22
+            [runenv]
+            MyPath3=(path)/some/path31
+            MyPath3=+(path)/other/path32
+            [tool_requires]
+            cmake/3.16.3
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        with open('profile', 'r') as file:
+            data = file.read()
+            assert data in result_conanfile
 
 class LocalTests(unittest.TestCase):
 
