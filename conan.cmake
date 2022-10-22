@@ -1064,7 +1064,7 @@ function(conan_cmake_profile)
   if(DEFINED ARGUMENTS_FILEPATH)  
     set(_FN "${ARGUMENTS_FILEPATH}")
   else()
-    set(_FN "${CMAKE_CURRENT_BINARY_DIR}/template.profile")
+    set(_FN "${CMAKE_CURRENT_BINARY_DIR}/profile")
   endif()
   file(WRITE ${_FN} "")
 
