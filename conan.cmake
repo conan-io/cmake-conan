@@ -1066,6 +1066,7 @@ function(conan_cmake_profile)
   else()
     set(_FN "${CMAKE_CURRENT_BINARY_DIR}/profile")
   endif()
+  message(STATUS "Conan: Creating profile ${_FN}")
   file(WRITE ${_FN} "")
 
   if(DEFINED ARGUMENTS_SETTINGS)
