@@ -40,23 +40,32 @@ include(CMakeParseArguments)
 function(_get_msvc_ide_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
-        set(${result} 8 PARENT_SCOPE)
+        # VS2005
+        set(${result} 140 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1500 AND MSVC_VERSION VERSION_LESS 1600)
-        set(${result} 9 PARENT_SCOPE)
+        # VS2008
+        set(${result} 150 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1600 AND MSVC_VERSION VERSION_LESS 1700)
-        set(${result} 10 PARENT_SCOPE)
+        # VS2010
+        set(${result} 160 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1700 AND MSVC_VERSION VERSION_LESS 1800)
-        set(${result} 11 PARENT_SCOPE)
+        # VS2012
+        set(${result} 170 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1800 AND MSVC_VERSION VERSION_LESS 1900)
-        set(${result} 12 PARENT_SCOPE)
+        # VS2013
+        set(${result} 180 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1900 AND MSVC_VERSION VERSION_LESS 1910)
-        set(${result} 14 PARENT_SCOPE)
+        # VS2015
+        set(${result} 190 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1910 AND MSVC_VERSION VERSION_LESS 1920)
-        set(${result} 15 PARENT_SCOPE)
+        # VS2017
+        set(${result} 191 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1920 AND MSVC_VERSION VERSION_LESS 1930)
-        set(${result} 16 PARENT_SCOPE)
+        # VS2019
+        set(${result} 192 PARENT_SCOPE)
     elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1940)
-        set(${result} 17 PARENT_SCOPE)
+        # VS2022
+        set(${result} 193 PARENT_SCOPE)
     else()
         message(FATAL_ERROR "Conan: Unknown MSVC compiler version [${MSVC_VERSION}]")
     endif()
