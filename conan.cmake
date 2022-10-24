@@ -339,8 +339,10 @@ function(conan_cmake_settings result)
     endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
-        set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
-                                   compiler.runtime compiler.libcxx compiler.toolset)
+        set(ARGUMENTS_PROFILE_AUTO  arch build_type compiler compiler.version
+                                    compiler.runtime compiler.runtime_type
+                                    compiler.libcxx compiler.toolset
+                                    compiler.cppstd compiler.update)
     endif()
 
     # remove any manually specified settings from the autodetected settings
