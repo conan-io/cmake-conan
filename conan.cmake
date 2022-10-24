@@ -275,6 +275,20 @@ macro(_conan_detect_compiler)
                 endif()
             endif()
         endforeach()
+
+        # Detect 'compiler.cppstd'
+        if(CMAKE_CXX_STANDARD)
+            set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
+        else()
+            if(MSVC_VERSION VERSION_LESS 1900)
+                # VS < 2015, specify C++98 standard by default.
+                set(_CONAN_SETTING_COMPILER_CPPSTD 98)
+            else()
+                # VS >= 2015, specify C++14 standard by default.
+                set(_CONAN_SETTING_COMPILER_CPPSTD 14)
+            endif()
+        endif()
+
     else()
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
