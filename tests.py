@@ -645,7 +645,7 @@ class CMakeConanTest(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
                             SETTINGS arch=armv6
-                            SETTINGS cppstd=14)
+                            SETTINGS compiler.cppstd=14)
 
             if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
                 message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
