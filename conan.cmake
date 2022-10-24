@@ -231,16 +231,19 @@ macro(_conan_detect_compiler)
                 OR (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL Clang 
                     AND "${CMAKE_${LANGUAGE}_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC" 
                     AND "${CMAKE_${LANGUAGE}_SIMULATE_ID}" STREQUAL "MSVC"))
+        # using MSVC
 
-        set(_VISUAL "Visual Studio")
-        _get_msvc_ide_version(_VISUAL_VERSION)
-        if("${_VISUAL_VERSION}" STREQUAL "")
-            message(FATAL_ERROR "Conan: Visual Studio not recognized")
+        # Detect 'compiler' and 'compiler.version'
+        set(_MSVC "msvc")
+        _get_msvc_ide_version(_MSVC_VERSION)
+        if("${_MSVC_VERSION}" STREQUAL "")
+            message(FATAL_ERROR "Conan: MSVC not recognized")
         else()
-            set(_CONAN_SETTING_COMPILER ${_VISUAL})
-            set(_CONAN_SETTING_COMPILER_VERSION ${_VISUAL_VERSION})
+            set(_CONAN_SETTING_COMPILER ${_MSVC})
+            set(_CONAN_SETTING_COMPILER_VERSION ${_MSVC_VERSION})
         endif()
 
+        # Detect 'arch'
         if(NOT _CONAN_SETTING_ARCH)
             if (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "64")
                 set(_CONAN_SETTING_ARCH x86_64)
@@ -254,16 +257,25 @@ macro(_conan_detect_compiler)
             endif()
         endif()
 
-        conan_cmake_detect_vs_runtime(_vs_runtime ${ARGV})
-        message(STATUS "Conan: Detected VS runtime: ${_vs_runtime}")
+        # Detect 'compiler.runtime' and 'compiler.runtime_type'
+        conan_cmake_detect_vs_runtime(_vs_runtime _vs_runtime_type ${ARGV})
+        message(STATUS "Conan: Detected MSVC runtime: ${_vs_runtime}")
         set(_CONAN_SETTING_COMPILER_RUNTIME ${_vs_runtime})
+        message(STATUS "Conan: Detected MSVC runtime_type: ${_vs_runtime_type}")
+        set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_vs_runtime_type})
 
-        if (CMAKE_GENERATOR_TOOLSET)
-            set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
-        elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
-            set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
-        endif()
-        else()
+        # Detect 'compiler.toolset'
+        set(_XP_TOOLSETS v110_xp v120_xp v140_xp v141_xp)
+        foreach(_XP_TOOLSET ${_XP_TOOLSETS})
+            if (CMAKE_GENERATOR_TOOLSET MATCHES ${_XP_TOOLSET})
+                if (CMAKE_GENERATOR_TOOLSET)
+                    set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+                elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
+                    set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+                endif()
+            endif()
+        endforeach()
+    else()
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
 
