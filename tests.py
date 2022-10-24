@@ -667,7 +667,7 @@ class CMakeConanTest(unittest.TestCase):
     def test_settings_removed_from_autodetect(self):
         if platform.system() == "Windows":
             settings_check = "compiler.runtime"
-            custom_setting = "{}=MTd".format(settings_check)
+            custom_setting = "{}=static".format(settings_check)
         else:
             settings_check = "compiler.libcxx"
             custom_setting = "{}=libstdc++".format(settings_check)
