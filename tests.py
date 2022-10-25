@@ -702,6 +702,7 @@ class CMakeConanTest(unittest.TestCase):
                             PROFILE myprofile
                             PROFILE_AUTO build_type
                             PROFILE_AUTO compiler
+                            PROFILE_AUTO compiler.version
                             )
 
             if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
