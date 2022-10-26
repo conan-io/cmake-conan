@@ -176,6 +176,28 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
 
+    def test_conan_cmake_install_conf_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES "")
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                GENERATOR cmake
+                                REMOTE conancenter
+                                CONF user.configuration:myconfig=somevalue
+                                SETTINGS ${settings})
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "--conf user.configuration:myconfig=somevalue" in data     
+        
+
     def test_conan_cmake_install_outputfolder(self):
         content = textwrap.dedent("""
             cmake_minimum_required(VERSION 3.15)
