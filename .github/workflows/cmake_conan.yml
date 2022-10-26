@@ -21,6 +21,6 @@ jobs:
       - name: Install Conan
         run: pip install conan pytest && conan --version
       - name: Install CMake
-        run: conan install cmake/3.16.4@ -g=virtualrunenv
+        run: conan install cmake/3.16.9@ -g=virtualrunenv
       - name: Run Tests
         run: ${{matrix.ENV_CMAKE}} && pytest tests.py -rA -v
