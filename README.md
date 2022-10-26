@@ -439,7 +439,7 @@ Returns the Conan client version.
 
 Example usage:
 ```
-conan_check(CONAN_VERSION)
+conan_version(CONAN_VERSION)
 if(${CONAN_VERSION} VERSION_LESS "2.0.0")
   ...
 endif()
