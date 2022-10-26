@@ -556,7 +556,7 @@ function(conan_cmake_install)
     set(installOptions UPDATE NO_IMPORTS OUTPUT_QUIET ERROR_QUIET)
     set(installOneValueArgs PATH_OR_REFERENCE REFERENCE REMOTE LOCKFILE LOCKFILE_OUT LOCKFILE_NODE_ID INSTALL_FOLDER OUTPUT_FOLDER)
     set(installMultiValueArgs GENERATOR BUILD ENV ENV_HOST ENV_BUILD OPTIONS_HOST OPTIONS OPTIONS_BUILD PROFILE
-                              PROFILE_HOST PROFILE_BUILD SETTINGS SETTINGS_HOST SETTINGS_BUILD)
+                              PROFILE_HOST PROFILE_BUILD SETTINGS SETTINGS_HOST SETTINGS_BUILD CONF CONF_HOST CONF_BUILD)
     cmake_parse_arguments(ARGS "${installOptions}" "${installOneValueArgs}" "${installMultiValueArgs}" ${ARGN})
     foreach(arg ${installOptions})
         if(ARGS_${arg})
@@ -611,6 +611,12 @@ function(conan_cmake_install)
                 set(flag "--settings:host")
             elseif("${arg}" STREQUAL "SETTINGS_BUILD")
                 set(flag "--settings:build")
+            elseif("${arg}" STREQUAL "CONF")
+                set(flag "--conf")
+            elseif("${arg}" STREQUAL "CONF_HOST")
+                set(flag "--conf:host")
+            elseif("${arg}" STREQUAL "CONF_BUILD")
+                set(flag "--conf:build")
             endif()
             list(LENGTH ARGS_${arg} numargs)
             foreach(item ${ARGS_${arg}})
@@ -628,9 +634,12 @@ function(conan_cmake_install)
     if(DEFINED NO_IMPORTS)
         set(NO_IMPORTS --no-imports)
     endif()
-    set(install_args install ${PATH_OR_REFERENCE} ${REFERENCE} ${UPDATE} ${NO_IMPORTS} ${REMOTE} ${LOCKFILE} ${LOCKFILE_OUT} ${LOCKFILE_NODE_ID} ${INSTALL_FOLDER} ${OUTPUT_FOLDER}
-                                ${GENERATOR} ${BUILD} ${ENV} ${ENV_HOST} ${ENV_BUILD} ${OPTIONS} ${OPTIONS_HOST} ${OPTIONS_BUILD}
-                                ${PROFILE} ${PROFILE_HOST} ${PROFILE_BUILD} ${SETTINGS} ${SETTINGS_HOST} ${SETTINGS_BUILD})
+    set(install_args install  ${PATH_OR_REFERENCE} ${REFERENCE} ${UPDATE} ${NO_IMPORTS} ${REMOTE} 
+                              ${LOCKFILE} ${LOCKFILE_OUT} ${LOCKFILE_NODE_ID} ${INSTALL_FOLDER} 
+                              ${OUTPUT_FOLDER} ${GENERATOR} ${BUILD} ${ENV} ${ENV_HOST} ${ENV_BUILD} 
+                              ${OPTIONS} ${OPTIONS_HOST} ${OPTIONS_BUILD} ${PROFILE} ${PROFILE_HOST} 
+                              ${PROFILE_BUILD} ${SETTINGS} ${SETTINGS_HOST} ${SETTINGS_BUILD} 
+                              ${CONF} ${CONF_HOST} ${CONF_BUILD})
 
     string(REPLACE ";" " " _install_args "${install_args}")
     message(STATUS "Conan executing: ${CONAN_CMD} ${_install_args}")

@@ -433,6 +433,18 @@ Example usage:
 conan_check(VERSION 1.0.0 REQUIRED)
 ```
 
+### conan_version()
+
+Returns the Conan client version.
+
+Example usage:
+```
+conan_check(CONAN_VERSION)
+if(${CONAN_VERSION} VERSION_LESS "2.0.0")
+  ...
+endif()
+```
+
 ### conan_add_remote()
 
 Adds a remote.
