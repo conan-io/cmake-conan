@@ -6,6 +6,7 @@ import shutil
 import json
 import textwrap
 from contextlib import contextmanager 
+from conan import conan_version
 
 
 def save(filename, content):
@@ -1011,6 +1012,23 @@ class LocalTests(unittest.TestCase):
         with open("conan.cmake", "r") as handle:
             if "# version: " not in handle.read():
                 raise Exception("Version missing in conan.cmake")
+
+    def test_conan_version(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(someproject CXX)
+            include(conan.cmake)
+            conan_version(CONAN_VERSION)
+            message(STATUS "Conan Version is: ${CONAN_VERSION}")
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release > output.txt" % self.generator)
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert f"Conan Version is: {str(conan_version.major)}.{str(conan_version.minor)}.{str(conan_version.patch)}" in data
 
     @unittest.skipIf(platform.system() != "Windows", "toolsets only in Windows")
     def test_vs_toolset(self):
