@@ -258,11 +258,11 @@ macro(_conan_detect_compiler)
         endif()
 
         # Detect 'compiler.runtime' and 'compiler.runtime_type'
-        conan_cmake_detect_vs_runtime(_vs_runtime _vs_runtime_type ${ARGV})
-        message(STATUS "Conan: Detected MSVC runtime: ${_vs_runtime}")
-        set(_CONAN_SETTING_COMPILER_RUNTIME ${_vs_runtime})
-        message(STATUS "Conan: Detected MSVC runtime_type: ${_vs_runtime_type}")
-        set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_vs_runtime_type})
+        conan_cmake_detect_msvc_runtime(_msvc_runtime _msvc_runtime_type ${ARGV})
+        message(STATUS "Conan: Detected MSVC runtime: ${_msvc_runtime}")
+        set(_CONAN_SETTING_COMPILER_RUNTIME ${_msvc_runtime})
+        message(STATUS "Conan: Detected MSVC runtime_type: ${_msvc_runtime_type}")
+        set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_msvc_runtime_type})
 
         # Detect 'compiler.toolset'
         set(_XP_TOOLSETS v110_xp v120_xp v140_xp v141_xp)
@@ -454,7 +454,7 @@ function(conan_cmake_detect_unix_libcxx result)
     endif()
 endfunction()
 
-function(conan_cmake_detect_vs_runtime result1 result2)
+function(conan_cmake_detect_msvc_runtime result1 result2)
 
     conan_parse_arguments(${ARGV})
     if(ARGUMENTS_BUILD_TYPE)
