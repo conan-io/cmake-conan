@@ -37,28 +37,6 @@
 
 include(CMakeParseArguments)
 
-
-function(_get_conan_version result)
-    set(${result} "" PARENT_SCOPE)
-
-    if(NOT DEFINED ${CONAN_CMD})
-        conan_check(DETECT_QUIET)
-    endif()
-
-    execute_process(COMMAND ${CONAN_CMD} --version
-                    RESULT_VARIABLE return_code
-                    OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
-                    ERROR_VARIABLE CONAN_VERSION_OUTPUT)
-    if(NOT "${return_code}" STREQUAL "0")
-        message(FATAL_ERROR "Conan --version failed='${return_code}'")
-    endif()
-    
-    string(REGEX MATCH ".*Conan version ([0-9]+\\.[0-9]+\\.[0-9]+)" FOO
-      "${CONAN_VERSION_OUTPUT}")
-    set(${result} ${CMAKE_MATCH_1} PARENT_SCOPE)
-endfunction()
-
-
 function(_get_msvc_ide_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
@@ -927,6 +905,30 @@ macro(conan_cmake_run)
     endif()
 endmacro()
 
+function(conan_version result)
+    set(${result} "" PARENT_SCOPE)
+
+    if(NOT CONAN_CMD)
+        find_program(CONAN_CMD conan)
+        if(NOT CONAN_CMD AND CONAN_REQUIRED)
+            message(FATAL_ERROR "Conan executable not found! Please install conan.")
+        endif()
+    endif()
+
+    execute_process(COMMAND ${CONAN_CMD} --version
+                    RESULT_VARIABLE return_code
+                    OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
+                    ERROR_VARIABLE CONAN_VERSION_OUTPUT)
+
+    if(NOT "${return_code}" STREQUAL "0")
+      message(FATAL_ERROR "Conan --version failed='${return_code}'")
+    endif()
+
+    string(REGEX MATCH ".*Conan version ([0-9]+\\.[0-9]+\\.[0-9]+)" FOO "${CONAN_VERSION_OUTPUT}")
+
+    set(${result} ${CMAKE_MATCH_1} PARENT_SCOPE)
+endfunction()
+
 macro(conan_check)
     # Checks conan availability in PATH
     # Arguments REQUIRED, DETECT_QUIET and VERSION are optional
@@ -946,25 +948,16 @@ macro(conan_check)
     if(NOT CONAN_DETECT_QUIET)
         message(STATUS "Conan: Found program ${CONAN_CMD}")
     endif()
-    execute_process(COMMAND ${CONAN_CMD} --version
-                    RESULT_VARIABLE return_code
-                    OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
-                    ERROR_VARIABLE CONAN_VERSION_OUTPUT)
 
-    if(NOT "${return_code}" STREQUAL "0")
-      message(FATAL_ERROR "Conan --version failed='${return_code}'")
-    endif()
+    conan_version(CONAN_DETECTED_VERSION)
 
     if(NOT CONAN_DETECT_QUIET)
-        string(STRIP "${CONAN_VERSION_OUTPUT}" _CONAN_VERSION_OUTPUT)
-        message(STATUS "Conan: Version found ${_CONAN_VERSION_OUTPUT}")
+        message(STATUS "Conan: Version found ${CONAN_DETECTED_VERSION}")
     endif()
 
     if(DEFINED CONAN_VERSION)
-        string(REGEX MATCH ".*Conan version ([0-9]+\\.[0-9]+\\.[0-9]+)" FOO
-            "${CONAN_VERSION_OUTPUT}")
-        if(${CMAKE_MATCH_1} VERSION_LESS ${CONAN_VERSION})
-            message(FATAL_ERROR "Conan outdated. Installed: ${CMAKE_MATCH_1}, \
+        if(${CONAN_DETECTED_VERSION} VERSION_LESS ${CONAN_VERSION})
+            message(FATAL_ERROR "Conan outdated. Installed: ${CONAN_DETECTED_VERSION}, \
                 required: ${CONAN_VERSION}. Consider updating via 'pip \
                 install conan==${CONAN_VERSION}'.")
         endif()
