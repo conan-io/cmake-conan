@@ -37,7 +37,7 @@
 
 include(CMakeParseArguments)
 
-function(_get_msvc_ide_version result)
+function(_get_msvc_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
         # VS2005
@@ -235,7 +235,7 @@ macro(_conan_detect_compiler)
 
         # Detect 'compiler' and 'compiler.version'
         set(_MSVC "msvc")
-        _get_msvc_ide_version(_MSVC_VERSION)
+        _get_msvc_version(_MSVC_VERSION)
         if("${_MSVC_VERSION}" STREQUAL "")
             message(FATAL_ERROR "Conan: MSVC not recognized")
         else()
