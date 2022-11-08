@@ -46,11 +46,13 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
                       GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)
+conan_cmake_env_autodetect(env_vars)
 
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
                     REMOTE conancenter
-                    SETTINGS ${settings})
+                    SETTINGS ${settings}
+                    ${env_vars})
 
 find_package(fmt)
 
@@ -60,8 +62,9 @@ target_link_libraries(main fmt::fmt)
 
 There are different functions you can use from your CMake project to use Conan from there. The
 recommended flow to use cmake-conan is successively calling to `conan_cmake_configure`,
-`conan_cmake_autodetect` and `conan_cmake_install`. This flow is recommended from v0.16 where these
-functions were introduced.
+`conan_cmake_autodetect` and `conan_cmake_install`. When cross compiling, a list of environment
+variables can be obtained from `conan_cmake_env_autodetect` before calling `conan_cmake_install`.
+This flow is recommended from v0.16 where these functions were introduced.
 
 The example above is using the Conan `cmake_find_package` generator which is less intrusive than the
 `cmake` generator and more aligned with the direction Conan is taking for the 2.0 version. If you
@@ -105,12 +108,21 @@ to the value provided (this can be useful for the multi-configuration generator 
 conan_cmake_autodetect(settings)
 ```
 
+## conan_cmake_env_autodetect()
+
+This function will return a list that can be passed to `conan_cmake_install`. This is useful
+for cross compilation when the variables `CMAKE_C_COMPILER` and `CMAKE_CXX_COMPILER` are set.
+
+```cmake
+conan_cmake_env_autodetect(env)
+```
+
 ## conan_cmake_install()
 
 This function is a wrapper for the [conan
 install](https://docs.conan.io/en/latest/reference/commands/consumer/install.html) command. You can
 pass all the arguments that the command supports. Also, you can pass the auto-detected settings from
-`conan_cmake_autodetect` in the `SETTINGS` argument.
+`conan_cmake_autodetect` in the `SETTINGS` argument and the list from `conan_cmake_env_autodetect`.
 
 It can receive as arguments: `UPDATE`, `NO_IMPORTS`, `PATH_OR_REFERENCE`, `REFERENCE`, `REMOTE`,
 `LOCKFILE`, `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `OUTPUT_FOLDER`, `GENERATOR`, `BUILD` (if this
@@ -135,7 +147,7 @@ This function is an additional wrapper for the [conan lock
 create](https://docs.conan.io/en/latest/reference/commands/misc/lock.html#conan-lock-create)
 sub-command of conan lock command to enable lockfile based workflows. You can pass all the arguments
 that the command supports. Also, you can pass the auto-detected settings from
-`conan_cmake_autodetect` in the `SETTINGS` argument.
+`conan_cmake_autodetect` in the `SETTINGS` argument, and the list returned from `conan_cmake_env_autodetect`.
 
 It can receive as arguments: `PATH`, `REFERENCE`, `UPDATE`, `BASE`, `REMOTE`, `LOCKFILE`,
 `LOCKFILE_OUT`, `LOCKFILE_NODE_ID`, `INSTALL_FOLDER`, `GENERATOR`, `BUILD`, `ENV`, `ENV_HOST`,
