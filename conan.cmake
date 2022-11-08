@@ -453,6 +453,23 @@ function(conan_cmake_autodetect detected_settings)
     set(${detected_settings} ${collected_settings} PARENT_SCOPE)
 endfunction()
 
+macro(_detect_cmake_var cmake_var conan_env)
+  if(DEFINED ${cmake_var})
+    list(APPEND collected_env ENV ${conan_env}=${${cmake_var}})
+  endif()
+endmacro()
+
+function(_collect_env result)
+  _detect_cmake_var(CMAKE_C_COMPILER CC)
+  _detect_cmake_var(CMAKE_CXX_COMPILER CXX)
+  set(${result} ${collected_env} PARENT_SCOPE)
+endfunction()
+
+function(conan_cmake_env_autodetect detected_env)
+  _collect_env(collected_env)
+  set(${detected_env} ${collected_env} PARENT_SCOPE)
+endfunction()
+
 macro(conan_parse_arguments)
   set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
   set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER OUTPUT_FOLDER CONAN_COMMAND)
