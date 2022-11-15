@@ -1059,7 +1059,9 @@ endmacro()
 
 function(conan_cmake_profile)
 
-  conan_parse_arguments(${ARGV})
+  set(profileOneValueArgs   FILEPATH)
+  set(profileMultiValueArgs SETTINGS OPTIONS CONF ENV BUILDENV RUNENV TOOL_REQUIRES)
+  cmake_parse_arguments(ARGS "" "${profileOneValueArgs}" "${profileMultiValueArgs}" ${ARGN})
 
   if(DEFINED ARGUMENTS_FILEPATH)  
     set(_FN "${ARGUMENTS_FILEPATH}")
