@@ -111,6 +111,7 @@ function(conan_cmake_detect_vs_runtime result)
 endfunction()
 
 
+# Detect 'compiler.version' setting for 'msvc'
 function(conan_cmake_detect_msvc_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
