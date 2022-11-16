@@ -231,9 +231,9 @@ macro(_conan_detect_compiler)
                 OR (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL Clang 
                     AND "${CMAKE_${LANGUAGE}_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC" 
                     AND "${CMAKE_${LANGUAGE}_SIMULATE_ID}" STREQUAL "MSVC"))
-        # using MSVC
+        # Using MSVC compilers.
 
-        # Detect 'compiler' and 'compiler.version'
+        # Detect 'compiler' and 'compiler.version' settings.
         set(_MSVC "msvc")
         conan_cmake_detect_msvc_version(_MSVC_VERSION)
         if("${_MSVC_VERSION}" STREQUAL "")
@@ -243,7 +243,7 @@ macro(_conan_detect_compiler)
             set(_CONAN_SETTING_COMPILER_VERSION ${_MSVC_VERSION})
         endif()
 
-        # Detect 'arch'
+        # Detect 'arch' setting.
         if(NOT _CONAN_SETTING_ARCH)
             if (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "64")
                 set(_CONAN_SETTING_ARCH x86_64)
@@ -257,14 +257,14 @@ macro(_conan_detect_compiler)
             endif()
         endif()
 
-        # Detect 'compiler.runtime' and 'compiler.runtime_type'
+        # Detect 'compiler.runtime' and 'compiler.runtime_type' settings.
         conan_cmake_detect_msvc_runtime(_msvc_runtime _msvc_runtime_type ${ARGV})
         message(STATUS "Conan: Detected MSVC runtime: ${_msvc_runtime}")
         set(_CONAN_SETTING_COMPILER_RUNTIME ${_msvc_runtime})
         message(STATUS "Conan: Detected MSVC runtime_type: ${_msvc_runtime_type}")
         set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_msvc_runtime_type})
 
-        # Detect 'compiler.toolset'
+        # Detect 'compiler.toolset' setting.
         set(_XP_TOOLSETS v110_xp v120_xp v140_xp v141_xp)
         foreach(_XP_TOOLSET ${_XP_TOOLSETS})
             if (CMAKE_GENERATOR_TOOLSET MATCHES ${_XP_TOOLSET})
@@ -276,7 +276,7 @@ macro(_conan_detect_compiler)
             endif()
         endforeach()
 
-        # Detect 'compiler.cppstd'
+        # Detect 'compiler.cppstd' setting.
         if(CMAKE_CXX_STANDARD)
             set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
         else()
