@@ -364,9 +364,7 @@ macro(_conan_detect_compiler)
                 AND "${CMAKE_${LANGUAGE}_SIMULATE_ID}" STREQUAL "MSVC"))
         # Using MSVC compilers.
 
-        conan_version(CONAN_VERSION)
-        if (${CONAN_VERSION} VERSION_LESS "2.0.0")
-            # Conan 1.0
+        if (NOT MODE_CONAN_V2)
             # Detect 'Visual Studio' compiler settings.
 
             # Detect 'compiler' and 'compiler.version' settings.
@@ -405,7 +403,6 @@ macro(_conan_detect_compiler)
                 set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
             endif()
         else ()
-            # Conan 2.0
             # Detect 'msvc' compiler settings.
 
             # Detect 'compiler' and 'compiler.version' settings.
@@ -646,6 +643,21 @@ function(_collect_settings result)
 endfunction()
 
 function(conan_cmake_autodetect detected_settings)
+    # Detect whether CONAN_V2 is specified with ON:
+    # - If CONAN_V2 is specified with ON, then MODE_CONAN_V2 will be ON.
+    # - Otherwise:
+    #   - If current Conan version is 1.0, then set MODE_CONAN_V2 to OFF.
+    #   - If current Conan version is 2.0, then set MODE_CONAN_V2 TO ON.
+    set(autodetectOneValueArgs CONAN_V2)
+    cmake_parse_arguments(MODE "" "${autodetectOneValueArgs}" "" ${ARGV})
+    if (NOT MODE_CONAN_V2)
+        conan_version(CONAN_VERSION)
+        if (CONAN_VERSION VERSION_LESS "2.0.0")
+            set(MODE_CONAN_V2 OFF)
+        else ()
+            set(MODE_CONAN_V2 ON)
+        endif ()
+    endif ()
     _conan_detect_build_type(${ARGV})
     _conan_check_system_name()
     _conan_check_language()
