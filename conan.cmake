@@ -364,62 +364,106 @@ macro(_conan_detect_compiler)
                 AND "${CMAKE_${LANGUAGE}_SIMULATE_ID}" STREQUAL "MSVC"))
         # Using MSVC compilers.
 
-        # Detect 'compiler' and 'compiler.version' settings.
-        set(_MSVC "msvc")
-        conan_cmake_detect_msvc_version(_MSVC_VERSION)
-        if("${_MSVC_VERSION}" STREQUAL "")
-            message(FATAL_ERROR "Conan: MSVC not recognized")
-        else()
-            set(_CONAN_SETTING_COMPILER ${_MSVC})
-            set(_CONAN_SETTING_COMPILER_VERSION ${_MSVC_VERSION})
-        endif()
+        conan_version(CONAN_VERSION)
+        if (${CONAN_VERSION} VERSION_LESS "2.0.0")
+            # Conan 1.0
+            # Detect 'Visual Studio' compiler settings.
 
-        # Detect 'arch' setting.
-        if(NOT _CONAN_SETTING_ARCH)
-            if (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "64")
-                set(_CONAN_SETTING_ARCH x86_64)
-            elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "^ARM")
-                message(STATUS "Conan: Using default ARM architecture from MSVC")
-                set(_CONAN_SETTING_ARCH armv6)
-            elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "86")
-                set(_CONAN_SETTING_ARCH x86)
-            else ()
-                message(FATAL_ERROR "Conan: Unknown MSVC architecture [${CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID}]")
+            # Detect 'compiler' and 'compiler.version' settings.
+            set(_VISUAL "Visual Studio")
+            conan_cmake_detect_vs_version(_VISUAL_VERSION)
+            if("${_VISUAL_VERSION}" STREQUAL "")
+                message(FATAL_ERROR "Conan: Visual Studio not recognized")
+            else()
+                set(_CONAN_SETTING_COMPILER ${_VISUAL})
+                set(_CONAN_SETTING_COMPILER_VERSION ${_VISUAL_VERSION})
             endif()
-        endif()
 
-        # Detect 'compiler.runtime' and 'compiler.runtime_type' settings.
-        conan_cmake_detect_msvc_runtime(_msvc_runtime _msvc_runtime_type ${ARGV})
-        message(STATUS "Conan: Detected MSVC runtime: ${_msvc_runtime}")
-        set(_CONAN_SETTING_COMPILER_RUNTIME ${_msvc_runtime})
-        message(STATUS "Conan: Detected MSVC runtime_type: ${_msvc_runtime_type}")
-        set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_msvc_runtime_type})
-
-        # Detect 'compiler.toolset' setting.
-        set(_XP_TOOLSETS v110_xp v120_xp v140_xp v141_xp)
-        foreach(_XP_TOOLSET ${_XP_TOOLSETS})
-            if (CMAKE_GENERATOR_TOOLSET MATCHES ${_XP_TOOLSET})
-                if (CMAKE_GENERATOR_TOOLSET)
-                    set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
-                elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
-                    set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+            # Detect 'arch' setting.
+            if(NOT _CONAN_SETTING_ARCH)
+                if (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "64")
+                    set(_CONAN_SETTING_ARCH x86_64)
+                elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "^ARM")
+                    message(STATUS "Conan: Using default ARM architecture from VS")
+                    set(_CONAN_SETTING_ARCH armv6)
+                elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "86")
+                    set(_CONAN_SETTING_ARCH x86)
+                else ()
+                    message(FATAL_ERROR "Conan: Unknown VS architecture [${MSVC_${LANGUAGE}_ARCHITECTURE_ID}]")
                 endif()
             endif()
-        endforeach()
 
-        # Detect 'compiler.cppstd' setting.
-        if(CMAKE_CXX_STANDARD)
-            set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
-        else()
-            if(MSVC_VERSION VERSION_LESS 1900)
-                # VS < 2015, specify C++98 standard by default.
-                set(_CONAN_SETTING_COMPILER_CPPSTD 98)
+            # Detect 'compiler.runtime' setting.
+            conan_cmake_detect_vs_runtime(VS_RUNTIME ${ARGV})
+            message(STATUS "Conan: Detected VS runtime: ${VS_RUNTIME}")
+            set(_CONAN_SETTING_COMPILER_RUNTIME ${VS_RUNTIME})
+
+            # Detect 'compiler.toolset' setting.
+            if (CMAKE_GENERATOR_TOOLSET)
+                set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+            elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
+                set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+            endif()
+        else ()
+            # Conan 2.0
+            # Detect 'msvc' compiler settings.
+
+            # Detect 'compiler' and 'compiler.version' settings.
+            set(_MSVC "msvc")
+            conan_cmake_detect_msvc_version(_MSVC_VERSION)
+            if("${_MSVC_VERSION}" STREQUAL "")
+                message(FATAL_ERROR "Conan: MSVC not recognized")
             else()
-                # VS >= 2015, specify C++14 standard by default.
-                set(_CONAN_SETTING_COMPILER_CPPSTD 14)
+                set(_CONAN_SETTING_COMPILER ${_MSVC})
+                set(_CONAN_SETTING_COMPILER_VERSION ${_MSVC_VERSION})
+            endif()
+
+            # Detect 'arch' setting.
+            if(NOT _CONAN_SETTING_ARCH)
+                if (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "64")
+                    set(_CONAN_SETTING_ARCH x86_64)
+                elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "^ARM")
+                    message(STATUS "Conan: Using default ARM architecture from MSVC")
+                    set(_CONAN_SETTING_ARCH armv6)
+                elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "86")
+                    set(_CONAN_SETTING_ARCH x86)
+                else ()
+                    message(FATAL_ERROR "Conan: Unknown MSVC architecture [${CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID}]")
+                endif()
+            endif()
+
+            # Detect 'compiler.runtime' and 'compiler.runtime_type' settings.
+            conan_cmake_detect_msvc_runtime(_MSVC_RUNTIME _MSVC_RUNTIME_TYPE ${ARGV})
+            message(STATUS "Conan: Detected MSVC runtime: ${_MSVC_RUNTIME}")
+            set(_CONAN_SETTING_COMPILER_RUNTIME ${_MSVC_RUNTIME})
+            message(STATUS "Conan: Detected MSVC runtime_type: ${_MSVC_RUNTIME_TYPE}")
+            set(_CONAN_SETTING_COMPILER_RUNTIME_TYPE ${_MSVC_RUNTIME_TYPE})
+
+            # Detect 'compiler.toolset' setting.
+            set(_XP_TOOLSETS v110_xp v120_xp v140_xp v141_xp)
+            foreach(_XP_TOOLSET ${_XP_TOOLSETS})
+                if (CMAKE_GENERATOR_TOOLSET MATCHES ${_XP_TOOLSET})
+                    if (CMAKE_GENERATOR_TOOLSET)
+                        set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+                    elseif(CMAKE_VS_PLATFORM_TOOLSET AND (CMAKE_GENERATOR STREQUAL "Ninja"))
+                        set(_CONAN_SETTING_COMPILER_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
+                    endif()
+                endif()
+            endforeach()
+
+            # Detect 'compiler.cppstd' setting.
+            if(CMAKE_CXX_STANDARD)
+                set(_CONAN_SETTING_COMPILER_CPPSTD ${CMAKE_CXX_STANDARD})
+            else()
+                if(MSVC_VERSION VERSION_LESS 1900)
+                    # VS < 2015, specify C++98 standard by default.
+                    set(_CONAN_SETTING_COMPILER_CPPSTD 98)
+                else()
+                    # VS >= 2015, specify C++14 standard by default.
+                    set(_CONAN_SETTING_COMPILER_CPPSTD 14)
+                endif()
             endif()
         endif()
-
     else()
         message(FATAL_ERROR "Conan: compiler setup not recognized")
     endif()
