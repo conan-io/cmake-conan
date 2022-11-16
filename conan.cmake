@@ -199,6 +199,7 @@ function(conan_cmake_detect_msvc_runtime result1 result2)
 endfunction()
 
 
+# Detect 'build_type' setting.
 macro(_conan_detect_build_type)
     conan_parse_arguments(${ARGV})
 
