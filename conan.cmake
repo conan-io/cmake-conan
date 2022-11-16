@@ -37,6 +37,44 @@
 
 include(CMakeParseArguments)
 
+
+# Detecting 'compiler.version' setting for 'Visual Studio', 
+# which will be deprecated in Conan 2.0.
+function(conan_cmake_detect_vs_version result)
+    set(${result} "" PARENT_SCOPE)
+    if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
+        # VS2005, VC 8.0
+        set(${result} 8 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1500 AND MSVC_VERSION VERSION_LESS 1600)
+        # VS2008, VC 9.0
+        set(${result} 9 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1600 AND MSVC_VERSION VERSION_LESS 1700)
+        # VS2010, VC 10.0
+        set(${result} 10 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1700 AND MSVC_VERSION VERSION_LESS 1800)
+        # VS2012, VC 11.0
+        set(${result} 11 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1800 AND MSVC_VERSION VERSION_LESS 1900)
+        # VS2013, VC 12.0
+        set(${result} 12 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1900 AND MSVC_VERSION VERSION_LESS 1910)
+        # VS2015, VC 14.0
+        set(${result} 14 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1910 AND MSVC_VERSION VERSION_LESS 1920)
+        # VS2017, VC 15.0
+        set(${result} 15 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1920 AND MSVC_VERSION VERSION_LESS 1930)
+        # VS2019, VC 16.0
+        set(${result} 16 PARENT_SCOPE)
+    elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1940)
+        # VS2022, VC 17.0
+        set(${result} 17 PARENT_SCOPE)
+    else()
+        message(FATAL_ERROR "Conan: Unknown MSVC compiler version [${MSVC_VERSION}]")
+    endif()
+endfunction()
+
+
 function(conan_cmake_detect_msvc_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
