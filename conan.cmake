@@ -38,7 +38,7 @@
 include(CMakeParseArguments)
 
 
-# Detecting 'compiler.version' setting for 'Visual Studio', 
+# Detect 'compiler.version' setting for 'Visual Studio', 
 # which will be deprecated in Conan 2.0.
 function(conan_cmake_detect_vs_version result)
     set(${result} "" PARENT_SCOPE)
@@ -111,7 +111,7 @@ function(conan_cmake_detect_vs_runtime result)
 endfunction()
 
 
-# Detect 'compiler.version' setting for 'msvc'
+# Detect 'compiler.version' setting for 'msvc'.
 function(conan_cmake_detect_msvc_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
@@ -147,7 +147,7 @@ function(conan_cmake_detect_msvc_version result)
 endfunction()
 
 
-# Detect 'compiler.runtime' and 'compiler.runtime_type' settings for 'msvc'
+# Detect 'compiler.runtime' and 'compiler.runtime_type' settings for 'msvc'.
 function(conan_cmake_detect_msvc_runtime result1 result2)
 
     conan_parse_arguments(${ARGV})
