@@ -223,6 +223,8 @@ macro(_conan_detect_build_type)
     endif()
 endmacro()
 
+
+# Detect 'os' setting.
 macro(_conan_check_system_name)
     #handle -s os setting
     if(CMAKE_SYSTEM_NAME AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
