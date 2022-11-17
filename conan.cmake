@@ -199,6 +199,7 @@ function(conan_cmake_detect_msvc_runtime result1 result2)
 endfunction()
 
 
+# Detect 'compiler.libcxx' setting for 'gcc', 'clang'...etc.
 function(conan_cmake_detect_unix_libcxx result)
     # Take into account any -stdlib in compile options
     get_directory_property(compile_options DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_OPTIONS)
