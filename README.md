@@ -93,27 +93,6 @@ conan_cmake_configure(REQUIRES fmt/6.1.2
 
 ```
 
-## conan_cmake_profile()
-
-This function will create a profile with the same arguments as the section of the [profile](https://docs.conan.io/en/latest/reference/profiles.html).
-
-```cmake
-conan_cmake_profile(FILEPATH      "${CMAKE_BINARY_DIR}/profile"
-                    SETTINGS      os=Windows
-                                  arch=x86_64
-                                  build_type=Debug
-                                  compiler=msvc
-                                  compiler.version=192
-                                  compiler.runtime=dynamic
-                                  compiler.runtime_type=Debug
-                                  compiler.cppstd=14
-                    OPTIONS       fmt:shared=True
-                                  fmt:header_only=False
-                    CONF          tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
-                                  tools.cmake.cmaketoolchain:toolset_arch=x64
-                    TOOL_REQUIRES cmake/3.16.3)
-```
-
 ## conan_cmake_autodetect()
 
 This function will return the auto-detected settings (things like *build_type*, *compiler* or *system
@@ -489,6 +468,26 @@ Example usage:
 conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
 ```
 
+## conan_cmake_profile()
+
+This function will create a profile with the same arguments as the section of the [profile](https://docs.conan.io/en/latest/reference/profiles.html).
+
+```cmake
+conan_cmake_profile(FILEPATH      "${CMAKE_BINARY_DIR}/profile"
+                    SETTINGS      os=Windows
+                                  arch=x86_64
+                                  build_type=Debug
+                                  compiler=msvc
+                                  compiler.version=192
+                                  compiler.runtime=dynamic
+                                  compiler.runtime_type=Debug
+                                  compiler.cppstd=14
+                    OPTIONS       fmt:shared=True
+                                  fmt:header_only=False
+                    CONF          tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
+                                  tools.cmake.cmaketoolchain:toolset_arch=x64
+                    TOOL_REQUIRES cmake/3.16.3)
+```
 
 ## Creating packages
 
