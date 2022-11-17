@@ -468,7 +468,7 @@ Example usage:
 conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
 ```
 
-## conan_cmake_profile()
+### conan_cmake_profile()
 
 This function will create a profile with the same arguments as the section of the [profile](https://docs.conan.io/en/latest/reference/profiles.html).
 
