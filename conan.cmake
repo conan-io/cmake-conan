@@ -454,12 +454,13 @@ function(conan_cmake_autodetect detected_settings)
 endfunction()
 
 macro(conan_parse_arguments)
-  set(options BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS OUTPUT_QUIET NO_IMPORTS SKIP_STD)
-  set(oneValueArgs CONANFILE  ARCH BUILD_TYPE INSTALL_FOLDER OUTPUT_FOLDER CONAN_COMMAND)
-  set(multiValueArgs DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
-                     PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
-                     INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD BUILD_REQUIRES)
-  cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(options         BASIC_SETUP CMAKE_TARGETS UPDATE KEEP_RPATHS NO_LOAD NO_OUTPUT_DIRS 
+                        OUTPUT_QUIET NO_IMPORTS SKIP_STD)
+    set(oneValueArgs    CONANFILE ARCH BUILD_TYPE INSTALL_FOLDER OUTPUT_FOLDER CONAN_COMMAND)
+    set(multiValueArgs  DEBUG_PROFILE RELEASE_PROFILE RELWITHDEBINFO_PROFILE MINSIZEREL_PROFILE
+                        PROFILE REQUIRES OPTIONS IMPORTS SETTINGS BUILD ENV GENERATORS PROFILE_AUTO
+                        INSTALL_ARGS CONFIGURATION_TYPES PROFILE_BUILD BUILD_REQUIRES)
+    cmake_parse_arguments(ARGUMENTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 endmacro()
 
 function(old_conan_cmake_install)
@@ -1054,3 +1055,67 @@ macro(conan_config_install)
     message(FATAL_ERROR "Conan config failed='${return_code}'")
   endif()
 endmacro()
+
+
+function(conan_cmake_profile)
+    set(profileOneValueArgs   FILEPATH)
+    set(profileMultiValueArgs SETTINGS OPTIONS CONF ENV BUILDENV RUNENV TOOL_REQUIRES)
+    cmake_parse_arguments(ARGS "" "${profileOneValueArgs}" "${profileMultiValueArgs}" ${ARGN})
+
+    if(DEFINED ARGS_FILEPATH)  
+        set(_FN "${ARGS_FILEPATH}")
+    else()
+        set(_FN "${CMAKE_CURRENT_BINARY_DIR}/profile")
+    endif()
+    message(STATUS "Conan: Creating profile ${_FN}")
+    file(WRITE ${_FN} "")
+
+    if(DEFINED ARGS_SETTINGS)
+        file(APPEND ${_FN} "[settings]\n")
+        foreach(SETTING ${ARGS_SETTINGS})
+            file(APPEND ${_FN} ${SETTING} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_OPTIONS)
+        file(APPEND ${_FN} "[options]\n")
+        foreach(OPTION ${ARGS_OPTIONS})
+            file(APPEND ${_FN} ${OPTION} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_CONF)
+        file(APPEND ${_FN} "[conf]\n")
+        foreach(CONF ${ARGS_CONF})
+            file(APPEND ${_FN} ${CONF} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_ENV)
+        file(APPEND ${_FN} "[env]\n")
+        foreach(ENV ${ARGS_ENV})
+            file(APPEND ${_FN} ${ENV} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_BUILDENV)
+        file(APPEND ${_FN} "[buildenv]\n")
+        foreach(BUILDENV ${ARGS_BUILDENV})
+            file(APPEND ${_FN} ${BUILDENV} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_RUNENV)
+        file(APPEND ${_FN} "[runenv]\n")
+        foreach(RUNENV ${ARGS_RUNENV})
+            file(APPEND ${_FN} ${RUNENV} "\n")
+        endforeach()
+    endif()
+
+    if(DEFINED ARGS_TOOL_REQUIRES)
+        file(APPEND ${_FN} "[tool_requires]\n")
+        foreach(TOOL_REQUIRE ${ARGS_TOOL_REQUIRES})
+            file(APPEND ${_FN} ${TOOL_REQUIRE} "\n")
+        endforeach()
+    endif()
+endfunction()
