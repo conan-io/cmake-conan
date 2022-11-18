@@ -1,3 +1,4 @@
+import re
 import unittest
 import tempfile
 import os
@@ -195,8 +196,9 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
         with open('output.txt', 'r') as file:
             data = file.read()
-            assert "--conf user.configuration:myconfig=somevalue" in data     
-        
+            assert "--conf user.configuration:myconfig=somevalue" in data
+            # check that the compiler version is set just with the major version
+            assert  re.match(r"--settings compiler.version=[\d]*[\s]", data)        
 
     def test_conan_cmake_install_outputfolder(self):
         content = textwrap.dedent("""
