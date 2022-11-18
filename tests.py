@@ -198,7 +198,8 @@ class CMakeConanTest(unittest.TestCase):
             data = file.read()
             assert "--conf user.configuration:myconfig=somevalue" in data
             # check that the compiler version is set just with the major version
-            assert  re.match(r"--settings compiler.version=[\d]*[\s]", data)        
+            assert re.search(r"--settings compiler.version=[\d]*[\s]", data) 
+
 
     def test_conan_cmake_install_outputfolder(self):
         content = textwrap.dedent("""
