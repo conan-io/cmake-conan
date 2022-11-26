@@ -40,7 +40,7 @@ include(CMakeParseArguments)
 
 # Detect 'compiler.version' setting for 'Visual Studio', 
 # which will be deprecated in Conan 2.0.
-function(conan_cmake_detect_vs_version result)
+function(_conan_detect_vs_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
         # VS2005, VC 8.0
@@ -77,7 +77,7 @@ endfunction()
 
 # Detect 'compiler.runtime' setting for 'Visual Studio',
 # which will be deprecated in Conan 2.0.
-function(conan_cmake_detect_vs_runtime result)
+function(_conan_detect_vs_runtime result)
     conan_parse_arguments(${ARGV})
     if(ARGUMENTS_BUILD_TYPE)
         set(build_type "${ARGUMENTS_BUILD_TYPE}")
@@ -112,7 +112,7 @@ endfunction()
 
 
 # Detect 'compiler.version' setting for 'msvc'.
-function(conan_cmake_detect_msvc_version result)
+function(_conan_detect_msvc_version result)
     set(${result} "" PARENT_SCOPE)
     if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
         # VS2005
@@ -148,7 +148,7 @@ endfunction()
 
 
 # Detect 'compiler.runtime' and 'compiler.runtime_type' settings for 'msvc'.
-function(conan_cmake_detect_msvc_runtime result1 result2)
+function(_conan_detect_msvc_runtime result1 result2)
 
     conan_parse_arguments(${ARGV})
     if(ARGUMENTS_BUILD_TYPE)
@@ -200,7 +200,7 @@ endfunction()
 
 
 # Detect 'compiler.libcxx' setting for 'gcc', 'clang'...etc.
-function(conan_cmake_detect_unix_libcxx result)
+function(_conan_detect_unix_libcxx result)
     # Take into account any -stdlib in compile options
     get_directory_property(compile_options DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_OPTIONS)
     string(GENEX_STRIP "${compile_options}" compile_options)
@@ -380,7 +380,7 @@ macro(_conan_detect_compiler)
         set(_CONAN_SETTING_COMPILER_VERSION ${COMPILER_VERSION})
 
         if (USING_CXX)
-            conan_cmake_detect_unix_libcxx(_LIBCXX)
+            _conan_detect_unix_libcxx(_LIBCXX)
             set(_CONAN_SETTING_COMPILER_LIBCXX ${_LIBCXX})
         endif ()
     elseif (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL Intel)
@@ -391,7 +391,7 @@ macro(_conan_detect_compiler)
         set(_CONAN_SETTING_COMPILER intel)
         set(_CONAN_SETTING_COMPILER_VERSION ${COMPILER_VERSION})
         if (USING_CXX)
-            conan_cmake_detect_unix_libcxx(_LIBCXX)
+            _conan_detect_unix_libcxx(_LIBCXX)
             set(_CONAN_SETTING_COMPILER_LIBCXX ${_LIBCXX})
         endif ()
     elseif (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL AppleClang)
@@ -411,7 +411,7 @@ macro(_conan_detect_compiler)
 
         set(_CONAN_SETTING_COMPILER apple-clang)
         if (USING_CXX)
-            conan_cmake_detect_unix_libcxx(_LIBCXX)
+            _conan_detect_unix_libcxx(_LIBCXX)
             set(_CONAN_SETTING_COMPILER_LIBCXX ${_LIBCXX})
         endif ()
     elseif (${CMAKE_${LANGUAGE}_COMPILER_ID} STREQUAL Clang
@@ -440,7 +440,7 @@ macro(_conan_detect_compiler)
             endif()
         endif()
         if (USING_CXX)
-            conan_cmake_detect_unix_libcxx(_LIBCXX)
+            _conan_detect_unix_libcxx(_LIBCXX)
             set(_CONAN_SETTING_COMPILER_LIBCXX ${_LIBCXX})
         endif ()
     elseif ("${CMAKE_${LANGUAGE}_COMPILER_ID}" STREQUAL "MSVC"
@@ -454,7 +454,7 @@ macro(_conan_detect_compiler)
 
             # Detect 'compiler' and 'compiler.version' settings.
             set(_VISUAL "Visual Studio")
-            conan_cmake_detect_vs_version(_VISUAL_VERSION)
+            _conan_detect_vs_version(_VISUAL_VERSION)
             if("${_VISUAL_VERSION}" STREQUAL "")
                 message(FATAL_ERROR "Conan: Visual Studio not recognized")
             else()
@@ -477,7 +477,7 @@ macro(_conan_detect_compiler)
             endif()
 
             # Detect 'compiler.runtime' setting.
-            conan_cmake_detect_vs_runtime(VS_RUNTIME ${ARGV})
+            _conan_detect_vs_runtime(VS_RUNTIME ${ARGV})
             message(STATUS "Conan: Detected VS runtime: ${VS_RUNTIME}")
             set(_CONAN_SETTING_COMPILER_RUNTIME ${VS_RUNTIME})
 
@@ -492,7 +492,7 @@ macro(_conan_detect_compiler)
 
             # Detect 'compiler' and 'compiler.version' settings.
             set(_MSVC "msvc")
-            conan_cmake_detect_msvc_version(_MSVC_VERSION)
+            _conan_detect_msvc_version(_MSVC_VERSION)
             if("${_MSVC_VERSION}" STREQUAL "")
                 message(FATAL_ERROR "Conan: MSVC not recognized")
             else()
@@ -515,7 +515,7 @@ macro(_conan_detect_compiler)
             endif()
 
             # Detect 'compiler.runtime' and 'compiler.runtime_type' settings.
-            conan_cmake_detect_msvc_runtime(_MSVC_RUNTIME _MSVC_RUNTIME_TYPE ${ARGV})
+            _conan_detect_msvc_runtime(_MSVC_RUNTIME _MSVC_RUNTIME_TYPE ${ARGV})
             message(STATUS "Conan: Detected MSVC runtime: ${_MSVC_RUNTIME}")
             set(_CONAN_SETTING_COMPILER_RUNTIME ${_MSVC_RUNTIME})
             message(STATUS "Conan: Detected MSVC runtime_type: ${_MSVC_RUNTIME_TYPE}")
