@@ -1079,7 +1079,7 @@ endmacro()
 
 
 function(conan_cmake_profile)
-    set(profileOneValueArgs   FILEPATH)
+    set(profileOneValueArgs   FILEPATH INCLUDE)
     set(profileMultiValueArgs SETTINGS OPTIONS CONF ENV BUILDENV RUNENV TOOL_REQUIRES)
     cmake_parse_arguments(ARGS "" "${profileOneValueArgs}" "${profileMultiValueArgs}" ${ARGN})
 
@@ -1090,6 +1090,10 @@ function(conan_cmake_profile)
     endif()
     message(STATUS "Conan: Creating profile ${_FN}")
     file(WRITE ${_FN} "")
+
+    if(DEFINED ARGS_INCLUDE)
+        file(APPEND ${_FN} "include(${ARGS_INCLUDE})\n")
+    endif()
 
     if(DEFINED ARGS_SETTINGS)
         file(APPEND ${_FN} "[settings]\n")
