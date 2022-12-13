@@ -896,9 +896,9 @@ class CMakeConanTest(unittest.TestCase):
                               compiler.cppstd=14
                 OPTIONS       fmt:shared=True
                               fmt:header_only=False
-                CONF          tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
-                              tools.cmake.cmaketoolchain:toolset_arch=x64
-                              tools.cmake.build:jobs=10
+                CONF          "tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019"
+                              "tools.cmake.cmaketoolchain:toolset_arch=x64"
+                              "tools.cmake.build:jobs=10"
                 ENV           "MyPath1=(path)/some/path11"
                               "MyPath1=+(path)/other/path12"
                 BUILDENV      "MyPath2=(path)/some/path21"
@@ -922,7 +922,7 @@ class CMakeConanTest(unittest.TestCase):
             fmt:shared=True
             fmt:header_only=False
             [conf]
-            tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
+            tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019
             tools.cmake.cmaketoolchain:toolset_arch=x64
             tools.cmake.build:jobs=10
             [env]
