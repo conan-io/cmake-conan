@@ -484,8 +484,8 @@ conan_cmake_profile(FILEPATH      "${CMAKE_BINARY_DIR}/profile"
                                   compiler.cppstd=14
                     OPTIONS       fmt:shared=True
                                   fmt:header_only=False
-                    CONF          tools.cmake.cmaketoolchain:generator="Visual Studio 16 2019"
-                                  tools.cmake.cmaketoolchain:toolset_arch=x64
+                    CONF          "tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019"
+                                  "tools.cmake.cmaketoolchain:toolset_arch=x64"
                     TOOL_REQUIRES cmake/3.16.3)
 ```
 
