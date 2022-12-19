@@ -886,6 +886,7 @@ class CMakeConanTest(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_profile(
                 FILEPATH      "${CMAKE_BINARY_DIR}/profile"
+                INCLUDE       default
                 SETTINGS      os=Windows
                               arch=x86_64
                               build_type=Debug
@@ -909,6 +910,7 @@ class CMakeConanTest(unittest.TestCase):
             )
         """)
         result_conanfile = textwrap.dedent("""
+            include(default)
             [settings]
             os=Windows
             arch=x86_64
