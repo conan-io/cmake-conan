@@ -309,6 +309,34 @@ macro(_conan_detect_build_type)
 endmacro()
 
 
+# Detect 'arch' setting.
+macro(_conan_detect_arch)
+    conan_parse_arguments(${ARGV})
+    if (ARGUMENTS_ARCH)
+        set(_CONAN_SETTING_ARCH ${ARGUMENTS_ARCH})
+    else ()
+        if ("${CMAKE_${LANGUAGE}_COMPILER_ID}" STREQUAL "MSVC" 
+            OR ("${CMAKE_${LANGUAGE}_COMPILER_ID}" STREQUAL "Clang" 
+                AND "${CMAKE_${LANGUAGE}_SIMULATE_ID}" STREQUAL "MSVC"))
+            # Available for MSVC 
+            # Available for MSVC-based Clang
+            if (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "64")
+                set(_CONAN_SETTING_ARCH x86_64)
+            elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "^ARM")
+                set(_CONAN_SETTING_ARCH armv6)
+            elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "86")
+                set(_CONAN_SETTING_ARCH x86)
+            else ()
+                # Other architectures...
+            endif()
+        else ()
+            # Other C/C++ compilers...
+            # Use other mechanism to detect its architecture 
+        endif ()
+    endif ()
+endmacro ()
+
+
 # Detect 'os' setting.
 macro(_conan_check_system_name)
     #handle -s os setting
@@ -462,20 +490,6 @@ macro(_conan_detect_compiler)
                 set(_CONAN_SETTING_COMPILER_VERSION ${_VISUAL_VERSION})
             endif()
 
-            # Detect 'arch' setting.
-            if(NOT _CONAN_SETTING_ARCH)
-                if (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "64")
-                    set(_CONAN_SETTING_ARCH x86_64)
-                elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "^ARM")
-                    message(STATUS "Conan: Using default ARM architecture from VS")
-                    set(_CONAN_SETTING_ARCH armv6)
-                elseif (MSVC_${LANGUAGE}_ARCHITECTURE_ID MATCHES "86")
-                    set(_CONAN_SETTING_ARCH x86)
-                else ()
-                    message(FATAL_ERROR "Conan: Unknown VS architecture [${MSVC_${LANGUAGE}_ARCHITECTURE_ID}]")
-                endif()
-            endif()
-
             # Detect 'compiler.runtime' setting.
             _conan_detect_vs_runtime(VS_RUNTIME ${ARGV})
             message(STATUS "Conan: Detected VS runtime: ${VS_RUNTIME}")
@@ -498,20 +512,6 @@ macro(_conan_detect_compiler)
             else()
                 set(_CONAN_SETTING_COMPILER ${_MSVC})
                 set(_CONAN_SETTING_COMPILER_VERSION ${_MSVC_VERSION})
-            endif()
-
-            # Detect 'arch' setting.
-            if(NOT _CONAN_SETTING_ARCH)
-                if (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "64")
-                    set(_CONAN_SETTING_ARCH x86_64)
-                elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "^ARM")
-                    message(STATUS "Conan: Using default ARM architecture from MSVC")
-                    set(_CONAN_SETTING_ARCH armv6)
-                elseif (CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID MATCHES "86")
-                    set(_CONAN_SETTING_ARCH x86)
-                else ()
-                    message(FATAL_ERROR "Conan: Unknown MSVC architecture [${CMAKE_${LANGUAGE}_COMPILER_ARCHITECTURE_ID}]")
-                endif()
             endif()
 
             # Detect 'compiler.runtime' and 'compiler.runtime_type' settings.
@@ -567,11 +567,9 @@ function(conan_cmake_settings result)
     conan_parse_arguments(${ARGV})
 
     _conan_detect_build_type(${ARGV})
-
+    _conan_detect_arch(${ARGV})
     _conan_check_system_name()
-
     _conan_check_language()
-
     _conan_detect_compiler(${ARGV})
 
     # If profile is defined it is used
@@ -660,6 +658,7 @@ function(conan_cmake_autodetect detected_settings)
         endif ()
     endif ()
     _conan_detect_build_type(${ARGV})
+    _conan_detect_arch(${ARGV})
     _conan_check_system_name()
     _conan_check_language()
     _conan_detect_compiler(${ARGV})
