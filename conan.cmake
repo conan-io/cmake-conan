@@ -302,6 +302,10 @@ function(conan_cmake_settings result)
         conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
         set(_SETTINGS ${_SETTINGS} -pr:b=${ARG})
     endforeach()
+    foreach(ARG ${ARGUMENTS_PROFILE_HOST})
+        conan_check(VERSION 1.24.0 REQUIRED DETECT_QUIET)
+        set(_SETTINGS ${_SETTINGS} -pr:h=${ARG})
+    endforeach()
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
         set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
