@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import tempfile
 import textwrap
@@ -60,7 +61,7 @@ def test1():
         cmake_minimum_required(VERSION 3.15)
         project(MyApp CXX)
 
-        find_package(hello)
+        find_package(hello REQUIRED)
         add_executable(app main.cpp)
         target_link_libraries(app hello::hello)
         """)
@@ -81,11 +82,15 @@ def test1():
     save("conanfile.txt", conanfile)
     save("CMakeLists.txt", cmake)
     save("user.cmake", "set(CMAKE_CXX_STANDARD 17)")
+    shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_provider.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conantools.cmake"), ".")
     with chdir("build"):
-        run("cmake .. -DCMAKE_PROJECT_INCLUDE=conaninstall.cmake -DCMAKE_TOOLCHAIN_FILE=user.cmake")
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_TOOLCHAIN_FILE=user.cmake -DCMAKE_BUILD_TYPE=Release")
         run("cmake --build . --config Release")
-        run(r"Release\app.exe")
+        if platform.system() == "Windows":
+            run(r"Release\app.exe")
+        else:
+            run("./app")
 
 
