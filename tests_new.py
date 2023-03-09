@@ -53,6 +53,7 @@ def test1():
     run("conan profile detect")
     run("conan new cmake_lib -d name=hello -d version=0.1")
     run("conan create . -tf=")
+    #run("conan create . -s compiler.cppstd=17 -tf=")
     run("rm -rf *")
 
     cmake = textwrap.dedent("""\
@@ -77,10 +78,14 @@ def test1():
         cmake_layout
         """)
     save("main.cpp", main)
-    shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
     save("conanfile.txt", conanfile)
     save("CMakeLists.txt", cmake)
+    save("user.cmake", "set(CMAKE_CXX_STANDARD 17)")
+    shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
+    shutil.copy2(os.path.join(os.path.dirname(__file__), "conantools.cmake"), ".")
     with chdir("build"):
-        run("cmake .. -DCMAKE_PROJECT_INCLUDE=conaninstall.cmake")
+        run("cmake .. -DCMAKE_PROJECT_INCLUDE=conaninstall.cmake -DCMAKE_TOOLCHAIN_FILE=user.cmake")
         run("cmake --build . --config Release")
+        run(r"Release\app.exe")
+
 
