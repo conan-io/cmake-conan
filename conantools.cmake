@@ -100,8 +100,8 @@ endfunction()
 function(conan_install)
     cmake_parse_arguments(ARGS CONAN_ARGS ${ARGN})
     # Invoke "conan install" with the provided arguments
-    message(STATUS "conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS}")
-    execute_process(COMMAND conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS}  --format=json
+    message(STATUS "conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
+    execute_process(COMMAND conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr

@@ -8,8 +8,7 @@ macro(conan_provide_dependency package_name)
 
     if(NOT CONAN_INSTALL_SUCCESS)
         detect_host_profile(${CMAKE_BINARY_DIR}/conan_host_profile)
-        # TODO; consider adding -g CMakeDeps to cover case where conanfile doesn't specify any
-        conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile --output-folder ${CONAN_OUTPUT_FOLDER})
+        conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile --output-folder ${CONAN_OUTPUT_FOLDER} -g CMakeDeps)
         if (CONAN_INSTALL_SUCCESS)
             message("Conan generators folder: ${CONAN_GENERATORS_FOLDER}")
             set(CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}" CACHE PATH "Conan generators folder")
