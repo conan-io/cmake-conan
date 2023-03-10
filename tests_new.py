@@ -53,44 +53,48 @@ def conan_test():
 def test1():
     run("conan profile detect")
     run("conan new cmake_lib -d name=hello -d version=0.1")
-    run("conan create . -tf=")
-    #run("conan create . -s compiler.cppstd=17 -tf=")
+    run("conan export .")
+    run("conan new cmake_lib -d name=bye -d version=0.1 -f")
+    run("conan export .")
     run("rm -rf *")
 
     cmake = textwrap.dedent("""\
-        cmake_minimum_required(VERSION 3.15)
+        cmake_minimum_required(VERSION 3.25)
         project(MyApp CXX)
 
+        set(CMAKE_CXX_STANDARD 17)
         find_package(hello REQUIRED)
+        find_package(bye REQUIRED)
         add_executable(app main.cpp)
-        target_link_libraries(app hello::hello)
+        target_link_libraries(app hello::hello bye::bye)
         """)
     main = textwrap.dedent("""\
         #include "hello.h"
-        int main(){hello();}
+        #include "bye.h"
+        int main(){hello();bye();}
         """)
     # TODO: Clarify if CMakeDeps, cmake_layout should be here or injected
     conanfile = textwrap.dedent("""\
         [requires]
         hello/0.1
-        [generators]
-        CMakeDeps
-        [layout]
-        cmake_layout
+        bye/0.1
         """)
     save("main.cpp", main)
     save("conanfile.txt", conanfile)
     save("CMakeLists.txt", cmake)
-    save("user.cmake", "set(CMAKE_CXX_STANDARD 17)")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_provider.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conantools.cmake"), ".")
     with chdir("build"):
-        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_TOOLCHAIN_FILE=user.cmake -DCMAKE_BUILD_TYPE=Release")
-        run("cmake --build . --config Release")
         if platform.system() == "Windows":
+            run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake")
+            run("cmake --build . --config Release")
+            run("cmake --build . --config Debug")
             run(r"Release\app.exe")
+            run(r"Debug\app.exe")
         else:
+            run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+            run("cmake --build .")
             run("./app")
 
 
