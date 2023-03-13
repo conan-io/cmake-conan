@@ -109,6 +109,28 @@ function(detect_host_profile output_file)
 endfunction()
 
 
+function(conan_profile_detect_default)
+    message(STATUS "Conan-cmake: Checking if a default profile exists")
+    execute_process(COMMAND conan profile path default
+                    RESULT_VARIABLE return_code
+                    OUTPUT_VARIABLE conan_stdout
+                    ERROR_VARIABLE conan_stderr
+                    ECHO_ERROR_VARIABLE    # show the text output regardless
+                    ECHO_OUTPUT_VARIABLE
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    if(NOT ${return_code} EQUAL "0")
+        message(STATUS "Conan-cmake: The default profile doesn't exist, detecting it.")
+        execute_process(COMMAND conan profile detect
+            RESULT_VARIABLE return_code
+            OUTPUT_VARIABLE conan_stdout
+            ERROR_VARIABLE conan_stderr
+            ECHO_ERROR_VARIABLE    # show the text output regardless
+            ECHO_OUTPUT_VARIABLE
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+endfunction()
+
+
 function(conan_install)
     cmake_parse_arguments(ARGS CONAN_ARGS ${ARGN})
     set(CONAN_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/conan)
@@ -138,13 +160,14 @@ endfunction()
 
 function(conan_provide_dependency package_name)
     if(NOT CONAN_INSTALL_SUCCESS)
-        message(STATUS "CMake-conan: first find_package() found, running 'conan install' to install deps")
+        message(STATUS "CMake-conan: first find_package() found. Installing dependencies with Conan")
+        conan_profile_detect_default()
         detect_host_profile(${CMAKE_BINARY_DIR}/conan_host_profile)
         if(NOT CMAKE_CONFIGURATION_TYPES)
-            message(STATUS "CMake-conan: Intalling single configuration ${CMAKE_BUILD_TYPE}")
+            message(STATUS "CMake-conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
             conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile --build=missing -g CMakeDeps)
         else()
-            message(STATUS "CMake-conan: Intalling both Debug and Release")
+            message(STATUS "CMake-conan: Installing both Debug and Release")
             conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile -s build_type=Release --build=missing -g CMakeDeps)
             conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile -s build_type=Debug --build=missing -g CMakeDeps)
         endif()

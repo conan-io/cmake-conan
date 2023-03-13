@@ -51,7 +51,6 @@ def conan_test():
 
 
 def test1():
-    run("conan profile detect")
     run("conan new cmake_lib -d name=hello -d version=0.1")
     run("conan export .")
     run("conan new cmake_lib -d name=bye -d version=0.1 -f")
@@ -104,5 +103,3 @@ def test1():
             run("cmake --build . --config Debug")
             run("./Release/app")
             run("./Debug/app")
-
-
