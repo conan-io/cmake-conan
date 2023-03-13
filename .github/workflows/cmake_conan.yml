@@ -20,6 +20,6 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
-          cmake-version: '3.24.x'
+          cmake-version: '3.25.x'
       - name: Run Tests
         run: pytest tests_new.py -rA -v
