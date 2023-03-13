@@ -85,16 +85,24 @@ def test1():
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_provider.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conantools.cmake"), ".")
-    with chdir("build"):
-        if platform.system() == "Windows":
+
+    if platform.system() == "Windows":
+        with chdir("build"):
             run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake")
             run("cmake --build . --config Release")
             run("cmake --build . --config Debug")
             run(r"Release\app.exe")
             run(r"Debug\app.exe")
-        else:
+    else:
+        with chdir("build"):
             run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
             run("cmake --build .")
             run("./app")
+        with chdir("build-multi"):
+            run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G'Ninja Multi-Config'")
+            run("cmake --build . --config Release")
+            run("cmake --build . --config Debug")
+            run("./Release/app")
+            run("./Debug/app")
 
 
