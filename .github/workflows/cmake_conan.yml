@@ -22,4 +22,4 @@ jobs:
         with:
           cmake-version: '3.24.x'
       - name: Run Tests
-        run: pytest tests.py -rA -v
+        run: pytest tests_new.py -rA -v
