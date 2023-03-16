@@ -1,14 +1,11 @@
 # cmake-conan
 
-![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg)
+![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg?branch=develop)
 
 CMake wrapper for the Conan C and C++ package manager.
 
-> :warning: **Compatibility with Conan 2.0**: cmake-conan is not compatible with Conan 2.0
-> for the moment. Once Conan 2.0 is GA the compatibility between both will be analyzed
-> again. Also, please note that CMakeToolchain is not compatible with cmake-conan. If you
-> need to use it, we would recommend not using cmake-conan but doing a ``conan install``
-> directly.
+> :warning: **Compatibility with Conan 2.0**: please check for experimental support in 
+the [develop2](https://github.com/conan-io/cmake-conan/tree/develop2) branch.
 
 
 This cmake module allows to launch ``conan install`` from cmake.
