@@ -58,7 +58,7 @@ def test1():
     run("rm -rf *")
 
     cmake = textwrap.dedent("""\
-        cmake_minimum_required(VERSION 3.25)
+        cmake_minimum_required(VERSION 3.24)
         project(MyApp CXX)
 
         set(CMAKE_CXX_STANDARD 17)
@@ -82,8 +82,7 @@ def test1():
     save("conanfile.txt", conanfile)
     save("CMakeLists.txt", cmake)
     shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_provider.cmake"), ".")
-    shutil.copy2(os.path.join(os.path.dirname(__file__), "conaninstall.cmake"), ".")
-    shutil.copy2(os.path.join(os.path.dirname(__file__), "conantools.cmake"), ".")
+    shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_support.cmake"), ".")
 
     if platform.system() == "Windows":
         with chdir("build"):

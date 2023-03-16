@@ -1,6 +1,6 @@
 # cmake-conan
 
-![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg)
+![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg?branch=develop2)
 
 CMake dependency provider for the Conan C and C++ package manager.
 
@@ -20,13 +20,28 @@ First, clone this repository in the `develop2` branch.
 git clone https://github.com/conan-io/cmake-conan.git -b develop2
 ```
 
-When initializing CMake for your project, specify Conan as the dependency provider, the following way:
+### Example project
 
-``` bash
-cmake -B [build-dir] -S [source-dir] -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake
+This repository contains a `CMakeLists.txt` with an example project that depends on `fmt`. 
+
+```bash
+cd cmake-conan
+mkdir build
+cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
 
-This will ensure that `conan install` is invoked from within CMake. This integration **does not require making any changes to your `CMakeLists.txt` scripts**, but it does assume a valid `conanfile.txt` or `conanfile.py` exists in the root of the source directory.
+### In your own project
+
+* Ensure you have placed a `conanfile.txt` or `conanfile.py` at the root of your project, listing your requirements. You can see [conanfile.txt](conanfile.txt) for an example, or check the Conan documentation for `conanfile`: [.txt docs](https://docs.conan.io/2/reference/conanfile_txt.html), [.py docs](https://docs.conan.io/2/reference/conanfile/attributes.html#requirements).
+
+* When first invoking CMake to configure the project, pass `-DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake`. This will ensure that `conan install` is invoked from within CMake. This integration **does not require making any changes to your `CMakeLists.txt` scripts**. 
+
+```bash
+cd [your-project]
+mkdir build
+cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
+```
 
 ### Known limitations with Conan 2.0
 
