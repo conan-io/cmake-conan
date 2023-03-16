@@ -645,7 +645,7 @@ class CMakeConanTest(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
                             SETTINGS arch=armv6
-                            SETTINGS cppstd=14)
+                            SETTINGS compiler.cppstd=14)
 
             if(NOT ${CONAN_SETTINGS_ARCH} STREQUAL "armv6")
                 message(FATAL_ERROR "CONAN_SETTINGS_ARCH INCORRECT!")
@@ -678,7 +678,7 @@ class CMakeConanTest(unittest.TestCase):
             include(conan.cmake)
             conan_cmake_run(BASIC_SETUP
                             SETTINGS {})
-            STRING(REGEX MATCHALL "{}" matches "${{settings}}")
+            STRING(REGEX MATCHALL "{}=" matches "${{settings}}")
             list(LENGTH matches n_matches)
             if(NOT n_matches EQUAL 1)
                 message(FATAL_ERROR "CONAN_SETTINGS DUPLICATED!")
@@ -702,6 +702,7 @@ class CMakeConanTest(unittest.TestCase):
                             PROFILE myprofile
                             PROFILE_AUTO build_type
                             PROFILE_AUTO compiler
+                            PROFILE_AUTO compiler.version
                             )
 
             if(NOT "${CONAN_SETTINGS_BUILD_TYPE}" STREQUAL "${CMAKE_BUILD_TYPE}")
