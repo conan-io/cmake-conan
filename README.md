@@ -4,15 +4,8 @@
 
 CMake dependency provider for the Conan C and C++ package manager.
 
-> :warning: **Compatibility with Conan 2.0**: compatibility with Conan 2.0 is currently **experimental** and may have some limitations, please read below.
+> :warning: **Compatibility with Conan 2.0**: compatibility with Conan 2.0 is currently **experimental** and may have some limitations, and is subject to change, please read below. The code in this branch only supports Conan 2.0.2 and ablove - if you need Conan 1.x please check the `develop` branch.
 
-## Repository layout
-
-The branches in this repo are:
-- **develop**: PR are merged to this branch. Latest state of development, support only for Conan 1.X.
-- **develop2**: Experimental support for Conan 2.0
-- **master**: Latest release
-- **tagged releases**: https://github.com/conan-io/cmake-conan/releases.
 
 ## Quickstart with Conan 2.0
 
