@@ -62,6 +62,21 @@ function(_get_msvc_ide_version result)
     endif()
 endfunction()
 
+function(_set_if_defined variable testVarNameList)
+    cmake_parse_arguments(ARGUMENTS "" "ERROR_MSG" "" ${ARGN})
+    foreach(testVarName ${testVarNameList})
+        if(DEFINED ${testVarName})
+            set(${variable} ${${testVarName}} PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+    if(DEFINED ARGUMENTS_ERROR_MSG)
+        message(FATAL_ERROR ${ARGUMENTS_ERROR_MSG})
+    else()
+        set(${variable} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
 macro(_conan_detect_build_type)
     conan_parse_arguments(${ARGV})
 
@@ -305,7 +320,41 @@ function(conan_cmake_settings result)
 
     if(NOT _SETTINGS OR ARGUMENTS_PROFILE_AUTO STREQUAL "ALL")
         set(ARGUMENTS_PROFILE_AUTO arch build_type compiler compiler.version
-                                   compiler.runtime compiler.libcxx compiler.toolset)
+                                   compiler.runtime compiler.libcxx compiler.toolset os os.api_level)
+    endif()
+
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+        # Do not auto detect unless PROFILE_AUTO told us to do so, because a failed detection breaks configuring
+        # User should be able to skip auto detection in this situation
+
+        # Detect by cmake predefined variables and variables which set by the toolchain file of ndk
+
+        list(FIND ARGUMENTS_PROFILE_AUTO "arch" _arch_index)
+        list(FIND ARGUMENTS_PROFILE_AUTO "compiler.libcxx" _compiler_libcxx_index)
+        list(FIND ARGUMENTS_PROFILE_AUTO "os.api_level" _os_api_level_index)
+
+        if(NOT _CONAN_SETTING_ARCH AND ${_arch_index} GREATER -1)
+            set(_CONAN_ANDROID_ABI_NAMES arm64-v8a armeabi-v7a armeabi-v6 armeabi mips mips64 x86 x86_64)
+            set(_CONAN_ANDROID_ABI_MAPPED_NAMES armv8 armv7 armv6 armv5hf mips mips64 x86 x86_64)
+            _set_if_defined(_CONAN_ANDROID_ARCH_ABI "CMAKE_ANDROID_ARCH_ABI;ANDROID_ABI"
+                ERROR_MSG "Conan: Cannot auto detect android abi")
+            list(FIND _CONAN_ANDROID_ABI_NAMES "${_CONAN_ANDROID_ARCH_ABI}" _index)
+            if(${_index} GREATER -1)
+                list(GET _CONAN_ANDROID_ABI_MAPPED_NAMES ${_index} _CONAN_SETTING_ARCH)
+            else()
+                message(FATAL_ERROR "Conan: Invalid abi ${_CONAN_ANDROID_ARCH_ABI}")
+            endif()
+        endif()
+        if(${_compiler_libcxx_index} GREATER -1)
+            _set_if_defined(_CONAN_SETTING_COMPILER_LIBCXX
+                "CMAKE_ANDROID_STL_TYPE;ANDROID_STL"
+                ERROR_MSG "Conan: Cannot auto detect libcxx")
+        endif()
+        if(${_os_api_level_index} GREATER -1)
+            _set_if_defined(_CONAN_SETTING_OS_API_LEVEL
+                "CMAKE_ANDROID_API;ANDROID_PLATFORM_LEVEL;ANDROID_NATIVE_API_LEVEL"
+                ERROR_MSG "Conan: Cannot auto detect api level")
+        endif()
     endif()
 
     # remove any manually specified settings from the autodetected settings
