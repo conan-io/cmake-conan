@@ -158,7 +158,7 @@ function(conan_install)
 endfunction()
 
 
-function(conan_provide_dependency package_name)
+macro(conan_provide_dependency package_name)
     if(NOT CONAN_INSTALL_SUCCESS)
         message(STATUS "CMake-conan: first find_package() found. Installing dependencies with Conan")
         conan_profile_detect_default()
@@ -175,12 +175,11 @@ function(conan_provide_dependency package_name)
             set(CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}" CACHE PATH "Conan generators folder")
         endif()
     else()
-        message(STATUS "CMake-conan: find_package(${package_name}) found, 'conan install' aready ran")
+        message(STATUS "CMake-conan: find_package(${ARGV1}) found, 'conan install' aready ran")
     endif()
 
     if (CONAN_GENERATORS_FOLDER)
         list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
     endif()
-
     find_package(${ARGN} BYPASS_PROVIDER)
-endfunction()
+endmacro()
