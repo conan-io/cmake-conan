@@ -38,7 +38,6 @@ cmake --build --preset default
 
 ```bash
 cd [your-project]
-mkdir build
 cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
