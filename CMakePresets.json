@@ -1,0 +1,20 @@
+{
+  "version": 5,
+  "configurePresets":[
+    {
+      "name": "default",
+      "binaryDir": "build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "conan_provider.cmake"
+      }
+    }
+  ],
+  "buildPresets":[
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "configuration": "Release"
+    }
+  ]
+}

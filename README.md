@@ -26,9 +26,8 @@ This repository contains a `CMakeLists.txt` with an example project that depends
 
 ```bash
 cd cmake-conan
-mkdir build
-cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+cmake --preset default
+cmake --build --preset default
 ```
 
 ### In your own project
