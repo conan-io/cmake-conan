@@ -55,5 +55,5 @@ cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/con
 There are some tests, you can run in python, with pytest, for example:
 
 ```bash
-$ pytest tests.py -rA
+$ pytest -rA
 ```
