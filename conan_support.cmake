@@ -109,9 +109,19 @@ function(detect_host_profile output_file)
 endfunction()
 
 
+function(detect_conan_command)
+    if(DEFINED CONAN_COMMAND_PATHS)
+        find_program(CONAN_COMMAND "conan" PATHS ${CONAN_COMMAND_PATHS} REQUIRED NO_CMAKE_FIND_ROOT_PATH NO_DEFAULT_PATH)
+    else()
+        find_program(CONAN_COMMAND "conan")
+    endif()
+    set(CONAN_COMMAND ${CONAN_COMMAND} CACHE FILEPATH "Path to the Conan executable")
+endfunction()
+
+
 function(conan_profile_detect_default)
     message(STATUS "Conan-cmake: Checking if a default profile exists")
-    execute_process(COMMAND conan profile path default
+    execute_process(COMMAND ${CONAN_COMMAND} profile path default
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
@@ -120,7 +130,7 @@ function(conan_profile_detect_default)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     if(NOT ${return_code} EQUAL "0")
         message(STATUS "Conan-cmake: The default profile doesn't exist, detecting it.")
-        execute_process(COMMAND conan profile detect
+        execute_process(COMMAND ${CONAN_COMMAND} profile detect
             RESULT_VARIABLE return_code
             OUTPUT_VARIABLE conan_stdout
             ERROR_VARIABLE conan_stderr
@@ -137,7 +147,7 @@ function(conan_install)
     # Invoke "conan install" with the provided arguments
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
     message(STATUS "CMake-conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
-    execute_process(COMMAND conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
+    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
@@ -159,6 +169,9 @@ endfunction()
 
 
 macro(conan_provide_dependency package_name)
+    if(NOT DEFINED CONAN_COMMAND)
+        detect_conan_command()
+    endif()
     if(NOT CONAN_INSTALL_SUCCESS)
         message(STATUS "CMake-conan: first find_package() found. Installing dependencies with Conan")
         conan_profile_detect_default()
