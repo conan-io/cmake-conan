@@ -109,16 +109,6 @@ function(detect_host_profile output_file)
 endfunction()
 
 
-function(detect_conan_command)
-    if(DEFINED CONAN_COMMAND_PATHS)
-        find_program(CONAN_COMMAND "conan" PATHS ${CONAN_COMMAND_PATHS} REQUIRED NO_CMAKE_FIND_ROOT_PATH NO_DEFAULT_PATH)
-    else()
-        find_program(CONAN_COMMAND "conan")
-    endif()
-    set(CONAN_COMMAND ${CONAN_COMMAND} CACHE FILEPATH "Path to the Conan executable")
-endfunction()
-
-
 function(conan_profile_detect_default)
     message(STATUS "Conan-cmake: Checking if a default profile exists")
     execute_process(COMMAND ${CONAN_COMMAND} profile path default
@@ -169,10 +159,8 @@ endfunction()
 
 
 macro(conan_provide_dependency package_name)
-    if(NOT DEFINED CONAN_COMMAND)
-        detect_conan_command()
-    endif()
     if(NOT CONAN_INSTALL_SUCCESS)
+        find_program(CONAN_COMMAND "conan" REQUIRED)
         message(STATUS "CMake-conan: first find_package() found. Installing dependencies with Conan")
         conan_profile_detect_default()
         detect_host_profile(${CMAKE_BINARY_DIR}/conan_host_profile)
