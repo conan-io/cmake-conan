@@ -147,18 +147,24 @@ function(conan_install)
         message(FATAL_ERROR "Conan install failed='${return_code}'")
     else()
         # the files are generated in a folder that depends on the layout used, if
-        # one if specified, but we don't know a priori where this is. 
+        # one is specified, but we don't know a priori where this is.
         # TODO: this can be made more robust if Conan can provide this in the json output
         string(JSON CONAN_GENERATORS_FOLDER GET ${conan_stdout} graph nodes 0 generators_folder)
         # message("conan stdout: ${conan_stdout}")
         message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
-        set(CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}" PARENT_SCOPE)
-        set(CONAN_INSTALL_SUCCESS TRUE CACHE BOOL "Conan install has been invoked and was successful")
+        set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
+        # reconfigure on conanfile changess
+        string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
+        message(STATUS "CMake-Conan: CONANFILE=${CMAKE_SOURCE_DIR}/${CONANFILE}")
+        set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/${CONANFILE}")
+        # success
+        set_property(GLOBAL PROPERTY CONAN_INSTALL_SUCCESS TRUE)
     endif()
 endfunction()
 
 
 macro(conan_provide_dependency package_name)
+    get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
     if(NOT CONAN_INSTALL_SUCCESS)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         message(STATUS "CMake-Conan: first find_package() found. Installing dependencies with Conan")
@@ -172,15 +178,14 @@ macro(conan_provide_dependency package_name)
             conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile -s build_type=Release --build=missing -g CMakeDeps)
             conan_install(-pr ${CMAKE_BINARY_DIR}/conan_host_profile -s build_type=Debug --build=missing -g CMakeDeps)
         endif()
+        get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
         if (CONAN_INSTALL_SUCCESS)
-            set(CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}" CACHE PATH "Conan generators folder")
+            get_property(CONAN_GENERATORS_FOLDER GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
+            list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
         endif()
     else()
         message(STATUS "CMake-Conan: find_package(${ARGV1}) found, 'conan install' aready ran")
     endif()
 
-    if (CONAN_GENERATORS_FOLDER)
-        list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
-    endif()
     find_package(${ARGN} BYPASS_PROVIDER)
 endmacro()

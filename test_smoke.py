@@ -3,7 +3,9 @@ import platform
 import shutil
 import tempfile
 import textwrap
-from contextlib import contextmanager 
+import subprocess
+from pathlib import Path
+from contextlib import contextmanager
 
 import pytest
 
@@ -15,10 +17,8 @@ def save(filename, content):
         handle.write(content)
 
 
-def run(cmd, ignore_errors=False):
-    retcode = os.system(cmd)
-    if retcode != 0 and not ignore_errors:
-        raise Exception("Command failed: %s" % cmd)
+def run(cmd, check=True):
+    return subprocess.run(cmd, capture_output=True, shell=True, check=check).stdout.decode("utf-8")
 
 
 @contextmanager
@@ -93,8 +93,18 @@ def test1():
             run(r"Debug\app.exe")
     else:
         with chdir("build"):
-            run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
-            run("cmake --build .")
+            out = run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+            expected_conan_install_outputs = [
+                "first find_package() found. Installing dependencies with Conan",
+                "find_package(bye) found, 'conan install' aready ran"
+            ]
+            assert all(expected_output in out for expected_output in expected_conan_install_outputs)
+            out = run("cmake --build .")
+            assert all(expected_output not in out for expected_output in expected_conan_install_outputs)
+            p = Path('../conanfile.txt')
+            p.touch()
+            out = run("cmake --build .")
+            assert all(expected_output in out for expected_output in expected_conan_install_outputs)
             run("./app")
         # TODO: install ninja on github actions
         # with chdir("build-multi"):
