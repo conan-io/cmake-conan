@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(FormatOutput LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 find_package(fmt REQUIRED)
 
