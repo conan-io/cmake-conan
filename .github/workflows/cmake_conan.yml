@@ -10,18 +10,17 @@ jobs:
           - os: macos-latest
           - os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v3.5.2
+      - name: Setup Python
+        uses: actions/setup-python@v4.6.0
         with:
-          python-version: 3.7
+          python-version: "3.10"
       - name: Install Conan
         run: pip install conan pytest && conan --version
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.13
+      - name: Setup CMake and Ninja
+        uses: lukka/get-cmake@latest
         with:
-          cmake-version: "3.25.x"
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
+          cmakeVersion: "~3.25.0"
+          ninjaVersion: "^1.11.1"
       - name: Run Tests
         run: pytest -rA -v
