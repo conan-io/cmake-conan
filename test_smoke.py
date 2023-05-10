@@ -1,24 +1,36 @@
 import os
 import platform
 import shutil
-import tempfile
-import textwrap
 import subprocess
-from pathlib import Path
+import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
+expected_conan_install_outputs = [
+    "first find_package() found. Installing dependencies with Conan",
+    "found, 'conan install' already ran"
+]
 
-def save(filename, content):
-    if os.path.dirname(filename):
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w") as handle:
-        handle.write(content)
+expected_app_release_outputs = [
+    "hello/0.1: Hello World Release!",
+    "bye/0.1: Hello World Release!"
+]
+
+expected_app_debug_outputs = [
+    "hello/0.1: Hello World Debug!",
+    "bye/0.1: Hello World Debug!"
+]
+
+unix = pytest.mark.skipif(platform.system() != "Linux" and platform.system() != "Darwin", reason="Linux or Darwin only")
+linux = pytest.mark.skipif(platform.system() != "Linux", reason="Linux only")
+darwin = pytest.mark.skipif(platform.system() != "Darwin", reason="Darwin only")
+windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows only")
 
 
 def run(cmd, check=True):
-    return subprocess.run(cmd, capture_output=True, shell=True, check=check).stdout.decode("utf-8")
+    subprocess.run(cmd, shell=True, check=check)
 
 
 @contextmanager
@@ -31,85 +43,134 @@ def chdir(folder):
     finally:
         os.chdir(cwd)
 
-@pytest.fixture(autouse=True)
-def conan_test():
+
+@pytest.fixture(scope="session")
+def tmpdirs():
+    """Always run all tests in the same tmp directory and set a custom conan
+    home to not pollute the cache of the user executing the tests locally.
+    """
     old_env = dict(os.environ)
-    home = tempfile.mkdtemp(suffix='conans')
-    env_vars = {"CONAN_HOME": home} 
-    os.environ.update(env_vars)
-    current = tempfile.mkdtemp(suffix="conans")
-    print(f"Current cache dir: {home}")
-    print(f"Current test dir: {current}")
-    cwd = os.getcwd()
-    os.chdir(current)
-    try:
+    conan_home = tempfile.mkdtemp(suffix="conan_home")
+    os.environ.update({"CONAN_HOME": conan_home})
+    conan_test_dir = tempfile.mkdtemp(suffix="conan_test_dir")
+    run(f"echo 'Current conan home: {conan_home}'")
+    run(f"echo 'Current conan test dir: {conan_test_dir}'")
+    with chdir(conan_test_dir):
         yield
-    finally:
-        os.chdir(cwd)
-        os.environ.clear()
-        os.environ.update(old_env)
+    os.environ.clear()
+    os.environ.update(old_env)
 
 
-def test1():
-    run("conan new cmake_lib -d name=hello -d version=0.1")
-    run("conan export .")
-    run("conan new cmake_lib -d name=bye -d version=0.1 -f")
-    run("conan export .")
+@pytest.fixture(scope="session", autouse=True)
+def basic_setup(tmpdirs):
+    "The packages created by this fixture are available to all tests."
+    run("conan profile detect -vquiet")
+    run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
+    run("conan export . -vquiet")
+    run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
+    run("conan export . -vquiet")
     run("rm -rf *")
+    src_dir = Path(__file__).parent
+    shutil.copy2(src_dir / 'conan_support.cmake', ".")
+    shutil.copy2(src_dir / 'conan_provider.cmake', ".")
+    shutil.copytree(src_dir / 'resources' / 'basic', ".", dirs_exist_ok=True)
+    yield
 
-    cmake = textwrap.dedent("""\
-        cmake_minimum_required(VERSION 3.24)
-        project(MyApp CXX)
 
-        set(CMAKE_CXX_STANDARD 17)
-        find_package(hello REQUIRED)
-        find_package(bye REQUIRED)
-        add_executable(app main.cpp)
-        target_link_libraries(app hello::hello bye::bye)
-        """)
-    main = textwrap.dedent("""\
-        #include "hello.h"
-        #include "bye.h"
-        int main(){hello();bye();}
-        """)
-    # TODO: Clarify if CMakeDeps, cmake_layout should be here or injected
-    conanfile = textwrap.dedent("""\
-        [requires]
-        hello/0.1
-        bye/0.1
-        """)
-    save("main.cpp", main)
-    save("conanfile.txt", conanfile)
-    save("CMakeLists.txt", cmake)
-    shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_provider.cmake"), ".")
-    shutil.copy2(os.path.join(os.path.dirname(__file__), "conan_support.cmake"), ".")
+@pytest.fixture
+def chdir_build():
+    with chdir("build"):
+        yield
 
-    if platform.system() == "Windows":
-        with chdir("build"):
-            run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake")
-            run("cmake --build . --config Release")
-            run("cmake --build . --config Debug")
-            run(r"Release\app.exe")
-            run(r"Debug\app.exe")
-    else:
-        with chdir("build"):
-            out = run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
-            expected_conan_install_outputs = [
-                "first find_package() found. Installing dependencies with Conan",
-                "find_package(bye) found, 'conan install' already ran"
-            ]
-            assert all(expected_output in out for expected_output in expected_conan_install_outputs)
-            out = run("cmake --build .")
-            assert all(expected_output not in out for expected_output in expected_conan_install_outputs)
-            p = Path('../conanfile.txt')
-            p.touch()
-            out = run("cmake --build .")
-            assert all(expected_output in out for expected_output in expected_conan_install_outputs)
-            run("./app")
-        # TODO: install ninja on github actions
-        # with chdir("build-multi"):
-        #     run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G'Ninja Multi-Config'")
-        #     run("cmake --build . --config Release")
-        #     run("cmake --build . --config Debug")
-        #     run("./Release/app")
-        #     run("./Debug/app")
+
+@pytest.fixture
+def chdir_build_multi():
+    with chdir("build-multi"):
+        yield
+
+
+class TestBasic:
+    @windows
+    def test_windows(self, capfd, chdir_build):
+        "Conan installs once during configure and applications are created"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        run("cmake --build . --config Release")
+        run(r"Release\app.exe")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        assert all(expected in out for expected in expected_app_release_outputs)
+        run("cmake --build . --config Debug")
+        run(r"Debug\app.exe")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        assert all(expected in out for expected in expected_app_debug_outputs)
+
+    @unix
+    def test_linux_single_config(self, capfd, chdir_build):
+        "Conan installs once during configure and applications are created"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        run("./app")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_app_release_outputs)
+
+    @unix
+    def test_linux_multi_config(self, capfd, chdir_build_multi):
+        "Conan installs once during configure and applications are created"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G'Ninja Multi-Config'")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        run("cmake --build . --config Release")
+        run("./Release/app")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        assert all(expected in out for expected in expected_app_release_outputs)
+        run("cmake --build . --config Debug")
+        run("./Debug/app")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        assert all(expected in out for expected in expected_app_debug_outputs)
+
+    @unix
+    def test_reconfigure_on_conanfile_changes(self, capfd, chdir_build):
+        "A conanfile change triggers conan install"
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        p = Path("../conanfile.txt")
+        p.touch()
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+
+
+class TestSubdir:
+    @pytest.fixture(scope="class", autouse=True)
+    def subdir_setup(self):
+        "Layout for subdir test"
+        run("conan new cmake_lib -d name=subdir -d version=0.1 -f -vquiet")
+        run("conan export . -vquiet")
+        run("rm -rf *")
+        src_dir = Path(__file__).parent
+        shutil.copy2(src_dir / 'conan_support.cmake', ".")
+        shutil.copy2(src_dir / 'conan_provider.cmake', ".")
+        shutil.copytree(src_dir / 'resources' / 'basic', ".", dirs_exist_ok=True)
+        shutil.copytree(src_dir / 'resources' / 'subdir', ".", dirs_exist_ok=True)
+        yield
+
+    @unix
+    def test_add_subdirectory(self, capfd, chdir_build):
+        "The CMAKE_PREFIX_PATH is set for CMakeLists.txt included with add_subdirectory BEFORE the first find_package."
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        run("cmake --build .")
+        run("./subdir/appSubdir")
+        out, _ = capfd.readouterr()
+        assert "subdir/0.1: Hello World Release!" in out
