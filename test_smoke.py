@@ -96,7 +96,7 @@ def test1():
             out = run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
             expected_conan_install_outputs = [
                 "first find_package() found. Installing dependencies with Conan",
-                "find_package(bye) found, 'conan install' aready ran"
+                "find_package(bye) found, 'conan install' already ran"
             ]
             assert all(expected_output in out for expected_output in expected_conan_install_outputs)
             out = run("cmake --build .")

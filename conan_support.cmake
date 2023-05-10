@@ -34,7 +34,7 @@ function(detect_compiler COMPILER COMPILER_VERSION)
     endif()
 
     message(STATUS "CMake-Conan: CMake compiler=${_COMPILER}")
-    message(STATUS "CMake-Conan: CMake cmpiler version=${_COMPILER_VERSION}")
+    message(STATUS "CMake-Conan: CMake compiler version=${_COMPILER_VERSION}")
 
     if(_COMPILER MATCHES MSVC)
         set(_COMPILER "msvc")
@@ -153,7 +153,7 @@ function(conan_install)
         # message("conan stdout: ${conan_stdout}")
         message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
         set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
-        # reconfigure on conanfile changess
+        # reconfigure on conanfile changes
         string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
         message(STATUS "CMake-Conan: CONANFILE=${CMAKE_SOURCE_DIR}/${CONANFILE}")
         set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/${CONANFILE}")
@@ -184,7 +184,7 @@ macro(conan_provide_dependency package_name)
             list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
         endif()
     else()
-        message(STATUS "CMake-Conan: find_package(${ARGV1}) found, 'conan install' aready ran")
+        message(STATUS "CMake-Conan: find_package(${ARGV1}) found, 'conan install' already ran")
     endif()
 
     find_package(${ARGN} BYPASS_PROVIDER)

@@ -4,12 +4,12 @@
 
 CMake dependency provider for the Conan C and C++ package manager.
 
-> :warning: **Compatibility with Conan 2.0**: integration with Conan 2.0 is currently **experimental**, may have some limitations, and is subject to change, please read below. The code in this branch only supports Conan 2.0.2 and ablove - if you need Conan 1.x please check the `develop` branch.
+> :warning: **Compatibility with Conan 2.0**: integration with Conan 2.0 is currently **experimental**, may have some limitations, and is subject to change, please read below. The code in this branch only supports Conan 2.0.2 and above - if you need Conan 1.x please check the `develop` branch.
 
 
 ## Quickstart with Conan 2.0
 
-Prequisites:
+Prerequisites:
 * CMake 3.24
 * Conan 2.0.2
 * A CMake-based project that contains a `conanfile.txt` or `conanfile.py` to list the required dependencies.
