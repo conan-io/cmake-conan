@@ -1,0 +1,5 @@
+[requires]
+fmt/9.1.0
+
+[layout]
+cmake_layout
