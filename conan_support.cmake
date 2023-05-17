@@ -1,3 +1,6 @@
+set(CONAN_MINIMUM_VERSION 2.0.2)
+
+
 function(detect_os OS)
     # it could be cross compilation
     message(STATUS "CMake-Conan: cmake_system_name=${CMAKE_SYSTEM_NAME}")
@@ -163,10 +166,104 @@ function(conan_install)
 endfunction()
 
 
+function(conan_version_parse result conan_version conan_version_raw)
+    set(${result} FALSE PARENT_SCOPE)
+
+    if(NOT conan_version_raw)
+        message(FATAL_ERROR "CMake-Conan: conan_version_parse requires three parameters")
+    endif()
+
+    string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _conan_version ${conan_version_raw})
+    if(NOT _conan_version)
+        return()
+    endif()
+    string(REPLACE "." ";" conan_version_list "${_conan_version}")
+    list(LENGTH conan_version_list conan_version_list_length)
+    if(conan_version_list_length EQUAL 3)
+        set(${result} TRUE PARENT_SCOPE)
+    endif()
+    set(${conan_version} ${_conan_version} PARENT_SCOPE)
+endfunction()
+
+
+function(conan_get_current_version conan_command conan_current_version)
+    execute_process(
+        COMMAND ${conan_command} --version
+        COMMAND_ECHO STDOUT
+        ERROR_QUIET
+        OUTPUT_VARIABLE conan_output
+        RESULT_VARIABLE conan_result
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    conan_version_parse(result conan_version ${conan_output})
+    if(result)
+        set(${conan_current_version} ${conan_version} PARENT_SCOPE)
+    else()
+        message(FATAL_ERROR "CMake-Conan: Conan version ${conan_version} wasn't in the expected form, #.#.#")
+    endif()
+endfunction()
+
+
+function(conan_version_check result)
+    set(options )
+    set(oneValueArgs MINIMUM CURRENT)
+    set(multiValueArgs )
+    cmake_parse_arguments(PARSE_ARGV 1
+        CONAN_VERSION_CHECK "${options}" "${oneValueArgs}" "${multiValueArgs}")
+
+    set(${result} FALSE PARENT_SCOPE)
+
+    if(NOT CONAN_VERSION_CHECK_MINIMUM)
+        message(FATAL_ERROR "CMake-Conan: Required parameter MINIMUM not set!")
+    endif()
+        if(NOT CONAN_VERSION_CHECK_CURRENT)
+        message(FATAL_ERROR "CMake-Conan: Required parameter CURRENT not set!")
+    endif()
+
+    conan_version_parse(parse_result CONAN_VERSION_CHECK_MINIMUM ${CONAN_VERSION_CHECK_MINIMUM})
+    string(REPLACE "." ";" CONAN_MINIMUM_VERSION_LIST "${CONAN_VERSION_CHECK_MINIMUM}")
+    list(LENGTH CONAN_MINIMUM_VERSION_LIST CONAN_MINIMUM_VERSION_LIST_LENGTH)
+    list(GET CONAN_MINIMUM_VERSION_LIST 0 CONAN_MINIMUM_VERSION_MAJOR)
+    list(GET CONAN_MINIMUM_VERSION_LIST 1 CONAN_MINIMUM_VERSION_MINOR)
+    list(GET CONAN_MINIMUM_VERSION_LIST 2 CONAN_MINIMUM_VERSION_PATCH)
+
+    conan_version_parse(parse_result CONAN_VERSION_CHECK_CURRENT ${CONAN_VERSION_CHECK_CURRENT})
+    string(REPLACE "." ";" CONAN_CURRENT_VERSION_LIST "${CONAN_VERSION_CHECK_CURRENT}")
+    list(LENGTH CONAN_CURRENT_VERSION_LIST CONAN_CURRENT_VERSION_LIST_LENGTH)
+    list(GET CONAN_CURRENT_VERSION_LIST 0 CONAN_CURRENT_VERSION_MAJOR)
+    list(GET CONAN_CURRENT_VERSION_LIST 1 CONAN_CURRENT_VERSION_MINOR)
+    list(GET CONAN_CURRENT_VERSION_LIST 2 CONAN_CURRENT_VERSION_PATCH)
+
+    if(NOT CONAN_CURRENT_VERSION_MAJOR EQUAL CONAN_MINIMUM_VERSION_MAJOR)
+        if(CONAN_CURRENT_VERSION_MAJOR GREATER CONAN_MINIMUM_VERSION_MAJOR)
+            set(${result} TRUE PARENT_SCOPE)
+        endif()
+        return()
+    endif()
+
+    if(NOT CONAN_CURRENT_VERSION_MINOR EQUAL CONAN_MINIMUM_VERSION_MINOR)
+        if(CONAN_CURRENT_VERSION_MINOR GREATER CONAN_MINIMUM_VERSION_MINOR)
+            set(${result} TRUE PARENT_SCOPE)
+        endif()
+        return()
+    endif()
+
+    if(CONAN_CURRENT_VERSION_PATCH GREATER_EQUAL CONAN_MINIMUM_VERSION_PATCH)
+        set(${result} TRUE PARENT_SCOPE)
+        return()
+    endif()
+endfunction()
+
+
 macro(conan_provide_dependency package_name)
     get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
     if(NOT CONAN_INSTALL_SUCCESS)
         find_program(CONAN_COMMAND "conan" REQUIRED)
+        conan_get_current_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
+        conan_version_check(result MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
+        if(NOT result)
+            message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_MINIMUM_VERSION} or later")
+        endif()
         message(STATUS "CMake-Conan: first find_package() found. Installing dependencies with Conan")
         conan_profile_detect_default()
         detect_host_profile(${CMAKE_BINARY_DIR}/conan_host_profile)
