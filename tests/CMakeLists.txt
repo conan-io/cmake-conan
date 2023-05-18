@@ -8,7 +8,6 @@ function(expect_true result)
     if(NOT result)
         message(SEND_ERROR "Expected TRUE, but result is ${result}")
     endif()
-    unset(result PARENT_SCOPE)
 endfunction()
 
 function(expect_false result)
