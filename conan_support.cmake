@@ -1,4 +1,4 @@
-set(CONAN_MINIMUM_VERSION 2.0.6)
+set(CONAN_MINIMUM_VERSION 2.0.2)
 
 
 function(detect_os OS)
