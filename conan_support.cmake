@@ -186,7 +186,7 @@ function(conan_version_parse result conan_version conan_version_raw)
 endfunction()
 
 
-function(conan_get_current_version conan_command conan_current_version)
+function(conan_get_version conan_command conan_current_version)
     execute_process(
         COMMAND ${conan_command} --version
         COMMAND_ECHO STDOUT
@@ -233,7 +233,7 @@ macro(conan_provide_dependency package_name)
     get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
     if(NOT CONAN_INSTALL_SUCCESS)
         find_program(CONAN_COMMAND "conan" REQUIRED)
-        conan_get_current_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
+        conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
         conan_version_check(result MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
         if(NOT result)
             message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_MINIMUM_VERSION} or later")
