@@ -166,41 +166,19 @@ function(conan_install)
 endfunction()
 
 
-function(conan_version_parse result conan_version conan_version_raw)
-    set(${result} FALSE PARENT_SCOPE)
-
-    if(NOT conan_version_raw)
-        message(FATAL_ERROR "CMake-Conan: conan_version_parse requires three parameters")
-    endif()
-
-    string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _conan_version ${conan_version_raw})
-    if(NOT _conan_version)
-        return()
-    endif()
-    string(REPLACE "." ";" conan_version_list "${_conan_version}")
-    list(LENGTH conan_version_list conan_version_list_length)
-    if(conan_version_list_length EQUAL 3)
-        set(${result} TRUE PARENT_SCOPE)
-    endif()
-    set(${conan_version} ${_conan_version} PARENT_SCOPE)
-endfunction()
-
-
 function(conan_get_version conan_command conan_current_version)
     execute_process(
         COMMAND ${conan_command} --version
-        COMMAND_ECHO STDOUT
-        ERROR_QUIET
         OUTPUT_VARIABLE conan_output
         RESULT_VARIABLE conan_result
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    conan_version_parse(result conan_version ${conan_output})
-    if(result)
-        set(${conan_current_version} ${conan_version} PARENT_SCOPE)
-    else()
-        message(FATAL_ERROR "CMake-Conan: Conan version ${conan_version} wasn't in the expected form, #.#.#")
+    if(conan_result)
+        message(FATAL_ERROR "CMake-Conan: Error when trying to run Conan")
     endif()
+
+    string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" conan_version ${conan_output})
+    set(${conan_current_version} ${conan_version} PARENT_SCOPE)
 endfunction()
 
 
@@ -219,9 +197,6 @@ function(conan_version_check result)
         if(NOT CONAN_VERSION_CHECK_CURRENT)
         message(FATAL_ERROR "CMake-Conan: Required parameter CURRENT not set!")
     endif()
-
-    conan_version_parse(parse_result CONAN_VERSION_CHECK_MINIMUM ${CONAN_VERSION_CHECK_MINIMUM})
-    conan_version_parse(parse_result CONAN_VERSION_CHECK_CURRENT ${CONAN_VERSION_CHECK_CURRENT})
 
     if(CONAN_VERSION_CHECK_CURRENT VERSION_GREATER_EQUAL CONAN_VERSION_CHECK_MINIMUM)
         set(${result} TRUE PARENT_SCOPE)
