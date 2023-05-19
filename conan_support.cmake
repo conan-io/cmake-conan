@@ -182,14 +182,12 @@ function(conan_get_version conan_command conan_current_version)
 endfunction()
 
 
-function(conan_version_check result)
+function(conan_version_check)
     set(options )
     set(oneValueArgs MINIMUM CURRENT)
     set(multiValueArgs )
-    cmake_parse_arguments(PARSE_ARGV 1
-        CONAN_VERSION_CHECK "${options}" "${oneValueArgs}" "${multiValueArgs}")
-
-    set(${result} FALSE PARENT_SCOPE)
+    cmake_parse_arguments(CONAN_VERSION_CHECK
+        "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT CONAN_VERSION_CHECK_MINIMUM)
         message(FATAL_ERROR "CMake-Conan: Required parameter MINIMUM not set!")
@@ -198,8 +196,8 @@ function(conan_version_check result)
         message(FATAL_ERROR "CMake-Conan: Required parameter CURRENT not set!")
     endif()
 
-    if(CONAN_VERSION_CHECK_CURRENT VERSION_GREATER_EQUAL CONAN_VERSION_CHECK_MINIMUM)
-        set(${result} TRUE PARENT_SCOPE)
+    if(CONAN_VERSION_CHECK_CURRENT VERSION_LESS CONAN_VERSION_CHECK_MINIMUM)
+        message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_VERSION_CHECK_MINIMUM} or later")
     endif()
 endfunction()
 
@@ -209,10 +207,7 @@ macro(conan_provide_dependency package_name)
     if(NOT CONAN_INSTALL_SUCCESS)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
-        conan_version_check(result MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
-        if(NOT result)
-            message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_MINIMUM_VERSION} or later")
-        endif()
+        conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
         message(STATUS "CMake-Conan: first find_package() found. Installing dependencies with Conan")
         conan_profile_detect_default()
         detect_host_profile(${CMAKE_BINARY_DIR}/conan_host_profile)

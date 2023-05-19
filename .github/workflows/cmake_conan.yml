@@ -23,5 +23,4 @@ jobs:
           cmake-version: '3.25.x'
       - name: Run Tests
         run: |
-          cmake -S tests -B build_unittests
           pytest -rA -v

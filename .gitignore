@@ -28,7 +28,6 @@
 *.app
 
 build/
-build_unittests/
 *.pyc
 .conan
 .idea
