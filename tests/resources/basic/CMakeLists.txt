@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(MyApp CXX)
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
-endif()
 set(CMAKE_CXX_STANDARD 17)
 find_package(hello REQUIRED)
 find_package(bye REQUIRED)
