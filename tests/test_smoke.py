@@ -71,7 +71,6 @@ def basic_setup(tmpdirs):
     run("conan export . -vquiet")
     run("rm -rf *")
     src_dir = Path(__file__).parent.parent
-    shutil.copy2(src_dir / 'conan_support.cmake', ".")
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
     yield
@@ -158,7 +157,6 @@ class TestSubdir:
         run("conan export . -vquiet")
         run("rm -rf *")
         src_dir = Path(__file__).parent.parent
-        shutil.copy2(src_dir / 'conan_support.cmake', ".")
         shutil.copy2(src_dir / 'conan_provider.cmake', ".")
         shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
         shutil.copytree(src_dir / 'tests' / 'resources' / 'subdir', ".", dirs_exist_ok=True)

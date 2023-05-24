@@ -11,7 +11,7 @@ CMake dependency provider for the Conan C and C++ package manager.
 
 Prerequisites:
 * CMake 3.24
-* Conan 2.0.2
+* Conan 2.0.6
 * A CMake-based project that contains a `conanfile.txt` or `conanfile.py` to list the required dependencies.
 
 First, clone this repository in the `develop2` branch.
@@ -25,9 +25,9 @@ git clone https://github.com/conan-io/cmake-conan.git -b develop2
 This repository contains a `CMakeLists.txt` with an example project that depends on `fmt`. 
 
 ```bash
-cd cmake-conan
+cd cmake-conan/example
 mkdir build
-cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
+cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=../conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
