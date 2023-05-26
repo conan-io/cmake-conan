@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install Conan
-        run: pip install conan pytest && conan --version
+        run: pip install conan && conan --version
       - name: Setup CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
