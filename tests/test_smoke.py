@@ -172,3 +172,19 @@ class TestSubdir:
         run("./subdir/appSubdir")
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
+
+class TestOsVersion:
+    @darwin
+    def test_os_version(self, capfd, chdir_build):
+        "Setting CMAKE_OSX_DEPLOYMENT_TARGET on macOS adds os.version to the Conan profile"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            "-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15")
+        out, _ = capfd.readouterr()
+        assert "os.version=10.15" in out
+
+    def test_no_os_version(self, capfd, chdir_build):
+        "If CMAKE_OSX_DEPLOYMENT_TARGET is not set, os.version is not added to the Conan profile"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            "-DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "os.version=10.15" not in out
