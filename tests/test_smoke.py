@@ -188,3 +188,52 @@ class TestOsVersion:
             "-DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
         assert "os.version=10.15" not in out
+
+class TestAndroid:
+    def test_android_armv8(self, capfd, chdir_build):
+        "Building for Android armv8"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
+            "-DANDROID_ABI=arm64-v8a -DANDROID_STL=c++_shared -DANDROID_PLATFORM=android-28")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "compiler.libcxx=c++_shared" in out
+        assert "os=Android" in out
+        assert "os.api_level=28" in out
+        assert "tools.android:ndk_path=" in out
+
+    def test_android_armv7(self, capfd, chdir_build):
+        "Building for Android armv7"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
+            "-DANDROID_ABI=armeabi-v7a -DANDROID_STL=c++_static -DANDROID_PLATFORM=android-24")
+        out, _ = capfd.readouterr()
+        assert "arch=armv7" in out
+        assert "compiler.libcxx=c++_static" in out
+        assert "os=Android" in out
+        assert "os.api_level=24" in out
+        assert "tools.android:ndk_path=" in out
+
+    def test_android_x86_64(self, capfd, chdir_build):
+        "Building for Android x86_64"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
+            "-DANDROID_ABI=x86_64 -DANDROID_STL=c++_static -DANDROID_PLATFORM=android-27")
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+        assert "compiler.libcxx=c++_static" in out
+        assert "os=Android" in out
+        assert "os.api_level=27" in out
+        assert "tools.android:ndk_path=" in out
+
+    def test_android_x86(self, capfd, chdir_build):
+        "Building for Android x86"
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
+            "-DANDROID_ABI=x86 -DANDROID_STL=c++_shared -DANDROID_PLATFORM=android-19")
+        out, _ = capfd.readouterr()
+        assert "arch=x86" in out
+        assert "compiler.libcxx=c++_shared" in out
+        assert "os=Android" in out
+        assert "os.api_level=19" in out
+        assert "tools.android:ndk_path=" in out
