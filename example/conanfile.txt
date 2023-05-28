@@ -1,5 +1,7 @@
 [requires]
 fmt/9.1.0
+zlib/1.2.13
+bzip2/1.0.8
 
 [layout]
 cmake_layout
