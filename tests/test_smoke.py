@@ -89,49 +89,35 @@ def chdir_build_multi():
 
 
 class TestBasic:
-    @windows
-    def test_windows(self, capfd, chdir_build):
+    def test_single_config(self, capfd, chdir_build):
         "Conan installs once during configure and applications are created"
-        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake")
-        out, _ = capfd.readouterr()
-        assert all(expected in out for expected in expected_conan_install_outputs)
-        run("cmake --build . --config Release")
-        run(r"Release\app.exe")
-        out, _ = capfd.readouterr()
-        assert all(expected not in out for expected in expected_conan_install_outputs)
-        assert all(expected in out for expected in expected_app_release_outputs)
-        run("cmake --build . --config Debug")
-        run(r"Debug\app.exe")
-        out, _ = capfd.readouterr()
-        assert all(expected not in out for expected in expected_conan_install_outputs)
-        assert all(expected in out for expected in expected_app_debug_outputs)
+        generator = "-GNinja" if platform.system() == "Windows" else ""
 
-    @unix
-    def test_linux_single_config(self, capfd, chdir_build):
-        "Conan installs once during configure and applications are created"
-        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release {generator}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         run("cmake --build .")
         out, _ = capfd.readouterr()
         assert all(expected not in out for expected in expected_conan_install_outputs)
-        run("./app")
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        run(os.path.join(os.getcwd(), app_executable))
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_app_release_outputs)
 
-    @unix
-    def test_linux_multi_config(self, capfd, chdir_build_multi):
+    def test_multi_config(self, capfd, chdir_build_multi):
         "Conan installs once during configure and applications are created"
-        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G'Ninja Multi-Config'")
+        generator = "-G'Ninja Multi-Config'" if platform.system() != "Windows" else ""
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake {generator}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         run("cmake --build . --config Release")
-        run("./Release/app")
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        run(os.path.join(os.getcwd(), "Release", app_executable))
         out, _ = capfd.readouterr()
         assert all(expected not in out for expected in expected_conan_install_outputs)
         assert all(expected in out for expected in expected_app_release_outputs)
         run("cmake --build . --config Debug")
-        run("./Debug/app")
+        run(os.path.join(os.getcwd(), "Debug", app_executable))
         out, _ = capfd.readouterr()
         assert all(expected not in out for expected in expected_conan_install_outputs)
         assert all(expected in out for expected in expected_app_debug_outputs)
