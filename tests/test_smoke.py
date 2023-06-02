@@ -13,15 +13,11 @@ expected_conan_install_outputs = [
     "found, 'conan install' already ran"
 ]
 
-expected_app_release_outputs = [
-    "hello/0.1: Hello World Release!",
-    "bye/0.1: Hello World Release!"
+expected_app_outputs = [
+    "hello/0.1: Hello World {config}!",
+    "bye/0.1: Hello World {config}!"
 ]
 
-expected_app_debug_outputs = [
-    "hello/0.1: Hello World Debug!",
-    "bye/0.1: Hello World Debug!"
-]
 
 unix = pytest.mark.skipif(platform.system() != "Linux" and platform.system() != "Darwin", reason="Linux or Darwin only")
 linux = pytest.mark.skipif(platform.system() != "Linux", reason="Linux only")
@@ -64,12 +60,15 @@ def tmpdirs():
 @pytest.fixture(scope="session", autouse=True)
 def basic_setup(tmpdirs):
     "The packages created by this fixture are available to all tests."
-    run("conan profile detect -vquiet")
-    run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
-    run("conan export . -vquiet")
-    run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
-    run("conan export . -vquiet")
-    run("rm -rf *")
+    workdir = "temp_recipes"
+    os.makedirs(workdir)
+    with chdir(workdir):
+        run("conan profile detect -vquiet")
+        run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
+        run("conan export . -vquiet")
+        run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
+        run("conan export . -vquiet")
+    shutil.rmtree(workdir)
     src_dir = Path(__file__).parent.parent
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
@@ -102,7 +101,8 @@ class TestBasic:
         app_executable = "app.exe" if platform.system() == "Windows" else "app"
         run(os.path.join(os.getcwd(), app_executable))
         out, _ = capfd.readouterr()
-        assert all(expected in out for expected in expected_app_release_outputs)
+        expected_output = [f.format(config="Release") for f in expected_app_outputs]
+        assert all(expected in out for expected in expected_output)
 
     def test_multi_config(self, capfd, chdir_build_multi):
         "Conan installs once during configure and applications are created"
@@ -110,17 +110,16 @@ class TestBasic:
         run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake {generator}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
-        run("cmake --build . --config Release")
+
         app_executable = "app.exe" if platform.system() == "Windows" else "app"
-        run(os.path.join(os.getcwd(), "Release", app_executable))
-        out, _ = capfd.readouterr()
-        assert all(expected not in out for expected in expected_conan_install_outputs)
-        assert all(expected in out for expected in expected_app_release_outputs)
-        run("cmake --build . --config Debug")
-        run(os.path.join(os.getcwd(), "Debug", app_executable))
-        out, _ = capfd.readouterr()
-        assert all(expected not in out for expected in expected_conan_install_outputs)
-        assert all(expected in out for expected in expected_app_debug_outputs)
+        for config in ["Release", "Debug"]:
+            run(f"cmake --build . --config {config}")
+            run(os.path.join(os.getcwd(), config, app_executable))
+            out, _ = capfd.readouterr()
+            expected_outputs = [f.format(config=config) for f in expected_app_outputs]
+            assert all(expected not in out for expected in expected_conan_install_outputs)
+            assert all(expected in out for expected in expected_outputs)
+     
 
     @unix
     def test_reconfigure_on_conanfile_changes(self, capfd, chdir_build):
