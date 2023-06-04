@@ -190,6 +190,11 @@ class TestOsVersion:
         assert "os.version=10.15" not in out
 
 class TestAndroid:
+    @pytest.fixture(scope="class", autouse=True)
+    def android_setup(self):
+        shutil.rmtree("build")
+        yield
+
     def test_android_armv8(self, capfd, chdir_build):
         "Building for Android armv8"
         run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "
