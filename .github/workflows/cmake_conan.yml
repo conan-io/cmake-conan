@@ -11,6 +11,11 @@ jobs:
           - os: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.5.2
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+        if: ${{ matrix.os == 'windows-2019' }}
+        name: setup msvc vcvars
       - name: Setup Python
         uses: actions/setup-python@v4.6.0
         with:
