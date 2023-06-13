@@ -159,7 +159,7 @@ class TestBasic:
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
     def test_msvc_runtime_singleconfig(self, capfd, chdir_build, config, msvc_runtime):
         msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
-        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE={config} {msvc_runtime_flag}")
+        run(f"cmake .. -GNinja -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE={config} {msvc_runtime_flag}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         run("cmake --build .")
