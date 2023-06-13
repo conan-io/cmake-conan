@@ -134,12 +134,14 @@ class TestBasic:
         assert all(expected in out for expected in expected_conan_install_outputs)
 
     @windows
+    @pytest.mark.parametrize("generator", "single", "multi")
     @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded"])
-    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime):
+    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime, generator):
+        generator_flag = f"-GNinja" if generator == "single" else ""
         msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
-        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake ${msvc_runtime_flag}")
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake {msvc_runtime_flag} {generator_flag}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
 
