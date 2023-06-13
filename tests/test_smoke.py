@@ -133,6 +133,25 @@ class TestBasic:
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
 
+    @windows
+    @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
+                                              "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
+                                              "MultiThreaded"])
+    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime):
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake ${msvc_runtime_flag}")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        for config in ["Release", "Debug"]:
+            run(f"cmake --build . --config {config}")
+            run(os.path.join(os.getcwd(), config, app_executable))
+            out, _ = capfd.readouterr()
+            expected_outputs = [f.format(config=config) for f in expected_app_outputs]
+            assert all(expected not in out for expected in expected_conan_install_outputs)
+            assert all(expected in out for expected in expected_outputs)
+
 
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
