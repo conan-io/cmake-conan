@@ -137,7 +137,7 @@ class TestBasic:
     @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
-    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime, generator):
+    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime):
         msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
         run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake {msvc_runtime_flag}")
         out, _ = capfd.readouterr()
