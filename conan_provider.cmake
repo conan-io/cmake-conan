@@ -84,23 +84,27 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreadedDebug MultiThreadedDebugDLL)
             list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreaded$<$<CONFIG:Debug>:Debug> MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
 
+            # only accept the 6 possible values, otherwise we don't don't know to map this
             if(NOT CMAKE_MSVC_RUNTIME_LIBRARY IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
                 message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${CMAKE_MSVC_RUNTIME_LIBRARY} to Conan settings")
             endif()
             
+            # Runtime is "dynamic" in all cases if it ends in DLL
             if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES ".*DLL$")
                 set(_COMPILER_RUNTIME "dynamic")
             else()
                 set(_COMPILER_RUNTIME "static")
             endif()
 
+            # Only define compiler.runtime_type=Debug when:
+            # - it's explicitly requested with `MultiThreadedDebug` or `MultiThreadedDebugDLL` (will be the same for all build types)
+            # - we are in a single-config generator and the current configuration is Debug
+            # in all other cases, let Conan handle `compiler.runtime_type` based on `build_type`
             get_property(_IS_MULTI_CONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-            if(NOT _IS_MULTI_CONFIG_GENERATOR)
-               if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>" AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+            if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDebug")
                 set(_COMPILER_RUNTIME_TYPE "Debug")
-               elseif(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "Debug")
+            elseif(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>" AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT _IS_MULTI_CONFIG_GENERATOR)
                 set(_COMPILER_RUNTIME_TYPE "Debug")
-               endif()
             endif()
 
             unset(_KNOWN_MSVC_RUNTIME_VALUES)
