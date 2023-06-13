@@ -96,15 +96,15 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
                 set(_COMPILER_RUNTIME "static")
             endif()
 
-            # Only define compiler.runtime_type=Debug when:
-            # - it's explicitly requested with `MultiThreadedDebug` or `MultiThreadedDebugDLL` (will be the same for all build types)
-            # - we are in a single-config generator and the current configuration is Debug
-            # in all other cases, let Conan handle `compiler.runtime_type` based on `build_type`
+            # Only define compiler.runtime_type when explicitly requested
+            # If a generator expression is used, let Conan handle it conditional on build_type
             get_property(_IS_MULTI_CONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-            if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDebug")
-                set(_COMPILER_RUNTIME_TYPE "Debug")
-            elseif(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>" AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT _IS_MULTI_CONFIG_GENERATOR)
-                set(_COMPILER_RUNTIME_TYPE "Debug")
+            if(NOT CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>")
+                if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "Debug")
+                    set(_COMPILER_RUNTIME_TYPE "Debug")
+                else()
+                    set(_COMPILER_RUNTIME_TYPE "Release")
+                endif()
             endif()
 
             unset(_KNOWN_MSVC_RUNTIME_VALUES)
