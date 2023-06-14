@@ -1,3 +1,13 @@
 #include "hello.h"
 #include "bye.h"
-int main(){hello();bye();}
+#include <vector>
+#include <string>
+int main(){
+    std::vector<std::string> vec;
+    vec.push_back("consumer");
+    
+    hello();
+    hello_print_vector(vec);
+    bye();
+    bye_print_vector(vec);
+}
