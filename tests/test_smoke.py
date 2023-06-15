@@ -1,4 +1,5 @@
 import os
+import re
 import platform
 import shutil
 import subprocess
@@ -132,6 +133,39 @@ class TestBasic:
         run("cmake --build .")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
+
+    @unix
+    def test_conan_default_configuration(self, capfd, chdir_build):
+        "Default configuration is set"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        regex = re.compile(r".*--CMake-Conan:conaninstall.+--format;json;--output-folder;.+;--build;missing;--profile:host;.+;--generator;CMakeDeps.*")
+        out_without_whitespace = "".join(out.split())
+        assert regex.match(out_without_whitespace)
+
+
+class TestConfigure:
+    @unix
+    def test_conan_custom_configuration(self, capfd, chdir_build):
+        "Custom configuration is set"
+        src_dir = Path(__file__).parent
+        shutil.copy2(src_dir / "resources" / "configure" / "success" / "CMakeLists.txt", Path(os.getcwd()).parent / "CMakeLists.txt")
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        out_without_whitespace = "".join(out.split())
+        regex = re.compile(r".*--CMake-Conan:conaninstall.+--format;json;--output-folder;.+;--build;missing;--profile:host;.+;--generator;CMakeDeps;--generator;CMakeToolchain.*")
+        assert regex.match(out_without_whitespace)
+
+    @unix
+    def test_conan_custom_configuration_after_first_find_package_fails(self, capfd, chdir_build):
+        "Attempting to configure after the first find package fails"
+        src_dir = Path(__file__).parent
+        shutil.copy2(src_dir / "resources" / "configure" / "failure" / "CMakeLists.txt", Path(os.getcwd()).parent / "CMakeLists.txt")
+        ret = subprocess.run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", shell=True, check=False)
+        _, err = capfd.readouterr()
+        err_without_whitespace = "".join(err.split())
+        assert 1 == ret.returncode
+        assert "CMake-Conan:'conaninstall'alreadyran,conan_configure()hastobecalledbeforethefirstfind_package()" in err_without_whitespace
 
 
 class TestSubdir:
