@@ -271,16 +271,11 @@ macro(conan_provide_dependency package_name)
     endif()
 
     get_property(CONAN_GENERATORS_FOLDER GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
-    list(FIND CMAKE_FIND_ROOT_PATH "${CONAN_GENERATORS_FOLDER}" index)
-    if(${index} EQUAL -1)
-        # Make find_package work in cross-compiling scenarios
-        list(PREPEND CMAKE_FIND_ROOT_PATH "${CONAN_GENERATORS_FOLDER}")
-    endif()
     list(FIND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}" index)
     if(${index} EQUAL -1)
         list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
     endif()
-    find_package(${ARGN} BYPASS_PROVIDER)
+    find_package(${ARGN} BYPASS_PROVIDER CMAKE_FIND_ROOT_PATH_BOTH)
 endmacro()
 
 
