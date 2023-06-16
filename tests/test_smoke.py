@@ -428,3 +428,34 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchsimulator" in out
         assert "os.version=7.0" in out
+
+
+class TestMSVCArch:
+    @pytest.fixture(scope="class", autouse=True)
+    def android_setup(self):
+        shutil.rmtree("build")
+        yield
+
+    @windows
+    def test_msvc_arm64(self, capfd, chdir_build):
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G "Visual Studio 16 2019" -A ARM64')
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+
+    @windows
+    def test_msvc_arm(self, capfd, chdir_build):
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G "Visual Studio 16 2019" -A ARM')
+        out, _ = capfd.readouterr()
+        assert "arch=armv7" in out
+
+    @windows
+    def test_msvc_x86_64(self, capfd, chdir_build):
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G "Visual Studio 16 2019" -A x64')
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+
+    @windows
+    def test_msvc_x86(self, capfd, chdir_build):
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G "Visual Studio 16 2019" -A Win32')
+        out, _ = capfd.readouterr()
+        assert "arch=x86" in out
