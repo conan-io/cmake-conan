@@ -59,7 +59,7 @@ endfunction()
 
 function(detect_arch ARCH)
     # CMAKE_OSX_ARCHITECTURES can contain multiple architectures, but Conan only supports one.
-    # Therefore this code only finds one. If the recipes support mulitple architectures, the
+    # Therefore this code only finds one. If the recipes support multiple architectures, the
     # build will work. Otherwise, there will be a linker error for the missing architecture(s).
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64" OR CMAKE_OSX_ARCHITECTURES MATCHES arm64)
         set(_ARCH armv8)
