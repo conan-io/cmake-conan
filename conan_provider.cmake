@@ -23,10 +23,7 @@ function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
             message(STATUS "CMake-Conan: android_platform=${ANDROID_PLATFORM}")
             set(${OS_API_LEVEL} ${_OS_API_LEVEL} PARENT_SCOPE)
         endif()
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" OR
-           ${CMAKE_SYSTEM_NAME} STREQUAL "iOS" OR
-           ${CMAKE_SYSTEM_NAME} STREQUAL "tvOS" OR
-           ${CMAKE_SYSTEM_NAME} STREQUAL "watchOS")
+        if(CMAKE_SYSTEM_NAME MATCHES "iOS|tvOS|watchOS")
             if(DEFINED CMAKE_OSX_SYSROOT)
                 # CMAKE_OSX_SYSROOT contains the full path to the SDK for MakeFile/Ninja
                 # generators, but just has the original input string for Xcode. Use the
