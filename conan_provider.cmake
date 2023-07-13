@@ -59,6 +59,13 @@ function(detect_arch ARCH)
     # CMAKE_OSX_ARCHITECTURES can contain multiple architectures, but Conan only supports one.
     # Therefore this code only finds one. If the recipes support multiple architectures, the
     # build will work. Otherwise, there will be a linker error for the missing architecture(s).
+    if(DEFINED CMAKE_OSX_ARCHITECTURES)
+        string(REPLACE " " ";" apple_arch_list "${CMAKE_OSX_ARCHITECTURES}")
+        list(LENGTH apple_arch_list apple_arch_count)
+        if(apple_arch_count GREATER 1)
+            message(WARNING "CMake-Conan: Multiple architectures detected, this will only work if Conan recipe(s) produce fat binaries.")
+        endif()
+    endif()
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64" OR CMAKE_OSX_ARCHITECTURES MATCHES arm64)
         set(_ARCH armv8)
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7-a|armv7l" OR CMAKE_OSX_ARCHITECTURES MATCHES armv7)
