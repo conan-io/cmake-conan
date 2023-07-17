@@ -177,7 +177,8 @@ class TestOsVersion:
 class TestAndroid:
     @pytest.fixture(scope="class", autouse=True)
     def android_setup(self):
-        shutil.rmtree("build")
+        if os.path.exists("build"):
+            shutil.rmtree("build")
         yield
 
     def test_android_armv8(self, capfd, chdir_build):
