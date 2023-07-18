@@ -284,7 +284,8 @@ macro(conan_provide_dependency package_name)
     if(${index} EQUAL -1)
         list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
     endif()
-    find_package(${ARGN} BYPASS_PROVIDER CMAKE_FIND_ROOT_PATH_BOTH)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+    find_package(${ARGN} BYPASS_PROVIDER)
 endmacro()
 
 
