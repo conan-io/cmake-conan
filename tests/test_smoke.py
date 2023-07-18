@@ -134,6 +134,20 @@ class TestBasic:
         assert all(expected in out for expected in expected_conan_install_outputs)
 
 
+class TestCmakeModule:
+    @pytest.fixture(scope="class", autouse=True)
+    def cmake_module_setup(self):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_module', ".", dirs_exist_ok=True)
+        yield
+
+    def test_cmake_module(self, capfd, chdir_build):
+        "Ensure that the Find<PackageName>.cmake modules from the CMake install work"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "Found Threads: TRUE" in out
+
+
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
     def subdir_setup(self):
