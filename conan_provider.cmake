@@ -258,7 +258,7 @@ function(conan_version_check)
 endfunction()
 
 
-macro(conan_provide_dependency package_name)
+macro(conan_provide_dependency method package_name)
     get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
     if(NOT CONAN_INSTALL_SUCCESS)
         find_program(CONAN_COMMAND "conan" REQUIRED)
@@ -280,12 +280,20 @@ macro(conan_provide_dependency package_name)
     endif()
 
     get_property(CONAN_GENERATORS_FOLDER GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
-    list(FIND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}" index)
-    if(${index} EQUAL -1)
-        list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GENERATORS_FOLDER}")
+
+    set(_find_args "${ARGN}")
+    list(REMOVE_ITEM _find_args "REQUIRED")
+    if(NOT "MODULE" IN_LIST _find_args)
+        find_package(${package_name} ${_find_args} BYPASS_PROVIDER PATHS "${CONAN_GENERATORS_FOLDER}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
     endif()
-    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
-    find_package(${ARGN} BYPASS_PROVIDER)
+
+    set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
+    list(PREPEND CMAKE_MODULE_PATH "${CONAN_GENERATORS_FOLDER}")
+    find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
+
+    set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
+    unset(_find_args)
+    unset(_cmake_module_path_orig)
 endmacro()
 
 
