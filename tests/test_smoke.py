@@ -61,15 +61,18 @@ def tmpdirs():
 def basic_setup(tmpdirs):
     "The packages created by this fixture are available to all tests."
     workdir = "temp_recipes"
+    src_dir = Path(__file__).parent.parent
     os.makedirs(workdir)
     with chdir(workdir):
         run("conan profile detect -vquiet")
         run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
         run("conan export . -vquiet")
         run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
+        # Modified version of Conanfile for 'bye' which sets custom
+        # properties in package_info()
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'libbye' / 'conanfile.py', ".")
         run("conan export . -vquiet")
     shutil.rmtree(workdir)
-    src_dir = Path(__file__).parent.parent
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
     yield
@@ -133,15 +136,29 @@ class TestBasic:
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
 
-
-class TestCmakeModule:
+class TestFindModule:
     @pytest.fixture(scope="class", autouse=True)
-    def cmake_module_setup(self):
+    def find_module_setup(self):
         src_dir = Path(__file__).parent.parent
-        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_module', ".", dirs_exist_ok=True)
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module', ".", dirs_exist_ok=True)
         yield
 
-    def test_cmake_module(self, capfd, chdir_build):
+    def test_find_module(self, capfd, chdir_build):
+        "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, _ = capfd.readouterr()
+        assert "Conan: Target declared 'hello::hello'" in out
+        assert "Conan: Target declared 'bye::bye'" in out
+        run("cmake --build .")
+        
+class TestCMakeBuiltinModule:
+    @pytest.fixture(scope="class", autouse=True)
+    def cmake_builtin_module_setup(self):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_builtin_module', ".", dirs_exist_ok=True)
+        yield
+
+    def test_cmake_builtin_module(self, capfd, chdir_build):
         "Ensure that the Find<PackageName>.cmake modules from the CMake install work"
         run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
