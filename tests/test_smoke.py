@@ -189,6 +189,7 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
+
 class TestOsVersion:
     @darwin
     def test_os_version(self, capfd, chdir_build):
@@ -259,3 +260,75 @@ class TestAndroid:
         assert "os=Android" in out
         assert "os.api_level=19" in out
         assert "tools.android:ndk_path=" in out
+
+
+class TestiOS:
+    @darwin
+    def test_ios(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=iOS "
+            "-DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=iOS" in out
+        assert "os.sdk=iphoneos" in out
+        assert "os.version=11.0" in out
+
+    @darwin
+    def test_ios_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=iOS "
+            "-DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0")
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+        assert "os=iOS" in out
+        assert "os.sdk=iphonesimulator" in out
+        assert "os.version=11.0" in out
+
+
+class TestTvOS:
+    @darwin
+    def test_tvos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=tvOS "
+            "-DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=tvOS" in out
+        assert "os.sdk=appletvos" in out
+        assert "os.version=15.0" in out
+
+    @darwin
+    def test_tvos_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=tvOS "
+            "-DCMAKE_OSX_SYSROOT=appletvsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=tvOS" in out
+        assert "os.sdk=appletvsimulator" in out
+        assert "os.version=15.0" in out
+
+
+class TestWatchOS:
+    @darwin
+    def test_watchos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -G Ninja "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=watchOS "
+            "-DCMAKE_OSX_SYSROOT=watchos -DCMAKE_OSX_DEPLOYMENT_TARGET=7.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=watchOS" in out
+        assert "os.sdk=watchos" in out
+        assert "os.version=7.0" in out
+
+    @darwin
+    def test_watchos_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=watchOS "
+            "-DCMAKE_OSX_SYSROOT=watchsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=7.0")
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+        assert "os=watchOS" in out
+        assert "os.sdk=watchsimulator" in out
+        assert "os.version=7.0" in out
