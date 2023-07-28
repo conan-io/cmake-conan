@@ -432,8 +432,9 @@ class TestWatchOS:
 
 class TestMSVCArch:
     @pytest.fixture(scope="class", autouse=True)
-    def android_setup(self):
-        shutil.rmtree("build")
+    def msvc_setup(self):
+        if os.path.exists("build"):
+            shutil.rmtree("build")
         yield
 
     @windows
