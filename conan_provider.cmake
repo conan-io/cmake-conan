@@ -230,14 +230,24 @@ function(conan_profile_detect_default)
     endif()
 endfunction()
 
+function(detect_conanfile out_conan_file)
+    if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt)
+        set(${out_conan_file} ${CMAKE_CURRENT_BINARY_DIR}/conanfile.txt PARENT_SCOPE)
+    elseif(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/conanfile.py)
+        set(${out_conan_file} ${CMAKE_CURRENT_BINARY_DIR}/conanfile.py PARENT_SCOPE)
+    else()
+        set(${out_conan_file} ${CMAKE_SOURCE_DIR} PARENT_SCOPE)
+    endif()
+endfunction()
 
 function(conan_install)
     cmake_parse_arguments(ARGS CONAN_ARGS ${ARGN})
     set(CONAN_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/conan)
     # Invoke "conan install" with the provided arguments
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
-    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
-    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
+    detect_conanfile(CONAN_FILE)
+    message(STATUS "CMake-Conan: conan install ${CONAN_FILE} ${CONAN_ARGS} ${ARGN}")
+    execute_process(COMMAND ${CONAN_COMMAND} install ${CONAN_FILE} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
