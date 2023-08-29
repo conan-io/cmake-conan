@@ -359,15 +359,18 @@ macro(conan_provide_dependency_check)
     set(_CONAN_PROVIDE_DEPENDENCY_INVOKED FALSE)
     get_property(_CONAN_PROVIDE_DEPENDENCY_INVOKED GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED)
     if(NOT _CONAN_PROVIDE_DEPENDENCY_INVOKED)
-        message(WARNING "Conan configured as dependency provider, but never invoked. There are no calls to `find_package()`")
+        message(WARNING "Conan is correctly configured as dependency provider, "
+                        "but Conan has not been invoked. Please add at least one "
+                        "call to `find_package()`.")
         if(DEFINED CONAN_COMMAND)
-            set(_CONAN_COMMAND ${CONAN_COMMAND})
             # supress warning in case `CONAN_COMMAND` was specified but unused.
+            set(_CONAN_COMMAND ${CONAN_COMMAND})
+            unset(_CONAN_COMMAND)
         endif()
-
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
-    unset(_CONAN_COMMAND)
 endmacro()
 
+# Add a deferred call at the end of processing the top-level directory
+# to check if the dependency provider was invoked at all.
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependency_check)
