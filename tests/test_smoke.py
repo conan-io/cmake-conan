@@ -65,12 +65,18 @@ def basic_setup(tmpdirs):
     os.makedirs(workdir)
     with chdir(workdir):
         run("conan profile detect -vquiet")
+        # libhello
         run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
         run("conan export . -vquiet")
+
+        # libbye with modified conanfile.py (custom package_info properties)
         run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
-        # Modified version of Conanfile for 'bye' which sets custom
-        # properties in package_info()
         shutil.copy2(src_dir / 'tests' / 'resources' / 'libbye' / 'conanfile.py', ".")
+        run("conan export . -vquiet")
+
+        # libboost with modified conanfile.py (ensure upper case B cmake package name)
+        run("conan new cmake_lib -d name=boost -d version=1.77.0 -f -vquiet")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'fake_boost_recipe' / 'conanfile.py', ".")
         run("conan export . -vquiet")
     shutil.rmtree(workdir)
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
@@ -149,6 +155,23 @@ class TestFindModule:
         out, _ = capfd.readouterr()
         assert "Conan: Target declared 'hello::hello'" in out
         assert "Conan: Target declared 'bye::bye'" in out
+        run("cmake --build .")
+
+class TestFindBuiltInModules:
+    @pytest.fixture(scope="class", autouse=True)
+    def find_module_builtin_setup(order):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module_builtin', ".", dirs_exist_ok=True)
+        yield
+
+    @pytest.mark.parametrize("use_find_components", [True, False])
+    def test_find_builtin_module(self, capfd, use_find_components, chdir_build):
+        "Ensure that a Conan-provided -config.cmake file satisfies dependency, even when a CMake builtin "
+        "exists for the same dependency"
+        boost_find_components = "ON" if use_find_components else "OFF"
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -D_TEST_BOOST_FIND_COMPONENTS={boost_find_components}", check=False)
+        out, _ = capfd.readouterr()
+        assert "Conan: Target declared 'Boost::boost'" in out
         run("cmake --build .")
         
 class TestCMakeBuiltinModule:
