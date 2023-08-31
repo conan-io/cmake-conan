@@ -152,7 +152,7 @@ class TestFindModule:
     def test_find_module(self, capfd, chdir_build):
         "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
         run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=False)
-        out, err = capfd.readouterr()
+        out, _ = capfd.readouterr()
         assert "Conan: Target declared 'hello::hello'" in out
         assert "Conan: Target declared 'bye::bye'" in out
         run("cmake --build .")
