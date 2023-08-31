@@ -170,7 +170,7 @@ class TestFindBuiltInModules:
         "exists for the same dependency"
         boost_find_components = "ON" if use_find_components else "OFF"
         run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -D_TEST_BOOST_FIND_COMPONENTS={boost_find_components}", check=False)
-        out, err = capfd.readouterr()
+        out, _ = capfd.readouterr()
         assert "Conan: Target declared 'Boost::boost'" in out
         run("cmake --build .")
         
