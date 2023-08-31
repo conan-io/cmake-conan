@@ -342,7 +342,9 @@ macro(conan_provide_dependency method package_name)
     # behaviour, also allowing modules to be searched.
     set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
     list(PREPEND CMAKE_MODULE_PATH "${CONAN_GENERATORS_FOLDER}")
-    find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
+    if(NOT ${${package_name}_FOUND})
+        find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
+    endif()
 
     set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
     unset(_find_args)
