@@ -1,0 +1,5 @@
+[requires]
+hello/0.1
+
+[tool_requires]
+ninja/1.11.1

@@ -1,4 +1,5 @@
 import os
+import re
 import platform
 import shutil
 import subprocess
@@ -186,6 +187,26 @@ class TestCMakeBuiltinModule:
         run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
+
+
+class TestTool:
+    @pytest.fixture(scope="class", autouse=True)
+    def tool_setup(self):
+        "Layout for tool test"
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'tool', ".", dirs_exist_ok=True)
+        yield
+
+    @unix
+    def test_tool_path(self, capfd, chdir_build):
+        "Tools are available in CMake"
+        generator = "-GNinja" if platform.system() == "Windows" else ""
+
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release {generator}")
+        out, _ = capfd.readouterr()
+        regex = re.compile(r".*--CMake-Conan:CONAN_TOOL_PATH=\/.*\/bin.*")
+        out_without_whitespace = "".join(out.split())
+        assert regex.match(out_without_whitespace)
 
 
 class TestSubdir:

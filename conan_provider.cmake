@@ -260,6 +260,30 @@ function(conan_install)
         # success
         set_property(GLOBAL PROPERTY CONAN_INSTALL_SUCCESS TRUE)
     endif()
+
+    # set tool path
+    set(CONAN_TOOL_PATH)
+    string(JSON NUMBER_OF_NODES LENGTH ${conan_stdout} graph nodes)
+    math(EXPR NUMBER_OF_NODES "${NUMBER_OF_NODES}-1")
+    foreach(INDEX RANGE ${NUMBER_OF_NODES})
+        string(JSON CONTEXT GET ${conan_stdout} graph nodes ${INDEX} context)
+        if(NOT CONTEXT STREQUAL "build")
+            continue()
+        endif()
+
+        string(JSON BINDIRS GET ${conan_stdout} graph nodes ${INDEX} cpp_info root bindirs)
+        string(JSON BINDIRS_NODES LENGTH ${BINDIRS})
+        if(BINDIRS_NODES EQUAL 0)
+            continue()
+        endif()
+        math(EXPR BINDIRS_NODES "${BINDIRS_NODES}-1")
+        foreach(BINDIRS_INDEX RANGE ${BINDIRS_NODES})
+            string(JSON BINDIR GET ${BINDIRS} ${BINDIRS_INDEX})
+            list(APPEND CONAN_TOOL_PATH "${BINDIR}")
+        endforeach()
+    endforeach()
+    set(CONAN_TOOL_PATH ${CONAN_TOOL_PATH} CACHE STRING "Path to build tools")
+    message(STATUS "CMake-Conan: CONAN_TOOL_PATH=${CONAN_TOOL_PATH}")
 endfunction()
 
 
