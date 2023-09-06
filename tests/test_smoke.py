@@ -128,7 +128,26 @@ class TestBasic:
             expected_outputs = [f.format(config=config) for f in expected_app_outputs]
             assert all(expected not in out for expected in expected_conan_install_outputs)
             assert all(expected in out for expected in expected_outputs)
-     
+
+    def test_single_config_only_one_configuration_installed(self, capfd, chdir_build):
+        "Ensure that if the generator is single config, `conan install` is only called for one configuration, "
+        "even when `CMAKE_CONFIGURATION_TYPES` is set to multiple values on a single-config generator"
+        
+        generator = "-GNinja" if platform.system() == "Windows" else ""
+        run(f'cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release {generator} -DOVERRIDE_CONFIG_TYPES=ON')
+        out, err = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        assert "Overriding config types" in err
+        assert "CMake-Conan: Installing single configuration Release" in out
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        run(os.path.join(os.getcwd(), app_executable))
+        out, _ = capfd.readouterr()
+        expected_output = [f.format(config="Release") for f in expected_app_outputs]
+        assert all(expected in out for expected in expected_output)
 
     @unix
     def test_reconfigure_on_conanfile_changes(self, capfd, chdir_build):
