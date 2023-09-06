@@ -135,9 +135,9 @@ class TestBasic:
         
         generator = "-GNinja" if platform.system() == "Windows" else ""
         run(f'cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release {generator} -DOVERRIDE_CONFIG_TYPES=ON')
-        out, err = capfd.readouterr()
+        out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
-        assert "Overriding config types" in err
+        assert "Overriding config types" in out
         assert "CMake-Conan: Installing single configuration Release" in out
         run("cmake --build .")
         out, _ = capfd.readouterr()
