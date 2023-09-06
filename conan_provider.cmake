@@ -89,11 +89,75 @@ function(detect_cxx_standard CXX_STANDARD)
     endif()
 endfunction()
 
+macro(detect_gnu_libstdcxx)
+    # _CONAN_IS_GNU_LIBSTDCXX true if GNU libstdc++
+    check_cxx_source_compiles("
+    #include <cstddef>
+    #if !defined(__GLIBCXX__) && !defined(__GLIBCPP__)
+    static_assert(false);
+    #endif
+    int main(){}" _CONAN_IS_GNU_LIBSTDCXX)
+
+    # _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI true if C++11 ABI
+    check_cxx_source_compiles("
+    #include <string>
+    static_assert(sizeof(std::string) != sizeof(void*), \"using libstdc++\");
+    int main () {}" _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
+
+    set(_CONAN_GNU_LIBSTDCXX_SUFFIX "")
+    if(_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
+        set(_CONAN_GNU_LIBSTDCXX_SUFFIX "11")
+    endif()
+    unset (_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
+endmacro()
+
+macro(detect_libcxx)
+    # _CONAN_IS_LIBCXX true if LLVM libc++
+    check_cxx_source_compiles("
+    #include <cstddef>
+    #if !defined(_LIBCPP_VERSION)
+       static_assert(false);
+    #endif
+    int main(){}" _CONAN_IS_LIBCXX)
+endmacro()
+
 
 function(detect_lib_cxx OS LIB_CXX)
     if(${OS} STREQUAL "Android")
         message(STATUS "CMake-Conan: android_stl=${ANDROID_STL}")
         set(${LIB_CXX} ${ANDROID_STL} PARENT_SCOPE)
+        return()
+    endif()
+
+    include(CheckCXXSourceCompiles)
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        detect_gnu_libstdcxx()
+        set(${LIB_CXX} "libstdc++${_CONAN_GNU_LIBSTDCXX_SUFFIX}" PARENT_SCOPE)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+        set(${LIB_CXX} "libc++" PARENT_SCOPE)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
+        # Check for libc++
+        detect_libcxx()
+        if(_CONAN_IS_LIBCXX)
+            set(${LIB_CXX} "libc++" PARENT_SCOPE)
+            return()
+        endif()
+
+        # Check for libstdc++
+        detect_gnu_libstdcxx()
+        if(_CONAN_IS_GNU_LIBSTDCXX)
+            set(${LIB_CXX} "libstdc++${_CONAN_GNU_LIBSTDCXX_SUFFIX}" PARENT_SCOPE)
+            return()
+        endif()
+
+        # TODO: it would be an error if we reach this point
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        # Do nothing - compiler.runtime and compiler.runtime_type
+        # should be handled separately: https://github.com/conan-io/cmake-conan/pull/516
+        return()
+    else()
+        # TODO: unable to determine, ask user to provide a full profile file instead
     endif()
 endfunction()
 
@@ -200,6 +264,7 @@ function(detect_host_profile output_file)
 
     string(APPEND PROFILE "[conf]\n")
     string(APPEND PROFILE "tools.cmake.cmaketoolchain:generator=${CMAKE_GENERATOR}\n")
+    string(APPEND PROFILE "tools.build:compiler_executables={\"cpp\":\"${CMAKE_CXX_COMPILER}\"}")
     if(${MYOS} STREQUAL "Android")
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
     endif()
