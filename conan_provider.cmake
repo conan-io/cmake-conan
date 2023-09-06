@@ -139,6 +139,7 @@ function(detect_compiler COMPILER COMPILER_VERSION)
     set(${COMPILER_VERSION} ${_COMPILER_VERSION} PARENT_SCOPE)
 endfunction()
 
+
 function(detect_build_type BUILD_TYPE)
     if(NOT CMAKE_CONFIGURATION_TYPES)
         # Only set when we know we are in a single-configuration generator
@@ -359,6 +360,7 @@ cmake_language(
     SUPPORTED_METHODS FIND_PACKAGE
 )
 
+
 macro(conan_provide_dependency_check)
     set(_CONAN_PROVIDE_DEPENDENCY_INVOKED FALSE)
     get_property(_CONAN_PROVIDE_DEPENDENCY_INVOKED GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED)
@@ -374,6 +376,7 @@ macro(conan_provide_dependency_check)
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
 endmacro()
+
 
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.
