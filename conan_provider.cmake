@@ -523,8 +523,8 @@ endmacro()
 
 
 cmake_language(
-  SET_DEPENDENCY_PROVIDER conan_provide_dependency
-  SUPPORTED_METHODS FIND_PACKAGE
+    SET_DEPENDENCY_PROVIDER conan_provide_dependency
+    SUPPORTED_METHODS FIND_PACKAGE
 )
 
 macro(conan_provide_dependency_check)
