@@ -264,7 +264,7 @@ function(detect_host_profile output_file)
 
     string(APPEND PROFILE "[conf]\n")
     string(APPEND PROFILE "tools.cmake.cmaketoolchain:generator=${CMAKE_GENERATOR}\n")
-    string(APPEND PROFILE "tools.build:compiler_executables={\"cpp\":\"${CMAKE_CXX_COMPILER}\"}")
+    string(APPEND PROFILE "tools.build:compiler_executables={\"cpp\":\"${CMAKE_CXX_COMPILER}\"}\n")
     if(${MYOS} STREQUAL "Android")
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
     endif()
