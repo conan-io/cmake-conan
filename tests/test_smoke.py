@@ -65,15 +65,24 @@ def tmpdirs():
 def basic_setup(tmpdirs):
     "The packages created by this fixture are available to all tests."
     workdir = "temp_recipes"
+    src_dir = Path(__file__).parent.parent
     os.makedirs(workdir)
     with chdir(workdir):
         run("conan profile detect -vquiet")
+        # libhello
         run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
         run("conan export . -vquiet")
+
+        # libbye with modified conanfile.py (custom package_info properties)
         run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'libbye' / 'conanfile.py', ".")
+        run("conan export . -vquiet")
+
+        # libboost with modified conanfile.py (ensure upper case B cmake package name)
+        run("conan new cmake_lib -d name=boost -d version=1.77.0 -f -vquiet")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'fake_boost_recipe' / 'conanfile.py', ".")
         run("conan export . -vquiet")
     shutil.rmtree(workdir)
-    src_dir = Path(__file__).parent.parent
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
     yield
@@ -123,7 +132,26 @@ class TestBasic:
             expected_outputs = [f.format(config=config) for f in expected_app_outputs]
             assert all(expected not in out for expected in expected_conan_install_outputs)
             assert all(expected in out for expected in expected_outputs)
-     
+
+    def test_single_config_only_one_configuration_installed(self, capfd, chdir_build):
+        "Ensure that if the generator is single config, `conan install` is only called for one configuration, "
+        "even when `CMAKE_CONFIGURATION_TYPES` is set to multiple values on a single-config generator"
+        
+        generator = "-GNinja" if platform.system() == "Windows" else ""
+        run(f'cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release {generator} -DOVERRIDE_CONFIG_TYPES=ON')
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        assert "Overriding config types" in out
+        assert "CMake-Conan: Installing single configuration Release" in out
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        run(os.path.join(os.getcwd(), app_executable))
+        out, _ = capfd.readouterr()
+        expected_output = [f.format(config="Release") for f in expected_app_outputs]
+        assert all(expected in out for expected in expected_output)
 
     @unix
     def test_reconfigure_on_conanfile_changes(self, capfd, chdir_build):
@@ -136,6 +164,7 @@ class TestBasic:
         run("cmake --build .")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
+
 
     @windows
     @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
@@ -184,6 +213,54 @@ class TestBasic:
         expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
         assert all(expected in out for expected in expected_runtime_outputs)
 
+        
+class TestFindModule:
+    @pytest.fixture(scope="class", autouse=True)
+    def find_module_setup(self):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module', ".", dirs_exist_ok=True)
+        yield
+
+    def test_find_module(self, capfd, chdir_build):
+        "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, _ = capfd.readouterr()
+        assert "Conan: Target declared 'hello::hello'" in out
+        assert "Conan: Target declared 'bye::bye'" in out
+        run("cmake --build .")
+
+class TestFindBuiltInModules:
+    @pytest.fixture(scope="class", autouse=True)
+    def find_module_builtin_setup(order):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module_builtin', ".", dirs_exist_ok=True)
+        yield
+
+    @pytest.mark.parametrize("use_find_components", [True, False])
+    def test_find_builtin_module(self, capfd, use_find_components, chdir_build):
+        "Ensure that a Conan-provided -config.cmake file satisfies dependency, even when a CMake builtin "
+        "exists for the same dependency"
+        boost_find_components = "ON" if use_find_components else "OFF"
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -D_TEST_BOOST_FIND_COMPONENTS={boost_find_components}", check=False)
+        out, _ = capfd.readouterr()
+        assert "Conan: Target declared 'Boost::boost'" in out
+        run("cmake --build .")
+
+        
+class TestCMakeBuiltinModule:
+    @pytest.fixture(scope="class", autouse=True)
+    def cmake_builtin_module_setup(self):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_builtin_module', ".", dirs_exist_ok=True)
+        yield
+
+    def test_cmake_builtin_module(self, capfd, chdir_build):
+        "Ensure that the Find<PackageName>.cmake modules from the CMake install work"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "Found Threads: TRUE" in out
+
+
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
     def subdir_setup(self):
@@ -208,6 +285,7 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
+
 class TestOsVersion:
     @darwin
     def test_os_version(self, capfd, chdir_build):
@@ -227,7 +305,8 @@ class TestOsVersion:
 class TestAndroid:
     @pytest.fixture(scope="class", autouse=True)
     def android_setup(self):
-        shutil.rmtree("build")
+        if os.path.exists("build"):
+            shutil.rmtree("build")
         yield
 
     def test_android_armv8(self, capfd, chdir_build):
@@ -246,7 +325,7 @@ class TestAndroid:
         "Building for Android armv7"
         run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "
             f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
-            "-DANDROID_ABI=armeabi-v7a -DANDROID_STL=c++_static -DANDROID_PLATFORM=android-24")
+            "-DANDROID_ABI=armeabi-v7a -DANDROID_STL=c++_static -DANDROID_PLATFORM=android-N")
         out, _ = capfd.readouterr()
         assert "arch=armv7" in out
         assert "compiler.libcxx=c++_static" in out
@@ -270,10 +349,82 @@ class TestAndroid:
         "Building for Android x86"
         run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "
             f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
-            "-DANDROID_ABI=x86 -DANDROID_STL=c++_shared -DANDROID_PLATFORM=android-19")
+            "-DANDROID_ABI=x86 -DANDROID_STL=c++_shared -DANDROID_PLATFORM=19")
         out, _ = capfd.readouterr()
         assert "arch=x86" in out
         assert "compiler.libcxx=c++_shared" in out
         assert "os=Android" in out
         assert "os.api_level=19" in out
         assert "tools.android:ndk_path=" in out
+
+
+class TestiOS:
+    @darwin
+    def test_ios(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=iOS "
+            "-DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=iOS" in out
+        assert "os.sdk=iphoneos" in out
+        assert "os.version=11.0" in out
+
+    @darwin
+    def test_ios_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=iOS "
+            "-DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0")
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+        assert "os=iOS" in out
+        assert "os.sdk=iphonesimulator" in out
+        assert "os.version=11.0" in out
+
+
+class TestTvOS:
+    @darwin
+    def test_tvos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=tvOS "
+            "-DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=tvOS" in out
+        assert "os.sdk=appletvos" in out
+        assert "os.version=15.0" in out
+
+    @darwin
+    def test_tvos_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=tvOS "
+            "-DCMAKE_OSX_SYSROOT=appletvsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=tvOS" in out
+        assert "os.sdk=appletvsimulator" in out
+        assert "os.version=15.0" in out
+
+
+class TestWatchOS:
+    @darwin
+    def test_watchos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -G Ninja "
+            "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_SYSTEM_NAME=watchOS "
+            "-DCMAKE_OSX_SYSROOT=watchos -DCMAKE_OSX_DEPLOYMENT_TARGET=7.0")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "os=watchOS" in out
+        assert "os.sdk=watchos" in out
+        assert "os.version=7.0" in out
+
+    @darwin
+    def test_watchos_simulator(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Xcode "
+            "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=watchOS "
+            "-DCMAKE_OSX_SYSROOT=watchsimulator -DCMAKE_OSX_DEPLOYMENT_TARGET=7.0")
+        out, _ = capfd.readouterr()
+        assert "arch=x86_64" in out
+        assert "os=watchOS" in out
+        assert "os.sdk=watchsimulator" in out
+        assert "os.version=7.0" in out
