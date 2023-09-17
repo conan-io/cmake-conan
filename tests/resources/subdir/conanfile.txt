@@ -2,3 +2,6 @@
 hello/0.1
 bye/0.1
 subdir/0.1
+
+[generators]
+CMakeDeps

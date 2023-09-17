@@ -1,5 +1,8 @@
 [requires]
 fmt/9.1.0
 
+[generators]
+CMakeDeps
+
 [layout]
 cmake_layout

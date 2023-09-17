@@ -2,3 +2,6 @@
 hello/0.1
 bye/0.1
 boost/1.77.0
+
+[generators]
+CMakeDeps
