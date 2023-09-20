@@ -18,6 +18,10 @@ expected_app_outputs = [
     "bye/0.1: Hello World {config}!"
 ]
 
+expected_app_msvc_runtime = [
+    "hello/0.1: MSVC runtime: {expected_runtime}",
+    "bye/0.1: MSVC runtime: {expected_runtime}"
+]
 
 unix = pytest.mark.skipif(platform.system() != "Linux" and platform.system() != "Darwin", reason="Linux or Darwin only")
 linux = pytest.mark.skipif(platform.system() != "Linux", reason="Linux only")
@@ -161,6 +165,55 @@ class TestBasic:
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
 
+
+    @windows
+    @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
+                                              "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
+                                              "MultiThreaded", "MultiThreadedDebugDLL"])
+    def test_msvc_runtime_multiconfig(self, capfd, chdir_build_multi, msvc_runtime):
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake {msvc_runtime_flag}")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+
+        app_executable = "app.exe" if platform.system() == "Windows" else "app"
+        for config in ["Release", "Debug"]:
+            run(f"cmake --build . --config {config}")
+            run(os.path.join(os.getcwd(), config, app_executable))
+            out, _ = capfd.readouterr()
+            expected_outputs = [f.format(config=config) for f in expected_app_outputs]
+            assert all(expected not in out for expected in expected_conan_install_outputs)
+            assert all(expected in out for expected in expected_outputs)
+            
+            debug_tag = "Debug" if config == "Debug" else ""
+            runtime = msvc_runtime.replace("$<$<CONFIG:Debug>:Debug>", debug_tag)
+            expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
+            assert all(expected in out for expected in expected_runtime_outputs)
+
+    @windows
+    @pytest.mark.parametrize("config", ["Debug", "Release"])
+    @pytest.mark.parametrize("msvc_runtime", ["MultiThreaded$<$<CONFIG:Debug>:Debug>",
+                                              "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
+                                              "MultiThreaded", "MultiThreadedDebugDLL"])
+    def test_msvc_runtime_singleconfig(self, capfd, chdir_build, config, msvc_runtime):
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        run(f"cmake .. -GNinja -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE={config} {msvc_runtime_flag} -GNinja")
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert all(expected not in out for expected in expected_conan_install_outputs)
+        run(os.path.join(os.getcwd(), "app.exe"))
+        out, _ = capfd.readouterr()
+        expected_output = [f.format(config=config) for f in expected_app_outputs]
+        assert all(expected in out for expected in expected_output)
+
+        debug_tag = "Debug" if config == "Debug" else ""
+        runtime = msvc_runtime.replace("$<$<CONFIG:Debug>:Debug>", debug_tag)
+        expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
+        assert all(expected in out for expected in expected_runtime_outputs)
+
+        
 class TestFindModule:
     @pytest.fixture(scope="class", autouse=True)
     def find_module_setup(self):
@@ -192,6 +245,7 @@ class TestFindBuiltInModules:
         out, _ = capfd.readouterr()
         assert "Conan: Target declared 'Boost::boost'" in out
         run("cmake --build .")
+
         
 class TestCMakeBuiltinModule:
     @pytest.fixture(scope="class", autouse=True)
@@ -205,6 +259,34 @@ class TestCMakeBuiltinModule:
         run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
+
+class TestGeneratedProfile:
+    @linux
+    def test_propagate_cxx_compiler(self, capfd, chdir_build):
+        """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is GNU" in out
+        assert "CMake-Conan: The C compiler is not defined." in err
+        assert 'tools.build:compiler_executables={"cpp":"/usr/bin/c++"}' in out
+
+    @linux
+    def test_propagate_c_compiler(self, capfd, chdir_build):
+        """Test that the C compiler is propagated when defined, even if the project only enables C++"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/cc", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is GNU" in out
+        assert "The C compiler is not defined." not in err
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/cc","cpp":"/usr/bin/c++"}' in out
+
+    @linux
+    def test_propagate_non_default_compiler(self, capfd, chdir_build):
+        """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
+        run(f"cmake --fresh .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is Clang" in out
+        assert "The C compiler is not defined." not in err
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
 
 
 class TestSubdir:
