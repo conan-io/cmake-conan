@@ -264,27 +264,27 @@ class TestGeneratedProfile:
     @linux
     def test_propagate_cxx_compiler(self, capfd, chdir_build):
         """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
-        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
         out, err = capfd.readouterr()
-        assert "The CXX compiler identification is GNU" in err
+        assert "The CXX compiler identification is GNU" in out
         assert "CMake-Conan: The C compiler is not defined." in err
         assert 'tools.build:compiler_executables={"cpp":"/usr/bin/c++"}' in out
 
     @linux
     def test_propagate_c_compiler(self, capfd, chdir_build):
         """Test that the C compiler is propagated when defined, even if the project only enables C++"""
-        run(f"cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/cc", check=True)
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/cc", check=True)
         out, err = capfd.readouterr()
-        assert "The CXX compiler identification is GNU" in err
+        assert "The CXX compiler identification is GNU" in out
         assert "The C compiler is not defined." not in err
         assert 'tools.build:compiler_executables={"c":"/usr/bin/cc","cpp":"/usr/bin/c++"}' in out
 
     @linux
     def test_propagate_non_default_compiler(self, capfd, chdir_build):
         """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
-        run(f"cmake .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        run(f"cmake --fresh .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
         out, err = capfd.readouterr()
-        assert "The CXX compiler identification is Clang" in err
+        assert "The CXX compiler identification is Clang" in out
         assert "The C compiler is not defined." not in err
         assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
 

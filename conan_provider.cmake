@@ -187,6 +187,27 @@ function(detect_build_type BUILD_TYPE)
     endif()
 endfunction()
 
+macro(append_compiler_executables_configuration)
+    set(_conan_c_compiler "")
+    set(_conan_cpp_compiler "")
+    if(CMAKE_C_COMPILER)
+        set(_conan_c_compiler "\"c\":\"${CMAKE_C_COMPILER}\",")
+    else()
+        message(WARNING "CMake-Conan: The C compiler is not defined. "
+                        "Please define CMAKE_C_COMPILER or enable the C language.")
+    endif()
+    if(CMAKE_CXX_COMPILER)
+        set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
+    else()
+        message(WARNING "CMake-Conan: The C++ compiler is not defined. "
+                        "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
+    endif()
+
+    string(APPEND PROFILE "tools.build:compiler_executables={${_conan_c_compiler}${_conan_cpp_compiler}}\n")
+    unset(_conan_c_compiler)
+    unset(_conan_cpp_compiler)
+endmacro()
+
 
 function(detect_host_profile output_file)
     detect_os(MYOS MYOS_API_LEVEL MYOS_SDK MYOS_SUBSYSTEM MYOS_VERSION)
@@ -249,22 +270,7 @@ function(detect_host_profile output_file)
     string(APPEND PROFILE "tools.cmake.cmaketoolchain:generator=${CMAKE_GENERATOR}\n")
 
     # propagate compilers via profile
-    set(_conan_c_compiler "")
-    set(_conan_cpp_compiler "")
-    if(CMAKE_C_COMPILER)
-        set(_conan_c_compiler "\"c\":\"${CMAKE_C_COMPILER}\",")
-    else()
-        message(WARNING "CMake-Conan: The C compiler is not defined. "
-                        "Please define CMAKE_C_COMPILER or enable the C language.")
-    endif()
-    if(CMAKE_CXX_COMPILER)
-        set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
-    else()
-        message(WARNING "CMake-Conan: The C++ compiler is not defined. "
-                        "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
-    endif()
-
-    string(APPEND PROFILE "tools.build:compiler_executables={${_conan_c_compiler}${_conan_cpp_compiler}}\n")
+    append_compiler_executables_configuration()
 
     if(${MYOS} STREQUAL "Android")
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
