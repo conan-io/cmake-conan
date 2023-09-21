@@ -50,6 +50,21 @@ cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/con
 * When using a single-configuration CMake generator, you must specify a valid `CMAKE_BUILD_TYPE` (can't be left blank)
 * Deriving Conan settings is currently only supported on the most common platforms with the most popular compilers.
 
+### Customizing Conan profiles
+The CMake-Conan dependency provider will create a Conan profile where the settings (`os`, `arch`, `compiler`, `build_type`) are retrieved from what CMake has detected for the current build. Conan uses two profiles for dependencies, the _host_ and the _build_ profiles. You can read more about them [here](https://docs.conan.io/2.0/tutorial/consuming_packages/cross_building_with_conan.html?highlight=build%20profile#conan-two-profiles-model-build-and-host-profiles). In CMake-Conan, the default behaviour is as follows:
+
+* Conan host profile: settings detected from CMake. For anything that cannot be detected from CMake, it falls back to the `default` Conan profile.
+* Conan build profile: the `default` Conan profile.
+
+Please note that for the above to work, a `default` profile must already exist. If it doesn't, `cmake-conan` will invoke Conan's autodetection mechanism which tries to guess the system defaults.
+
+If you need to customize the profile, you can do so by modifying the value of `CONAN_HOST_PROFILE` and `CONAN_BUILD_PROFILE` and passing them as CMake cache variables. Some examples:
+
+* `-DCONAN_HOST_PROFILE=autodetect`: perform autodetection as described above
+* `-DCONAN_HOST_PROFILE=clang16`: do not perform autodetection, and use the `clang16` profile which must exist in the Conan profiles folder (see [docs](https://docs.conan.io/2.0/reference/commands/profile.html?highlight=profiles%20folder#conan-profile-list).)
+* `-DCONAN_BUILD_PROFILE=/path/to/profile`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
+* `-DCONAN_HOST_PROFILE=default;custom`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
+
 ## Development, contributors
 
 There are some tests, you can run in python, with pytest, for example:
