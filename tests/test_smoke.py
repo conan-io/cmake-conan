@@ -313,6 +313,50 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
+class TestLibcxx:
+    @darwin
+    def test_libcxx_macos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            "-DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "compiler.libcxx=libc++" in out
+
+    @linux
+    @pytest.mark.parametrize("compiler", ["g++", "clang++"])
+    def test_gnu_libstdcxx_linux(self, capfd, chdir_build, compiler):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            f"-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER={compiler}")
+        out, _ = capfd.readouterr()
+        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
+        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Success" in out
+        assert "compiler.libcxx=libstdc++11" in out
+        if compiler == "clang++":
+            assert "The CXX compiler identification is Clang" in out
+            assert "compiler=clang" in out
+        elif compiler == "g++":
+            assert "The CXX compiler identification is GNU" in out
+            assert "compiler=gcc" in out
+
+    @linux
+    def test_gnu_libstdcxx_old_abi_linux(self, capfd, chdir_build):
+        """Ensure libstdc++ is set when the C++11 for libstdc++ is disabled"""
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake '
+            '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"')
+        out, _ = capfd.readouterr()
+        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
+        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Failed" in out
+        assert "compiler.libcxx=libstdc++" in out
+
+    @linux
+    def test_clang_libcxx_linux(self, capfd, chdir_build):
+        """Ensure libc++ is set when using libc++ with Clang"""
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake '
+            '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_COMPILER=clang++')
+        out, _ = capfd.readouterr()
+        assert "The CXX compiler identification is Clang" in out
+        assert "compiler=clang" in out
+        assert "Performing Test _CONAN_IS_LIBCXX - Success" in out
+        assert "compiler.libcxx=libc++" in out
 
 class TestOsVersion:
     @darwin
@@ -397,6 +441,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphoneos" in out
         assert "os.version=11.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_ios_simulator(self, capfd, chdir_build):
@@ -408,6 +453,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphonesimulator" in out
         assert "os.version=11.0" in out
+        assert "compiler.libcxx=libc++"
 
 
 class TestTvOS:
@@ -421,6 +467,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvos" in out
         assert "os.version=15.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_tvos_simulator(self, capfd, chdir_build):
@@ -432,6 +479,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvsimulator" in out
         assert "os.version=15.0" in out
+        assert "compiler.libcxx=libc++"
 
 
 class TestWatchOS:
@@ -445,6 +493,7 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchos" in out
         assert "os.version=7.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_watchos_simulator(self, capfd, chdir_build):
@@ -456,3 +505,4 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchsimulator" in out
         assert "os.version=7.0" in out
+        assert "compiler.libcxx=libc++"
