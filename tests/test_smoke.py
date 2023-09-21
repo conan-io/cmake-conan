@@ -296,7 +296,7 @@ class TestProfileCustomization:
     def test_profile_defults(self, capfd, chdir_build):
         """Test the defaults passed for host and build profiles"""
         run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
-        builddir = os.getcwd()
+        builddir = Path(os.getcwd()).as_posix()
         out, _ = capfd.readouterr()
         assert f"--profile:host={builddir}/conan_host_profile" in out
         assert "--profile:build=default" in out
@@ -304,7 +304,7 @@ class TestProfileCustomization:
     def test_profile_composed_list(self, capfd, chdir_build):
         """Test passing a list of profiles to host and build profiles"""
         run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="autodetect;foo" -DCONAN_BUILD_PROFILE="default;bar"', check=True)
-        builddir = os.getcwd()
+        builddir = Path(os.getcwd()).as_posix()
         out, err = capfd.readouterr()
         assert f"--profile:host={builddir}/conan_host_profile" in out
         assert "--profile:host=foo" in out
@@ -316,6 +316,7 @@ class TestProfileCustomization:
     def test_profile_pass_path(self, capfd, chdir_build):
         """Test that we can both skip autodetected profile and override with a full profile from a path"""
         custom_profile = Path(__file__).parent.parent / 'tests' / 'resources' / 'custom_profiles' / 'invalid_os'
+        custom_profile = custom_profile.as_posix()
         run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="{custom_profile}"', check=False)
         out, err = capfd.readouterr()
         assert f"--profile:host={custom_profile}" in out
