@@ -298,12 +298,13 @@ class TestProfileCustomization:
         """Test the defaults passed for host and build profiles"""
         run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
         out, _ = capfd.readouterr()
+        assert "--profile:host=default" in out
         assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
         assert "--profile:build=default" in out
 
     def test_profile_composed_list(self, capfd, chdir_build):
         """Test passing a list of profiles to host and build profiles"""
-        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="autodetect;foo" -DCONAN_BUILD_PROFILE="default;bar"', check=True)
+        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="auto-cmake;foo" -DCONAN_BUILD_PROFILE="default;bar"', check=True)
         out, err = capfd.readouterr()
         assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
         assert "--profile:host=foo" in out
