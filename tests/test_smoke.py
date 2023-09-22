@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -82,6 +83,10 @@ def basic_setup(tmpdirs):
         run("conan new cmake_lib -d name=boost -d version=1.77.0 -f -vquiet")
         shutil.copy2(src_dir / 'tests' / 'resources' / 'fake_boost_recipe' / 'conanfile.py', ".")
         run("conan export . -vquiet")
+
+        # Additional profiles for testing
+        config_dir = src_dir / 'tests' / 'resources' / 'custom_config'
+        run(f"conan config install {config_dir}")
     shutil.rmtree(workdir)
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
@@ -287,6 +292,36 @@ class TestGeneratedProfile:
         assert "The CXX compiler identification is Clang" in out
         assert "The C compiler is not defined." not in err
         assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
+
+class TestProfileCustomization:
+    def test_profile_defaults(self, capfd, chdir_build):
+        """Test the defaults passed for host and build profiles"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, _ = capfd.readouterr()
+        assert "--profile:host=default" in out
+        assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
+        assert "--profile:build=default" in out
+
+    def test_profile_composed_list(self, capfd, chdir_build):
+        """Test passing a list of profiles to host and build profiles"""
+        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="default;auto-cmake;foo" -DCONAN_BUILD_PROFILE="default;bar"', check=True)
+        out, err = capfd.readouterr()
+        assert "--profile:host=default" in out
+        assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
+        assert "--profile:host=foo" in out
+        assert "user:custom_info=foo" in err
+        assert "--profile:build=default" in out
+        assert "--profile:build=bar" in out
+        assert "user:custom_info=bar" in err
+
+    def test_profile_pass_path(self, capfd, chdir_build):
+        """Test that we can both skip autodetected profile and override with a full profile from a path"""
+        custom_profile = Path(__file__).parent.parent / 'tests' / 'resources' / 'custom_profiles' / 'invalid_os'
+        custom_profile = custom_profile.as_posix()
+        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="{custom_profile}"', check=False)
+        out, err = capfd.readouterr()
+        assert f"--profile:host={custom_profile}" in out
+        assert "ERROR: Invalid setting 'JuliusOS' is not a valid 'settings.os' value." in err
 
 
 class TestSubdir:
