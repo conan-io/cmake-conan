@@ -59,6 +59,36 @@ class CMakeConanTest(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self.old_env)
 
+    # https://github.com/conan-io/cmake-conan/pull/420
+    def test_conan_cmake_autodetect_cxx_os(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+            list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES fmt/6.1.2 GENERATORS cmake_find_package)
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                BUILD missing
+                                REMOTE conancenter
+                                SETTINGS ${settings})
+        """)
+        save("CMakeLists.txt", content)
+        empty_profile = textwrap.dedent("""
+            [settings]
+            build_type=Release
+            arch=x86_64
+        """)
+        save(os.path.join(os.environ.get("CONAN_USER_HOME"), ".conan", "profiles", "default"), empty_profile)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            the_os = {'Darwin': 'Macos'}.get(platform.system())
+            assert f"os={the_os}" in data
+
     # https://github.com/conan-io/cmake-conan/issues/279
     def test_options_override_profile(self):
         content = textwrap.dedent("""
