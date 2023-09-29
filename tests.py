@@ -1,3 +1,4 @@
+import re
 import unittest
 import tempfile
 import os
@@ -6,6 +7,7 @@ import shutil
 import json
 import textwrap
 from contextlib import contextmanager 
+from conan import conan_version
 
 
 def save(filename, content):
@@ -174,6 +176,30 @@ class CMakeConanTest(unittest.TestCase):
         os.chdir("build")
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
         run("cmake --build . --config Release")
+
+    def test_conan_cmake_install_conf_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_configure(REQUIRES "")
+            conan_cmake_autodetect(settings)
+            conan_cmake_install(PATH_OR_REFERENCE .
+                                GENERATOR cmake
+                                REMOTE conancenter
+                                CONF user.configuration:myconfig=somevalue
+                                SETTINGS ${settings})
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "--conf user.configuration:myconfig=somevalue" in data
+            # check that the compiler version is set just with the major version
+            assert re.search(r"--settings compiler.version=[\d]*[\s]", data) 
+
 
     def test_conan_cmake_install_outputfolder(self):
         content = textwrap.dedent("""
@@ -831,6 +857,96 @@ class CMakeConanTest(unittest.TestCase):
             assert remote["url"] == remote_url, "Invalid remote url"
             assert remote["verify_ssl"] == verify_ssl, "Invalid verify_ssl"
 
+    def test_conan_config_install_args(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            message(STATUS "CMAKE VERSION: ${CMAKE_VERSION}")
+
+            set(CONAN_DISABLE_CHECK_COMPILER ON)
+            include(conan.cmake)
+            conan_config_install(ITEM https://github.com/conan-io/cmake-conan.git
+                                 TYPE git
+                                 ARGS -b v0.5)
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert "Repo cloned!" in data
+            assert "Copying file" in data
+
+    def test_conan_cmake_profile(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(FormatOutput CXX)
+            include(conan.cmake)
+            conan_cmake_profile(
+                FILEPATH      "${CMAKE_BINARY_DIR}/profile"
+                INCLUDE       default
+                SETTINGS      os=Windows
+                              arch=x86_64
+                              build_type=Debug
+                              compiler=msvc
+                              compiler.version=192
+                              compiler.runtime=dynamic
+                              compiler.runtime_type=Debug
+                              compiler.cppstd=14
+                OPTIONS       fmt:shared=True
+                              fmt:header_only=False
+                CONF          "tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019"
+                              "tools.cmake.cmaketoolchain:toolset_arch=x64"
+                              "tools.cmake.build:jobs=10"
+                ENV           "MyPath1=(path)/some/path11"
+                              "MyPath1=+(path)/other/path12"
+                BUILDENV      "MyPath2=(path)/some/path21"
+                              "MyPath2=+(path)/other/path22"
+                RUNENV        "MyPath3=(path)/some/path31"
+                              "MyPath3=+(path)/other/path32"
+                TOOL_REQUIRES cmake/3.16.3
+            )
+        """)
+        result_conanfile = textwrap.dedent("""
+            include(default)
+            [settings]
+            os=Windows
+            arch=x86_64
+            build_type=Debug
+            compiler=msvc
+            compiler.version=192
+            compiler.runtime=dynamic
+            compiler.runtime_type=Debug
+            compiler.cppstd=14
+            [options]
+            fmt:shared=True
+            fmt:header_only=False
+            [conf]
+            tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019
+            tools.cmake.cmaketoolchain:toolset_arch=x64
+            tools.cmake.build:jobs=10
+            [env]
+            MyPath1=(path)/some/path11
+            MyPath1=+(path)/other/path12
+            [buildenv]
+            MyPath2=(path)/some/path21
+            MyPath2=+(path)/other/path22
+            [runenv]
+            MyPath3=(path)/some/path31
+            MyPath3=+(path)/other/path32
+            [tool_requires]
+            cmake/3.16.3
+        """)
+        save("CMakeLists.txt", content)
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. {} -DCMAKE_BUILD_TYPE=Release".format(generator))
+        with open('profile', 'r') as file:
+            data = file.read()
+            assert data in result_conanfile
+
 class LocalTests(unittest.TestCase):
 
     @classmethod
@@ -988,6 +1104,23 @@ class LocalTests(unittest.TestCase):
         with open("conan.cmake", "r") as handle:
             if "# version: " not in handle.read():
                 raise Exception("Version missing in conan.cmake")
+
+    def test_conan_version(self):
+        content = textwrap.dedent("""
+            cmake_minimum_required(VERSION 3.9)
+            project(someproject CXX)
+            include(conan.cmake)
+            conan_version(CONAN_VERSION)
+            message(STATUS "Conan Version is: ${CONAN_VERSION}")
+            """)
+        save("CMakeLists.txt", content)
+
+        os.makedirs("build")
+        os.chdir("build")
+        run("cmake .. %s -DCMAKE_BUILD_TYPE=Release > output.txt" % self.generator)
+        with open('output.txt', 'r') as file:
+            data = file.read()
+            assert f"Conan Version is: {str(conan_version.major)}.{str(conan_version.minor)}.{str(conan_version.patch)}" in data
 
     @unittest.skipIf(platform.system() != "Windows", "toolsets only in Windows")
     def test_vs_toolset(self):

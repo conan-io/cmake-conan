@@ -1,8 +1,11 @@
 # cmake-conan
 
-![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg)
+![Build Status](https://github.com/conan-io/cmake-conan/actions/workflows/cmake_conan.yml/badge.svg?branch=develop)
 
 CMake wrapper for the Conan C and C++ package manager.
+
+> :warning: **Compatibility with Conan 2.0**: please check for experimental support in 
+the [develop2](https://github.com/conan-io/cmake-conan/tree/develop2) branch.
 
 
 This cmake module allows to launch ``conan install`` from cmake.
@@ -427,6 +430,18 @@ Example usage:
 conan_check(VERSION 1.0.0 REQUIRED)
 ```
 
+### conan_version()
+
+Returns the Conan client version.
+
+Example usage:
+```
+conan_version(CONAN_VERSION)
+if(${CONAN_VERSION} VERSION_LESS "2.0.0")
+  ...
+endif()
+```
+
 ### conan_add_remote()
 
 Adds a remote.
@@ -450,6 +465,26 @@ Example usage:
 conan_config_install(ITEM ./config.git TYPE git SOURCE src TARGET dst VERIFY_SSL False)
 ```
 
+### conan_cmake_profile()
+
+This function will create a profile with the same arguments as the section of the [profile](https://docs.conan.io/en/latest/reference/profiles.html).
+
+```cmake
+conan_cmake_profile(FILEPATH      "${CMAKE_BINARY_DIR}/profile"
+                    SETTINGS      os=Windows
+                                  arch=x86_64
+                                  build_type=Debug
+                                  compiler=msvc
+                                  compiler.version=192
+                                  compiler.runtime=dynamic
+                                  compiler.runtime_type=Debug
+                                  compiler.cppstd=14
+                    OPTIONS       fmt:shared=True
+                                  fmt:header_only=False
+                    CONF          "tools.cmake.cmaketoolchain:generator=Visual Studio 16 2019"
+                                  "tools.cmake.cmaketoolchain:toolset_arch=x64"
+                    TOOL_REQUIRES cmake/3.16.3)
+```
 
 ## Creating packages
 
