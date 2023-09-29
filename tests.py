@@ -86,7 +86,7 @@ class CMakeConanTest(unittest.TestCase):
         run("cmake .. {} -DCMAKE_BUILD_TYPE=Release > output.txt".format(generator))
         with open('output.txt', 'r') as file:
             data = file.read()
-            the_os = {'Darwin': 'Macos'}.get(platform.system())
+            the_os = {'Darwin': 'Macos'}.get(platform.system(), platform.system())
             assert f"os={the_os}" in data
 
     # https://github.com/conan-io/cmake-conan/issues/279
