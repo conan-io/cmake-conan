@@ -235,6 +235,20 @@ class TestBasic:
         expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
         assert all(expected in out for expected in expected_runtime_outputs)
 
+class TestPreserveModulePath:
+    @pytest.fixture(scope="class", autouse=True)
+    def preserve_module_path_setup(self):
+        src_dir = Path(__file__).parent.parent
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'preserve_module_path', ".", dirs_exist_ok=True)
+        yield
+
+    def test_preserve_module_path(self, capfd, chdir_build):
+        "Ensure that existing CMAKE_MODULE_PATH values remain in place after find_package(XXX) call"
+        run("cmake .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release Module -DCMAKE_C_COMPILER=/usr/bin/cc", check=False)
+        out, _ = capfd.readouterr()
+        assert "We should be seeing this warning, if we do the test works" in out
+        run("cmake --build .")
+
         
 class TestFindModules:
     def test_find_module(self, capfd, basic_cmake_project):
