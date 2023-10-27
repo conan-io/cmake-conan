@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -82,6 +83,10 @@ def basic_setup(tmpdirs):
         run("conan new cmake_lib -d name=boost -d version=1.77.0 -f -vquiet")
         shutil.copy2(src_dir / 'tests' / 'resources' / 'fake_boost_recipe' / 'conanfile.py', ".")
         run("conan export . -vquiet")
+
+        # Additional profiles for testing
+        config_dir = src_dir / 'tests' / 'resources' / 'custom_config'
+        run(f"conan config install {config_dir}")
     shutil.rmtree(workdir)
     shutil.copy2(src_dir / 'conan_provider.cmake', ".")
     shutil.copytree(src_dir / 'tests' / 'resources' / 'basic', ".", dirs_exist_ok=True)
@@ -260,6 +265,64 @@ class TestCMakeBuiltinModule:
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
 
+class TestGeneratedProfile:
+    @linux
+    def test_propagate_cxx_compiler(self, capfd, chdir_build):
+        """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is GNU" in out
+        assert "CMake-Conan: The C compiler is not defined." in err
+        assert 'tools.build:compiler_executables={"cpp":"/usr/bin/c++"}' in out
+
+    @linux
+    def test_propagate_c_compiler(self, capfd, chdir_build):
+        """Test that the C compiler is propagated when defined, even if the project only enables C++"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/cc", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is GNU" in out
+        assert "The C compiler is not defined." not in err
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/cc","cpp":"/usr/bin/c++"}' in out
+
+    @linux
+    def test_propagate_non_default_compiler(self, capfd, chdir_build):
+        """Test that the C++ compiler is propagated via tools.build:compiler_executables"""
+        run(f"cmake --fresh .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, err = capfd.readouterr()
+        assert "The CXX compiler identification is Clang" in out
+        assert "The C compiler is not defined." not in err
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
+
+class TestProfileCustomization:
+    def test_profile_defaults(self, capfd, chdir_build):
+        """Test the defaults passed for host and build profiles"""
+        run(f"cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, _ = capfd.readouterr()
+        assert "--profile:host=default" in out
+        assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
+        assert "--profile:build=default" in out
+
+    def test_profile_composed_list(self, capfd, chdir_build):
+        """Test passing a list of profiles to host and build profiles"""
+        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="default;auto-cmake;foo" -DCONAN_BUILD_PROFILE="default;bar"', check=True)
+        out, err = capfd.readouterr()
+        assert "--profile:host=default" in out
+        assert re.search("--profile:host=.*/build/conan_host_profile", out)  # buildir
+        assert "--profile:host=foo" in out
+        assert "user:custom_info=foo" in err
+        assert "--profile:build=default" in out
+        assert "--profile:build=bar" in out
+        assert "user:custom_info=bar" in err
+
+    def test_profile_pass_path(self, capfd, chdir_build):
+        """Test that we can both skip autodetected profile and override with a full profile from a path"""
+        custom_profile = Path(__file__).parent.parent / 'tests' / 'resources' / 'custom_profiles' / 'invalid_os'
+        custom_profile = custom_profile.as_posix()
+        run(f'cmake --fresh .. -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="{custom_profile}"', check=False)
+        out, err = capfd.readouterr()
+        assert f"--profile:host={custom_profile}" in out
+        assert "ERROR: Invalid setting 'JuliusOS' is not a valid 'settings.os' value." in err
+
 
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
@@ -285,6 +348,50 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
+class TestLibcxx:
+    @darwin
+    def test_libcxx_macos(self, capfd, chdir_build):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            "-DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "compiler.libcxx=libc++" in out
+
+    @linux
+    @pytest.mark.parametrize("compiler", ["g++", "clang++"])
+    def test_gnu_libstdcxx_linux(self, capfd, chdir_build, compiler):
+        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake "
+            f"-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER={compiler}")
+        out, _ = capfd.readouterr()
+        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
+        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Success" in out
+        assert "compiler.libcxx=libstdc++11" in out
+        if compiler == "clang++":
+            assert "The CXX compiler identification is Clang" in out
+            assert "compiler=clang" in out
+        elif compiler == "g++":
+            assert "The CXX compiler identification is GNU" in out
+            assert "compiler=gcc" in out
+
+    @linux
+    def test_gnu_libstdcxx_old_abi_linux(self, capfd, chdir_build):
+        """Ensure libstdc++ is set when the C++11 for libstdc++ is disabled"""
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake '
+            '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"')
+        out, _ = capfd.readouterr()
+        assert "Performing Test _CONAN_IS_GNU_LIBSTDCXX - Success" in out
+        assert "Performing Test _CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI - Failed" in out
+        assert "compiler.libcxx=libstdc++" in out
+
+    @linux
+    def test_clang_libcxx_linux(self, capfd, chdir_build):
+        """Ensure libc++ is set when using libc++ with Clang"""
+        run('cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake '
+            '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_COMPILER=clang++')
+        out, _ = capfd.readouterr()
+        assert "The CXX compiler identification is Clang" in out
+        assert "compiler=clang" in out
+        assert "Performing Test _CONAN_IS_LIBCXX - Success" in out
+        assert "compiler.libcxx=libc++" in out
 
 class TestOsVersion:
     @darwin
@@ -369,6 +476,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphoneos" in out
         assert "os.version=11.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_ios_simulator(self, capfd, chdir_build):
@@ -380,6 +488,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphonesimulator" in out
         assert "os.version=11.0" in out
+        assert "compiler.libcxx=libc++"
 
 
 class TestTvOS:
@@ -393,6 +502,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvos" in out
         assert "os.version=15.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_tvos_simulator(self, capfd, chdir_build):
@@ -404,6 +514,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvsimulator" in out
         assert "os.version=15.0" in out
+        assert "compiler.libcxx=libc++"
 
 
 class TestWatchOS:
@@ -417,6 +528,7 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchos" in out
         assert "os.version=7.0" in out
+        assert "compiler.libcxx=libc++"
 
     @darwin
     def test_watchos_simulator(self, capfd, chdir_build):
@@ -428,6 +540,7 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchsimulator" in out
         assert "os.version=7.0" in out
+        assert "compiler.libcxx=libc++"
 
 
 class TestMSVCArch:
