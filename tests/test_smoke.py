@@ -456,12 +456,12 @@ class TestAndroid:
         "Building for Android x86"
         run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "
             f"-DCMAKE_TOOLCHAIN_FILE={os.environ['ANDROID_NDK_ROOT']}/build/cmake/android.toolchain.cmake "
-            "-DANDROID_ABI=x86 -DANDROID_STL=c++_shared -DANDROID_PLATFORM=19")
+            "-DANDROID_ABI=x86 -DANDROID_STL=c++_shared -DANDROID_PLATFORM=22")
         out, _ = capfd.readouterr()
         assert "arch=x86" in out
         assert "compiler.libcxx=c++_shared" in out
         assert "os=Android" in out
-        assert "os.api_level=19" in out
+        assert "os.api_level=22" in out
         assert "tools.android:ndk_path=" in out
 
 
