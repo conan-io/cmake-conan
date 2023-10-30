@@ -200,7 +200,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             if(NOT CMAKE_MSVC_RUNTIME_LIBRARY IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
                 message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${CMAKE_MSVC_RUNTIME_LIBRARY} to Conan settings")
             endif()
-            
+
             # Runtime is "dynamic" in all cases if it ends in DLL
             if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES ".*DLL$")
                 set(_COMPILER_RUNTIME "dynamic")
