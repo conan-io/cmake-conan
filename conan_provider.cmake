@@ -96,6 +96,7 @@ function(detect_cxx_standard CXX_STANDARD)
     endif()
 endfunction()
 
+
 macro(detect_gnu_libstdcxx)
     # _CONAN_IS_GNU_LIBSTDCXX true if GNU libstdc++
     check_cxx_source_compiles("
@@ -117,6 +118,7 @@ macro(detect_gnu_libstdcxx)
     endif()
     unset (_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
 endmacro()
+
 
 macro(detect_libcxx)
     # _CONAN_IS_LIBCXX true if LLVM libc++
@@ -249,6 +251,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
     set(${COMPILER_RUNTIME_TYPE} ${_COMPILER_RUNTIME_TYPE} PARENT_SCOPE)
 endfunction()
 
+
 function(detect_build_type BUILD_TYPE)
     get_property(_MULTICONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if(NOT _MULTICONFIG_GENERATOR)
@@ -257,6 +260,7 @@ function(detect_build_type BUILD_TYPE)
         set(${BUILD_TYPE} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
     endif()
 endfunction()
+
 
 macro(append_compiler_executables_configuration)
     set(_conan_c_compiler "")
@@ -441,6 +445,7 @@ function(conan_version_check)
     endif()
 endfunction()
 
+
 macro(construct_profile_argument argument_variable profile_list)
     set(${argument_variable} "")
     if("${profile_list}" STREQUAL "CONAN_HOST_PROFILE")
@@ -527,6 +532,7 @@ cmake_language(
     SUPPORTED_METHODS FIND_PACKAGE
 )
 
+
 macro(conan_provide_dependency_check)
     set(_CONAN_PROVIDE_DEPENDENCY_INVOKED FALSE)
     get_property(_CONAN_PROVIDE_DEPENDENCY_INVOKED GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED)
@@ -542,6 +548,7 @@ macro(conan_provide_dependency_check)
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
 endmacro()
+
 
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.
