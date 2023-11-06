@@ -476,7 +476,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphoneos" in out
         assert "os.version=11.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
     @darwin
     def test_ios_simulator(self, capfd, chdir_build):
@@ -488,7 +488,7 @@ class TestiOS:
         assert "os=iOS" in out
         assert "os.sdk=iphonesimulator" in out
         assert "os.version=11.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
 
 class TestTvOS:
@@ -502,7 +502,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvos" in out
         assert "os.version=15.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
     @darwin
     def test_tvos_simulator(self, capfd, chdir_build):
@@ -514,7 +514,7 @@ class TestTvOS:
         assert "os=tvOS" in out
         assert "os.sdk=appletvsimulator" in out
         assert "os.version=15.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
 
 class TestWatchOS:
@@ -528,7 +528,7 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchos" in out
         assert "os.version=7.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
     @darwin
     def test_watchos_simulator(self, capfd, chdir_build):
@@ -540,7 +540,7 @@ class TestWatchOS:
         assert "os=watchOS" in out
         assert "os.sdk=watchsimulator" in out
         assert "os.version=7.0" in out
-        assert "compiler.libcxx=libc++"
+        assert "compiler.libcxx=libc++" in out
 
 
 class TestMSVCArch:
