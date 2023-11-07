@@ -368,8 +368,12 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         run("cmake --build .")
-        app_executable = "appSubdir.exe" if platform.system() == "Windows" else "appSubdir"
-        run(f"./subdir/{app_executable}")
+        if platform.system == "Windows":
+            app_executable = self.binary_dir / "subdir" / "Release" / "appSubdir.exe"
+        else:
+            app_executable = self.binary_dir / "subdir" / "appSubdir"
+        "appSubdir.exe" if platform.system() == "Windows" else "appSubdir"
+        run(app_executable.as_posix())
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
