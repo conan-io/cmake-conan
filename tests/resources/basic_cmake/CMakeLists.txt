@@ -11,3 +11,6 @@ find_package(hello REQUIRED)
 find_package(bye REQUIRED)
 add_executable(app main.cpp)
 target_link_libraries(app hello::hello bye::bye)
+
+option(BASIC_TEST_FIND_THREADS ... "OFF")
+
