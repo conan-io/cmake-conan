@@ -471,8 +471,8 @@ endmacro()
 
 macro(conan_provide_dependency method package_name)
     set_property(GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED TRUE)
-    get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
-    if(NOT CONAN_INSTALL_SUCCESS)
+    get_property(_conan_install_success GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
+    if(NOT _conan_install_success)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
         conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
@@ -485,8 +485,8 @@ macro(conan_provide_dependency method package_name)
         endif()
         construct_profile_argument(_host_profile_flags CONAN_HOST_PROFILE)
         construct_profile_argument(_build_profile_flags CONAN_BUILD_PROFILE)
-        get_property(_MULTICONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-        if(NOT _MULTICONFIG_GENERATOR)
+        get_property(_multiconfig_generator GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+        if(NOT _multiconfig_generator)
             message(STATUS "CMake-Conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
             conan_install(${_host_profile_flags} ${_build_profile_flags} --build=missing -g CMakeDeps)
         else()
@@ -494,12 +494,16 @@ macro(conan_provide_dependency method package_name)
             conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release --build=missing -g CMakeDeps)
             conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug --build=missing -g CMakeDeps)
         endif()
-        unset(_MULTICONFIG_GENERATOR)
+        unset(_host_profile_flags)
+        unset(_build_profile_flags)
+        unset(_multiconfig_generator)
+        unset(_conan_install_success)
     else()
         message(STATUS "CMake-Conan: find_package(${ARGV1}) found, 'conan install' already ran")
+        unset(_conan_install_success)
     endif()
 
-    get_property(CONAN_GENERATORS_FOLDER GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
+    get_property(_conan_generators_folder GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
 
     # Ensure that we consider Conan-provided packages ahead of any other,
     # irrespective of other settings that modify the search order or search paths
@@ -509,26 +513,24 @@ macro(conan_provide_dependency method package_name)
     #       find_package (<PackageName>)
 
     # Filter out `REQUIRED` from the argument list, as the first call may fail
-    set(_find_args "${ARGN}")
-    list(REMOVE_ITEM _find_args "REQUIRED")
-    if(NOT "MODULE" IN_LIST _find_args)
-        find_package(${package_name} ${_find_args} BYPASS_PROVIDER PATHS "${CONAN_GENERATORS_FOLDER}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    set(_find_args_${package_name} "${ARGN}")
+    list(REMOVE_ITEM _find_args_${package_name} "REQUIRED")
+    if(NOT "MODULE" IN_LIST _find_args_${package_name})
+        find_package(${package_name} ${_find_args_${package_name}} BYPASS_PROVIDER PATHS "${_conan_generators_folder}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        unset(_find_args_${package_name})
     endif()
 
     # Invoke find_package a second time - if the first call succeeded,
     # this will simply reuse the result. If not, fall back to CMake default search
     # behaviour, also allowing modules to be searched.
-    set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
-    list(PREPEND CMAKE_MODULE_PATH "${CONAN_GENERATORS_FOLDER}")
     if(NOT ${package_name}_FOUND)
+        #FIXME: https://github.com/conan-io/cmake-conan/issues/570
+        set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
+        list(PREPEND CMAKE_MODULE_PATH "${_conan_generators_folder}")
         find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
+        set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
+        unset(_cmake_module_path_orig)
     endif()
-
-    set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
-    unset(_find_args)
-    unset(_cmake_module_path_orig)
-    unset(_host_profile_flags)
-    unset(_build_profile_flags)
 endmacro()
 
 
