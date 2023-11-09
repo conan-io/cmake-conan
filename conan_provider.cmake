@@ -471,7 +471,7 @@ endmacro()
 
 macro(conan_provide_dependency method package_name)
     set_property(GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED TRUE)
-    get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY _conan_install_success)
+    get_property(_conan_install_success GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
     if(NOT _conan_install_success)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
