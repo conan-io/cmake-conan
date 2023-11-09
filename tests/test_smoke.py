@@ -37,17 +37,6 @@ def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
 
-@contextmanager
-def chdir(folder):
-    cwd = os.getcwd()
-    os.makedirs(folder, exist_ok=True)
-    os.chdir(folder)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
     """Set up the CONAN_HOME in a temporary directory,
