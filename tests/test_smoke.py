@@ -485,10 +485,11 @@ class TestAndroid:
         assert "os.api_level=22" in out
         assert "tools.android:ndk_path=" in out
 
-    def test_android_no_toolchain(self, capfd, chdir_build):
+    def test_android_no_toolchain(self, capfd, basic_cmake_project):
         "Building for Android without toolchain"
+        source_dir, binary_dir = basic_cmake_project
         android_ndk_root = os.environ['ANDROID_NDK_ROOT'].replace("\\", "/")
-        run("cmake .. --fresh -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G Ninja -DCMAKE_BUILD_TYPE=Release "
             f"-DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK={android_ndk_root} "
             "-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a -DCMAKE_SYSTEM_VERSION=28 -DCMAKE_ANDROID_STL_TYPE=c++_static")
         out, _ = capfd.readouterr()
