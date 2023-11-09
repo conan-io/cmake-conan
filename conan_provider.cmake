@@ -5,20 +5,20 @@ function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
     # it could be cross compilation
     message(STATUS "CMake-Conan: cmake_system_name=${CMAKE_SYSTEM_NAME}")
     if(CMAKE_SYSTEM_NAME AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             set(${OS} Macos PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "QNX")
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "QNX")
             set(${OS} Neutrino PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "CYGWIN")
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "CYGWIN")
             set(${OS} Windows PARENT_SCOPE)
             set(${OS_SUBSYSTEM} cygwin PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} MATCHES "^MSYS")
+        elseif(CMAKE_SYSTEM_NAME MATCHES "^MSYS")
             set(${OS} Windows PARENT_SCOPE)
             set(${OS_SUBSYSTEM} msys2 PARENT_SCOPE)
         else()
             set(${OS} ${CMAKE_SYSTEM_NAME} PARENT_SCOPE)
         endif()
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Android")
             if(DEFINED ANDROID_PLATFORM)
                 string(REGEX MATCH "[0-9]+" _OS_API_LEVEL ${ANDROID_PLATFORM})
             elseif(DEFINED CMAKE_SYSTEM_VERSION)
@@ -100,6 +100,7 @@ function(detect_cxx_standard CXX_STANDARD)
     endif()
 endfunction()
 
+
 macro(detect_gnu_libstdcxx)
     # _CONAN_IS_GNU_LIBSTDCXX true if GNU libstdc++
     check_cxx_source_compiles("
@@ -122,6 +123,7 @@ macro(detect_gnu_libstdcxx)
     unset (_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
 endmacro()
 
+
 macro(detect_libcxx)
     # _CONAN_IS_LIBCXX true if LLVM libc++
     check_cxx_source_compiles("
@@ -133,8 +135,8 @@ macro(detect_libcxx)
 endmacro()
 
 
-function(detect_lib_cxx OS LIB_CXX)
-    if(${OS} STREQUAL "Android")
+function(detect_lib_cxx LIB_CXX)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Android")
         message(STATUS "CMake-Conan: android_stl=${CMAKE_ANDROID_STL_TYPE}")
         set(${LIB_CXX} ${CMAKE_ANDROID_STL_TYPE} PARENT_SCOPE)
         return()
@@ -202,7 +204,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             if(NOT CMAKE_MSVC_RUNTIME_LIBRARY IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
                 message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${CMAKE_MSVC_RUNTIME_LIBRARY} to Conan settings")
             endif()
-            
+
             # Runtime is "dynamic" in all cases if it ends in DLL
             if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES ".*DLL$")
                 set(_COMPILER_RUNTIME "dynamic")
@@ -253,6 +255,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
     set(${COMPILER_RUNTIME_TYPE} ${_COMPILER_RUNTIME_TYPE} PARENT_SCOPE)
 endfunction()
 
+
 function(detect_build_type BUILD_TYPE)
     get_property(_MULTICONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if(NOT _MULTICONFIG_GENERATOR)
@@ -261,6 +264,7 @@ function(detect_build_type BUILD_TYPE)
         set(${BUILD_TYPE} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
     endif()
 endfunction()
+
 
 macro(append_compiler_executables_configuration)
     set(_conan_c_compiler "")
@@ -289,7 +293,7 @@ function(detect_host_profile output_file)
     detect_arch(MYARCH)
     detect_compiler(MYCOMPILER MYCOMPILER_VERSION MYCOMPILER_RUNTIME MYCOMPILER_RUNTIME_TYPE)
     detect_cxx_standard(MYCXX_STANDARD)
-    detect_lib_cxx(MYOS MYLIB_CXX)
+    detect_lib_cxx(MYLIB_CXX)
     detect_build_type(MYBUILD_TYPE)
 
     set(PROFILE "")
@@ -346,7 +350,7 @@ function(detect_host_profile output_file)
     # propagate compilers via profile
     append_compiler_executables_configuration()
 
-    if(${MYOS} STREQUAL "Android")
+    if(MYOS STREQUAL "Android")
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
     endif()
 
@@ -397,6 +401,7 @@ function(conan_install)
         # one is specified, but we don't know a priori where this is.
         # TODO: this can be made more robust if Conan can provide this in the json output
         string(JSON CONAN_GENERATORS_FOLDER GET ${conan_stdout} graph nodes 0 generators_folder)
+        cmake_path(CONVERT ${CONAN_GENERATORS_FOLDER} TO_CMAKE_PATH_LIST CONAN_GENERATORS_FOLDER)
         # message("conan stdout: ${conan_stdout}")
         message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
         set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
@@ -444,6 +449,7 @@ function(conan_version_check)
         message(FATAL_ERROR "CMake-Conan: Conan version must be ${CONAN_VERSION_CHECK_MINIMUM} or later")
     endif()
 endfunction()
+
 
 macro(construct_profile_argument argument_variable profile_list)
     set(${argument_variable} "")
@@ -527,9 +533,10 @@ endmacro()
 
 
 cmake_language(
-  SET_DEPENDENCY_PROVIDER conan_provide_dependency
-  SUPPORTED_METHODS FIND_PACKAGE
+    SET_DEPENDENCY_PROVIDER conan_provide_dependency
+    SUPPORTED_METHODS FIND_PACKAGE
 )
+
 
 macro(conan_provide_dependency_check)
     set(_CONAN_PROVIDE_DEPENDENCY_INVOKED FALSE)
@@ -546,6 +553,7 @@ macro(conan_provide_dependency_check)
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
 endmacro()
+
 
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.
