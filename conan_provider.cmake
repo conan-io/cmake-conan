@@ -289,7 +289,7 @@ function(detect_host_profile output_file)
     detect_arch(MYARCH)
     detect_compiler(MYCOMPILER MYCOMPILER_VERSION MYCOMPILER_RUNTIME MYCOMPILER_RUNTIME_TYPE)
     detect_cxx_standard(MYCXX_STANDARD)
-    detect_lib_cxx(MYOS MYLIB_CXX)
+    detect_lib_cxx(${MYOS} MYLIB_CXX)
     detect_build_type(MYBUILD_TYPE)
 
     set(PROFILE "")
