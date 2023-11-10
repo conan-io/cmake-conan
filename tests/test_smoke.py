@@ -614,16 +614,23 @@ class TestMSVCArch:
 
 
 class TestCMakeDepsGenerators:
+    @staticmethod
+    def change_conanfile(gen_resource, source_dir):
+        os.remove(source_dir / "conanfile.txt")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'change_generators' / gen_resource / 'conanfile.py', source_dir)
+
     # CMakeDeps generator is declared in the generate() function in conanfile.py
-    def test_one_generator(self, capfd, basic_cmake_project):
-        source_dir, binary_dir = change_conanfile(basic_cmake_project, 'single_generator')
+    def test_single_generator(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        self.change_conanfile('single_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release')
         out, _ = capfd.readouterr()
         assert 'Generating done' in out
 
     # CMakeDeps generator is declared both in generators attribute and generate() function in conanfile.py
     def test_duplicate_generator(self, capfd, basic_cmake_project):
-        source_dir, binary_dir = change_conanfile(basic_cmake_project, 'duplicate_generator')
+        source_dir, binary_dir = basic_cmake_project
+        self.change_conanfile('duplicate_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
         assert ('ConanException: CMakeDeps is declared in the generators attribute, but was instantiated in the '
@@ -631,14 +638,9 @@ class TestCMakeDepsGenerators:
 
     # CMakeDeps generator is not declared in either place
     def test_no_generator(self, capfd, basic_cmake_project):
-        source_dir, binary_dir = change_conanfile(basic_cmake_project, 'no_generator')
+        source_dir, binary_dir = basic_cmake_project
+        self.change_conanfile('no_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         out, _ = capfd.readouterr()
         assert 'Could NOT find hello (missing: hello_DIR)' in out
 
-def change_conanfile(basic_cmake_project, gen_resource):
-    source_dir, binary_dir = basic_cmake_project
-    os.chdir(source_dir.as_posix())
-    os.remove("conanfile.txt")
-    shutil.copy2(src_dir / 'tests' / 'resources' / 'change_generators' / gen_resource / 'conanfile.py', source_dir)
-    return source_dir, binary_dir
