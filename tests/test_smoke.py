@@ -36,7 +36,6 @@ windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows onl
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
-    
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
     """Set up the CONAN_HOME in a temporary directory,
