@@ -5,22 +5,26 @@ function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
     # it could be cross compilation
     message(STATUS "CMake-Conan: cmake_system_name=${CMAKE_SYSTEM_NAME}")
     if(CMAKE_SYSTEM_NAME AND NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             set(${OS} Macos PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "QNX")
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "QNX")
             set(${OS} Neutrino PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "CYGWIN")
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "CYGWIN")
             set(${OS} Windows PARENT_SCOPE)
             set(${OS_SUBSYSTEM} cygwin PARENT_SCOPE)
-        elseif(${CMAKE_SYSTEM_NAME} MATCHES "^MSYS")
+        elseif(CMAKE_SYSTEM_NAME MATCHES "^MSYS")
             set(${OS} Windows PARENT_SCOPE)
             set(${OS_SUBSYSTEM} msys2 PARENT_SCOPE)
         else()
             set(${OS} ${CMAKE_SYSTEM_NAME} PARENT_SCOPE)
         endif()
-        if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
-            string(REGEX MATCH "[0-9]+" _OS_API_LEVEL ${ANDROID_PLATFORM})
-            message(STATUS "CMake-Conan: android_platform=${ANDROID_PLATFORM}")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+            if(DEFINED ANDROID_PLATFORM)
+                string(REGEX MATCH "[0-9]+" _OS_API_LEVEL ${ANDROID_PLATFORM})
+            elseif(DEFINED CMAKE_SYSTEM_VERSION)
+                set(_OS_API_LEVEL ${CMAKE_SYSTEM_VERSION})
+            endif()
+            message(STATUS "CMake-Conan: android api level=${_OS_API_LEVEL}")
             set(${OS_API_LEVEL} ${_OS_API_LEVEL} PARENT_SCOPE)
         endif()
         if(CMAKE_SYSTEM_NAME MATCHES "Darwin|iOS|tvOS|watchOS")
@@ -96,6 +100,7 @@ function(detect_cxx_standard CXX_STANDARD)
     endif()
 endfunction()
 
+
 macro(detect_gnu_libstdcxx)
     # _CONAN_IS_GNU_LIBSTDCXX true if GNU libstdc++
     check_cxx_source_compiles("
@@ -118,6 +123,7 @@ macro(detect_gnu_libstdcxx)
     unset (_CONAN_GNU_LIBSTDCXX_IS_CXX11_ABI)
 endmacro()
 
+
 macro(detect_libcxx)
     # _CONAN_IS_LIBCXX true if LLVM libc++
     check_cxx_source_compiles("
@@ -129,10 +135,10 @@ macro(detect_libcxx)
 endmacro()
 
 
-function(detect_lib_cxx OS LIB_CXX)
-    if(${OS} STREQUAL "Android")
-        message(STATUS "CMake-Conan: android_stl=${ANDROID_STL}")
-        set(${LIB_CXX} ${ANDROID_STL} PARENT_SCOPE)
+function(detect_lib_cxx LIB_CXX)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+        message(STATUS "CMake-Conan: android_stl=${CMAKE_ANDROID_STL_TYPE}")
+        set(${LIB_CXX} ${CMAKE_ANDROID_STL_TYPE} PARENT_SCOPE)
         return()
     endif()
 
@@ -198,7 +204,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             if(NOT CMAKE_MSVC_RUNTIME_LIBRARY IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
                 message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${CMAKE_MSVC_RUNTIME_LIBRARY} to Conan settings")
             endif()
-            
+
             # Runtime is "dynamic" in all cases if it ends in DLL
             if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES ".*DLL$")
                 set(_COMPILER_RUNTIME "dynamic")
@@ -249,6 +255,7 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
     set(${COMPILER_RUNTIME_TYPE} ${_COMPILER_RUNTIME_TYPE} PARENT_SCOPE)
 endfunction()
 
+
 function(detect_build_type BUILD_TYPE)
     get_property(_MULTICONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if(NOT _MULTICONFIG_GENERATOR)
@@ -257,6 +264,7 @@ function(detect_build_type BUILD_TYPE)
         set(${BUILD_TYPE} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
     endif()
 endfunction()
+
 
 macro(append_compiler_executables_configuration)
     set(_conan_c_compiler "")
@@ -285,7 +293,7 @@ function(detect_host_profile output_file)
     detect_arch(MYARCH)
     detect_compiler(MYCOMPILER MYCOMPILER_VERSION MYCOMPILER_RUNTIME MYCOMPILER_RUNTIME_TYPE)
     detect_cxx_standard(MYCXX_STANDARD)
-    detect_lib_cxx(MYOS MYLIB_CXX)
+    detect_lib_cxx(MYLIB_CXX)
     detect_build_type(MYBUILD_TYPE)
 
     set(PROFILE "")
@@ -342,7 +350,7 @@ function(detect_host_profile output_file)
     # propagate compilers via profile
     append_compiler_executables_configuration()
 
-    if(${MYOS} STREQUAL "Android")
+    if(MYOS STREQUAL "Android")
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
     endif()
 
@@ -442,6 +450,7 @@ function(conan_version_check)
     endif()
 endfunction()
 
+
 macro(construct_profile_argument argument_variable profile_list)
     set(${argument_variable} "")
     if("${profile_list}" STREQUAL "CONAN_HOST_PROFILE")
@@ -462,8 +471,8 @@ endmacro()
 
 macro(conan_provide_dependency method package_name)
     set_property(GLOBAL PROPERTY CONAN_PROVIDE_DEPENDENCY_INVOKED TRUE)
-    get_property(CONAN_INSTALL_SUCCESS GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
-    if(NOT CONAN_INSTALL_SUCCESS)
+    get_property(_conan_install_success GLOBAL PROPERTY CONAN_INSTALL_SUCCESS)
+    if(NOT _conan_install_success)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
         conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
@@ -476,7 +485,6 @@ macro(conan_provide_dependency method package_name)
         endif()
         construct_profile_argument(_host_profile_flags CONAN_HOST_PROFILE)
         construct_profile_argument(_build_profile_flags CONAN_BUILD_PROFILE)
-        get_property(_MULTICONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
         if(EXISTS "${CMAKE_SOURCE_DIR}/conanfile.py")
             file(READ "${CMAKE_SOURCE_DIR}/conanfile.py" outfile)
             if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
@@ -491,7 +499,8 @@ macro(conan_provide_dependency method package_name)
             endif()
             set(generator "-g;CMakeDeps")
         endif()
-        if(NOT _MULTICONFIG_GENERATOR)
+        get_property(_multiconfig_generator GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+        if(NOT _multiconfig_generator)
             message(STATUS "CMake-Conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
             conan_install(${_host_profile_flags} ${_build_profile_flags} --build=missing ${generator})
         else()
@@ -499,12 +508,16 @@ macro(conan_provide_dependency method package_name)
             conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release --build=missing ${generator})
             conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug --build=missing ${generator})
         endif()
-        unset(_MULTICONFIG_GENERATOR)
+        unset(_host_profile_flags)
+        unset(_build_profile_flags)
+        unset(_multiconfig_generator)
+        unset(_conan_install_success)
     else()
         message(STATUS "CMake-Conan: find_package(${ARGV1}) found, 'conan install' already ran")
+        unset(_conan_install_success)
     endif()
 
-    get_property(CONAN_GENERATORS_FOLDER GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
+    get_property(_conan_generators_folder GLOBAL PROPERTY CONAN_GENERATORS_FOLDER)
 
     # Ensure that we consider Conan-provided packages ahead of any other,
     # irrespective of other settings that modify the search order or search paths
@@ -514,33 +527,32 @@ macro(conan_provide_dependency method package_name)
     #       find_package (<PackageName>)
 
     # Filter out `REQUIRED` from the argument list, as the first call may fail
-    set(_find_args "${ARGN}")
-    list(REMOVE_ITEM _find_args "REQUIRED")
-    if(NOT "MODULE" IN_LIST _find_args)
-        find_package(${package_name} ${_find_args} BYPASS_PROVIDER PATHS "${CONAN_GENERATORS_FOLDER}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    set(_find_args_${package_name} "${ARGN}")
+    list(REMOVE_ITEM _find_args_${package_name} "REQUIRED")
+    if(NOT "MODULE" IN_LIST _find_args_${package_name})
+        find_package(${package_name} ${_find_args_${package_name}} BYPASS_PROVIDER PATHS "${_conan_generators_folder}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        unset(_find_args_${package_name})
     endif()
 
     # Invoke find_package a second time - if the first call succeeded,
     # this will simply reuse the result. If not, fall back to CMake default search
     # behaviour, also allowing modules to be searched.
-    set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
-    list(PREPEND CMAKE_MODULE_PATH "${CONAN_GENERATORS_FOLDER}")
     if(NOT ${package_name}_FOUND)
+        #FIXME: https://github.com/conan-io/cmake-conan/issues/570
+        set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
+        list(PREPEND CMAKE_MODULE_PATH "${_conan_generators_folder}")
         find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
+        set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
+        unset(_cmake_module_path_orig)
     endif()
-
-    set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
-    unset(_find_args)
-    unset(_cmake_module_path_orig)
-    unset(_host_profile_flags)
-    unset(_build_profile_flags)
 endmacro()
 
 
 cmake_language(
-  SET_DEPENDENCY_PROVIDER conan_provide_dependency
-  SUPPORTED_METHODS FIND_PACKAGE
+    SET_DEPENDENCY_PROVIDER conan_provide_dependency
+    SUPPORTED_METHODS FIND_PACKAGE
 )
+
 
 macro(conan_provide_dependency_check)
     set(_CONAN_PROVIDE_DEPENDENCY_INVOKED FALSE)
@@ -557,6 +569,7 @@ macro(conan_provide_dependency_check)
     endif()
     unset(_CONAN_PROVIDE_DEPENDENCY_INVOKED)
 endmacro()
+
 
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.

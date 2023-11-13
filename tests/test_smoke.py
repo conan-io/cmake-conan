@@ -36,20 +36,7 @@ windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows onl
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
-
-@contextmanager
-def chdir(folder):
-    cwd = os.getcwd()
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
-    os.makedirs(folder, exist_ok=True)
-    os.chdir(folder)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-
-
+    
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
     """Set up the CONAN_HOME in a temporary directory,
@@ -496,6 +483,20 @@ class TestAndroid:
         assert "compiler.libcxx=c++_shared" in out
         assert "os=Android" in out
         assert "os.api_level=22" in out
+        assert "tools.android:ndk_path=" in out
+
+    def test_android_no_toolchain(self, capfd, basic_cmake_project):
+        "Building for Android without toolchain"
+        source_dir, binary_dir = basic_cmake_project
+        android_ndk_root = os.environ['ANDROID_NDK_ROOT'].replace("\\", "/")
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G Ninja -DCMAKE_BUILD_TYPE=Release "
+            f"-DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK={android_ndk_root} "
+            "-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a -DCMAKE_SYSTEM_VERSION=28 -DCMAKE_ANDROID_STL_TYPE=c++_static")
+        out, _ = capfd.readouterr()
+        assert "arch=armv8" in out
+        assert "compiler.libcxx=c++_static" in out
+        assert "os=Android" in out
+        assert "os.api_level=28" in out
         assert "tools.android:ndk_path=" in out
 
 
