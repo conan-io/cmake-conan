@@ -283,6 +283,15 @@ class TestCMakeModulePath:
         assert "CMAKE_MODULE_PATH has expected value" in out
         assert "CMAKE_MODULE_PATH DOES NOT have expected value" not in out
 
+    def test_module_path_from_dependency(self, capfd, basic_cmake_project):
+        "Ensure that CMAKE_MODULE_PATH is prepended with value from dependency (builddir in recipe)"
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_module_path' / 'library_with_cmake_module_dir', source_dir, dirs_exist_ok=True)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, err = capfd.readouterr()
+        assert "CMAKE_MODULE_PATH has expected value" in out
+        assert "CMAKE_MODULE_PATH DOES NOT have expected value" not in out
+
 
 class TestGeneratedProfile:
     @linux

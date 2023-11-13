@@ -16,8 +16,8 @@ class cmake_module_onlyRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    options = {"shared": [True, False], "fPIC": [True, False], "with_builddir": [True, False]}
+    default_options = {"shared": False, "fPIC": True, "with_builddir": False}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*"
@@ -50,6 +50,9 @@ class cmake_module_onlyRecipe(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = []
+        
+        if self.options.with_builddir:
+            self.cpp_info.builddirs.append("orion-module-subfolder")
 
         # Set this to be MODULE only, to force the case in a test where this is detected by module name
         self.cpp_info.set_property("cmake_file_name", "Orion")
