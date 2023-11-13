@@ -615,14 +615,14 @@ class TestMSVCArch:
 
 class TestCMakeDepsGenerators:
     @staticmethod
-    def change_conanfile(gen_resource, source_dir):
+    def copy_resource(gen_resource, source_dir):
         os.remove(source_dir / "conanfile.txt")
         shutil.copy2(src_dir / 'tests' / 'resources' / 'change_generators' / gen_resource / 'conanfile.py', source_dir)
 
     # CMakeDeps generator is declared in the generate() function in conanfile.py
     def test_single_generator(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        self.change_conanfile('single_generator', source_dir)
+        self.copy_resource('single_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release')
         out, _ = capfd.readouterr()
         assert 'Generating done' in out
@@ -630,7 +630,7 @@ class TestCMakeDepsGenerators:
     # CMakeDeps generator is declared both in generators attribute and generate() function in conanfile.py
     def test_duplicate_generator(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        self.change_conanfile('duplicate_generator', source_dir)
+        self.copy_resource('duplicate_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
         assert ('ConanException: CMakeDeps is declared in the generators attribute, but was instantiated in the '
@@ -639,7 +639,7 @@ class TestCMakeDepsGenerators:
     # CMakeDeps generator is not declared in either place
     def test_no_generator(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        self.change_conanfile('no_generator', source_dir)
+        self.copy_resource('no_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         out, _ = capfd.readouterr()
         assert 'Could NOT find hello (missing: hello_DIR)' in out
