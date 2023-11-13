@@ -636,11 +636,27 @@ class TestCMakeDepsGenerators:
         assert ('ConanException: CMakeDeps is declared in the generators attribute, but was instantiated in the '
                 'generate() method too') in err
 
-    # CMakeDeps generator is not declared in either place
-    def test_no_generator(self, capfd, basic_cmake_project):
+    # CMakeDeps generator is not declared in either place in teh conanfile.py
+    def test_no_generator_py(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        self.copy_resource('no_generator', source_dir)
+        self.copy_resource('no_generator_py', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
-        out, _ = capfd.readouterr()
-        assert 'Could NOT find hello (missing: hello_DIR)' in out
+        out, err = capfd.readouterr()
+        assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
 
+    #CMakeDeps generator is not declared in the conanfile.txt
+    def test_no_generator_txt(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        os.remove(source_dir / "conanfile.txt")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'change_generators' / 'no_generator_txt' / 'conanfile.txt', source_dir)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
+        out, err = capfd.readouterr()
+        assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
+
+#Conanfile is not found
+def test_no_conanfile(self, capfd, basic_cmake_project):
+    source_dir, binary_dir = basic_cmake_project
+    os.remove(source_dir / "conanfile.txt")
+    run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
+    out, err = capfd.readouterr()
+    assert 'Conanfile not found in' in err
