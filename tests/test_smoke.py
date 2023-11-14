@@ -58,21 +58,24 @@ def setup_conan_home(conan_home_dir, tmp_path_factory):
     workdir = tmp_path_factory.mktemp("temp_recipes")
     logging.info(f"Conan home setup, temporary folder: {workdir}")
     cwd = os.getcwd()
-    os.chdir(workdir.as_posix())
+    
+    # Detect default profile
     run("conan profile detect -vquiet")
-    # libhello
+    
+    # Create hello lib from built-in template
+    os.chdir(workdir.as_posix())
     run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
     run("conan export . -vquiet")
 
-    # libbye with modified conanfile.py (custom package_info properties)
-    run("conan new cmake_lib -d name=bye -d version=0.1 -f -vquiet")
-    shutil.copy2(resources_dir / 'libbye' / 'conanfile.py', ".")
-    run("conan export . -vquiet")
+    # additional recipes to export from resources, overlay on top of `hello` and export
+    additional_recipes = ['boost', 'bye', 'cmake-module-only', 'cmake-module-with-dependency']
 
-    # libboost with modified conanfile.py (ensure upper case B cmake package name)
-    run("conan new cmake_lib -d name=boost -d version=1.77.0 -f -vquiet")
-    shutil.copy2(resources_dir / 'fake_boost_recipe' / 'conanfile.py', ".")
-    run("conan export . -vquiet")
+    for recipe in additional_recipes:
+        recipe_dir = tmp_path_factory.mktemp(f"temp_{recipe}")
+        os.chdir(recipe_dir.as_posix())
+        run(f"conan new cmake_lib -d name={recipe} -d version=0.1 -f -vquiet")
+        shutil.copy2(src_dir / 'tests' / 'resources' / 'recipes' / recipe / 'conanfile.py', ".")
+        run("conan export . -vquiet")
 
     # Additional profiles for testing
     config_dir = resources_dir / 'custom_config'
@@ -234,7 +237,6 @@ class TestBasic:
         runtime = msvc_runtime.replace("$<$<CONFIG:Debug>:Debug>", debug_tag)
         expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
         assert all(expected in out for expected in expected_runtime_outputs)
-
         
 class TestFindModules:
     def test_find_module(self, capfd, basic_cmake_project):
@@ -268,6 +270,28 @@ class TestFindModules:
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
+
+
+class TestCMakeModulePath:
+
+    def test_preserve_module_path(self, capfd, basic_cmake_project):
+        "Ensure that existing CMAKE_MODULE_PATH values remain in place after find_package(XXX) call"
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_module_path' / 'module_only', source_dir, dirs_exist_ok=True)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, err = capfd.readouterr()
+        assert "CMAKE_MODULE_PATH has expected value" in out
+        assert "CMAKE_MODULE_PATH DOES NOT have expected value" not in out
+
+    def test_module_path_from_dependency(self, capfd, basic_cmake_project):
+        "Ensure that CMAKE_MODULE_PATH is prepended with value from dependency (builddir in recipe)"
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_module_path' / 'library_with_cmake_module_dir', source_dir, dirs_exist_ok=True)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, err = capfd.readouterr()
+        assert "CMAKE_MODULE_PATH has expected value" in out
+        assert "CMAKE_MODULE_PATH DOES NOT have expected value" not in out
+
 
 class TestGeneratedProfile:
     @linux

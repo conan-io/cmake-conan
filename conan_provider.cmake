@@ -524,12 +524,13 @@ macro(conan_provide_dependency method package_name)
     # this will simply reuse the result. If not, fall back to CMake default search
     # behaviour, also allowing modules to be searched.
     if(NOT ${package_name}_FOUND)
-        #FIXME: https://github.com/conan-io/cmake-conan/issues/570
-        set(_cmake_module_path_orig "${CMAKE_MODULE_PATH}")
-        list(PREPEND CMAKE_MODULE_PATH "${_conan_generators_folder}")
+        list(FIND CMAKE_MODULE_PATH "${_conan_generators_folder}" _index)
+        if(_index EQUAL -1)
+            list(PREPEND CMAKE_MODULE_PATH "${_conan_generators_folder}")
+        endif()
+        unset(_index)
         find_package(${package_name} ${ARGN} BYPASS_PROVIDER)
-        set(CMAKE_MODULE_PATH "${_cmake_module_path_orig}")
-        unset(_cmake_module_path_orig)
+        list(REMOVE_ITEM CMAKE_MODULE_PATH "${_conan_generators_folder}")
     endif()
 endmacro()
 
