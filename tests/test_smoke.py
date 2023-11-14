@@ -636,3 +636,36 @@ class TestMSVCArch:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 16 2019" -A Win32')
         out, _ = capfd.readouterr()
         assert "arch=x86" in out
+
+
+class TestCMakeDepsGenerators:
+    @staticmethod
+    def copy_resource(gen_resource, source_dir):
+        os.remove(source_dir / "conanfile.txt")
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'change_generators' / gen_resource, source_dir, dirs_exist_ok=True)
+
+    # CMakeDeps generator is declared in the generate() function in conanfile.py
+    def test_single_generator(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        self.copy_resource('single_generator', source_dir)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release')
+        out, _ = capfd.readouterr()
+        assert 'Generating done' in out
+
+    # CMakeDeps generator is declared both in generators attribute and generate() function in conanfile.py
+    def test_duplicate_generator(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        self.copy_resource('duplicate_generator', source_dir)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
+        _, err = capfd.readouterr()
+        assert ('ConanException: CMakeDeps is declared in the generators attribute, but was instantiated in the '
+                'generate() method too') in err
+
+    # CMakeDeps generator is not declared in the conanfile
+    @pytest.mark.parametrize("resource_path", ["no_generator_py", "no_generator_txt"])
+    def test_no_generator_py(self, capfd, basic_cmake_project, resource_path):
+        source_dir, binary_dir = basic_cmake_project
+        self.copy_resource(resource_path, source_dir)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
+        _, err = capfd.readouterr()
+        assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
