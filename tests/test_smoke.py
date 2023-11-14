@@ -645,8 +645,7 @@ class TestCMakeDepsGenerators:
         _, err = capfd.readouterr()
         assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
 
-#Conanfile is not found
-def test_no_conanfile(self, capfd, basic_cmake_project):
+def test_no_conanfile(capfd, basic_cmake_project):
     source_dir, binary_dir = basic_cmake_project
     os.remove(source_dir / "conanfile.txt")
     run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
