@@ -1,0 +1,8 @@
+[requires]
+cmake-module-with-dependency/0.1
+
+[options]
+cmake-module-only/*:with_builddir=True
+
+[generators]
+CMakeDeps
