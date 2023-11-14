@@ -4,7 +4,6 @@ import platform
 import re
 import shutil
 import subprocess
-from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -26,6 +25,7 @@ expected_app_msvc_runtime = [
 
 src_dir = Path(__file__).parent.parent
 conan_provider = src_dir / "conan_provider.cmake"
+resources_dir= src_dir / 'tests' / 'resources'
 
 unix = pytest.mark.skipif(platform.system() != "Linux" and platform.system() != "Darwin", reason="Linux or Darwin only")
 linux = pytest.mark.skipif(platform.system() != "Linux", reason="Linux only")
@@ -78,7 +78,7 @@ def setup_conan_home(conan_home_dir, tmp_path_factory):
         run("conan export . -vquiet")
 
     # Additional profiles for testing
-    config_dir = src_dir / 'tests' / 'resources' / 'custom_config'
+    config_dir = resources_dir / 'custom_config'
     run(f"conan config install {config_dir}")
     os.chdir(cwd)
 
@@ -89,7 +89,7 @@ def setup_cmake_workdir(base_tmp_dir, resource_dirs=['basic_cmake']):
     source_dir.mkdir()
     binary_dir.mkdir()
     for item in resource_dirs:
-        shutil.copytree(src_dir / 'tests' / 'resources' / item, source_dir.as_posix(), dirs_exist_ok=True)
+        shutil.copytree(resources_dir / item, source_dir.as_posix(), dirs_exist_ok=True)
     return (source_dir, binary_dir)
 
 @pytest.fixture
@@ -242,7 +242,7 @@ class TestFindModules:
     def test_find_module(self, capfd, basic_cmake_project):
         "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
         source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module', source_dir, dirs_exist_ok=True)
+        shutil.copytree(resources_dir / 'find_module' / 'basic_module', source_dir, dirs_exist_ok=True)
 
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
         out, err = capfd.readouterr()
@@ -255,7 +255,7 @@ class TestFindModules:
         "Ensure that a Conan-provided -config.cmake file satisfies dependency, even when a CMake builtin "
         "exists for the same dependency"
         source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(src_dir / 'tests' / 'resources' / 'find_module_builtin', source_dir, dirs_exist_ok=True)
+        shutil.copytree(resources_dir / 'find_module' / 'builtin_module', source_dir, dirs_exist_ok=True)
         boost_find_components = "ON" if use_find_components else "OFF"
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -D_TEST_BOOST_FIND_COMPONENTS={boost_find_components}", check=False)
         out, err = capfd.readouterr()
@@ -265,7 +265,7 @@ class TestFindModules:
     def test_cmake_builtin_module(self, capfd, basic_cmake_project):
         "Ensure that the Find<PackageName>.cmake modules from the CMake install work"
         source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(src_dir / 'tests' / 'resources' / 'cmake_builtin_module', source_dir, dirs_exist_ok=True)
+        shutil.copytree(resources_dir / 'find_module' / 'cmake_builtin_module', source_dir, dirs_exist_ok=True)
 
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
@@ -350,7 +350,7 @@ class TestProfileCustomization:
     def test_profile_pass_path(self, capfd, basic_cmake_project):
         """Test that we can both skip autodetected profile and override with a full profile from a path"""
         source_dir, binary_dir = basic_cmake_project
-        custom_profile = Path(__file__).parent.parent / 'tests' / 'resources' / 'custom_profiles' / 'invalid_os'
+        custom_profile = resources_dir / 'custom_profiles' / 'invalid_os'
         custom_profile = custom_profile.as_posix()
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -DCONAN_HOST_PROFILE="{custom_profile}"', check=False)
         out, err = capfd.readouterr()
