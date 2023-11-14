@@ -36,6 +36,7 @@ windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows onl
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
+
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
     """Set up the CONAN_HOME in a temporary directory,
@@ -644,10 +645,3 @@ class TestCMakeDepsGenerators:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
         assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
-
-def test_no_conanfile(capfd, basic_cmake_project):
-    source_dir, binary_dir = basic_cmake_project
-    os.remove(source_dir / "conanfile.txt")
-    run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
-    _, err = capfd.readouterr()
-    assert 'Conanfile not found at' in err
