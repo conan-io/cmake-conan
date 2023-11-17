@@ -295,7 +295,7 @@ macro(append_compiler_executables_configuration)
                         "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
     endif()
 
-    if(NOT "${_conan_c_compiler}${_conan_cpp_compiler}" STREQUAL "")
+    if(NOT "x${_conan_c_compiler}${_conan_cpp_compiler}" STREQUAL "x")
         string(APPEND PROFILE "tools.build:compiler_executables={${_conan_c_compiler}${_conan_cpp_compiler}}\n")
     endif()
     unset(_conan_c_compiler)
