@@ -389,9 +389,9 @@ function(conan_install)
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
     message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
 
-    set(_OLD_PATH $ENV{PATH})
 
     if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
+        set(_OLD_PATH $ENV{PATH})
         set(ENV{PATH} "${CONAN_CMAKE_EXE_PATH}:$ENV{PATH}")
         message(STATUS "Modified PATH to include ${CONAN_CMAKE_EXE_PATH}.")
     endif()
@@ -403,8 +403,10 @@ function(conan_install)
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-    set(ENV{PATH} "${_OLD_PATH}")
-    message(STATUS "Restored original PATH.")
+    if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
+        set(ENV{PATH} "${_OLD_PATH}")
+        message(STATUS "Restored original PATH.")
+    endif()
 
     if(NOT "${return_code}" STREQUAL "0")
         message(FATAL_ERROR "Conan install failed='${return_code}'")
