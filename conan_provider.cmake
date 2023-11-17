@@ -388,12 +388,24 @@ function(conan_install)
     # Invoke "conan install" with the provided arguments
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
     message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
+
+    set(_OLD_PATH $ENV{PATH})
+
+    if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
+        set(ENV{PATH} "${CONAN_CMAKE_EXE_PATH}:$ENV{PATH}")
+        message(STATUS "Modified PATH to include ${CONAN_CMAKE_EXE_PATH}.")
+    endif()
+
     execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    set(ENV{PATH} "${_OLD_PATH}")
+    message(STATUS "Restored original PATH.")
+
     if(NOT "${return_code}" STREQUAL "0")
         message(FATAL_ERROR "Conan install failed='${return_code}'")
     else()
@@ -583,8 +595,3 @@ set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
 # Append a Conan CMake executable to the PATH. This will override the system-wide installed CMake binary,
 # but it will not be selected over the CMake that may be added via tool_requires.
 set(CONAN_CMAKE_EXE_PATH "" CACHE STRING "Path to the Conan CMake executable")
-
-if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
-    set(ENV{PATH} "${CONAN_CMAKE_EXE_PATH}:$ENV{PATH}")
-    message(STATUS "Added ${CONAN_CMAKE_EXE_PATH} to PATH.")
-endif()

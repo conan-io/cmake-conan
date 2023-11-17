@@ -704,3 +704,6 @@ class TestCustomCMakeExe:
         _, err = capfd.readouterr()
 
         assert "Mock CMake" in err
+
+        path_env = os.environ.get('PATH', '')
+        assert str(tmp_path) not in path_env
