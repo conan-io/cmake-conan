@@ -33,8 +33,15 @@ darwin = pytest.mark.skipif(platform.system() != "Darwin", reason="Darwin only")
 windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows only")
 
 
-def run(cmd, check=True):
-    subprocess.run(cmd, shell=True, check=check)
+def run(cmd, check=True, fails=False):
+    try:
+        subprocess.run(cmd, shell=True, check=check)
+        if fails:
+            raise Exception(f"Command did not fail as expected: {cmd}")
+    except subprocess.CalledProcessError:
+        if not fails:
+            raise
+
 
 
 @pytest.fixture(scope="session")
@@ -669,3 +676,31 @@ class TestCMakeDepsGenerators:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
         assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
+
+
+class TestCustomCMakeExe:
+    def test_custom_cmake_path(self, capfd, basic_cmake_project):
+        """
+        Test that custom CMake path is correctly used.
+        """
+        source_dir, binary_dir = basic_cmake_project
+        tmp_path = source_dir.parent
+
+        mock_cmake_script = tmp_path / "cmake"
+
+        if platform.system() == "Windows":
+            mock_cmake_script = mock_cmake_script + ".bat"
+            with open(mock_cmake_script, "w") as f:
+                f.write("@echo off\n")
+                f.write("echo Mock CMake\n")
+        else:  # Unix
+            with open(mock_cmake_script, "w") as f:
+                f.write("#!/bin/bash\n")
+                f.write("echo 'Mock CMake'\n")
+            os.chmod(mock_cmake_script, 0o755)
+
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCONAN_CMAKE_EXE_PATH={tmp_path} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", fails=True)
+
+        _, err = capfd.readouterr()
+
+        assert "Mock CMake" in err
