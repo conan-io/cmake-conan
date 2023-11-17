@@ -672,7 +672,7 @@ class TestCMakeDepsGenerators:
         assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
 
 
-class TestCustomCMakeExe:
+class TestInjectCMakeFolderToPath:
     def test_inject_invoked_path(self, capfd, basic_cmake_project):
         """
         Test that we inject the CMake we used to invoke the provider for the Conan builds
