@@ -265,27 +265,31 @@ function(detect_build_type BUILD_TYPE)
     endif()
 endfunction()
 
+macro(set_conan_compiler_if_appleclang lang command output_variable)
+    if(CMAKE_${lang}_COMPILER_ID STREQUAL "AppleClang")
+        execute_process(COMMAND xcrun --find ${command}
+            OUTPUT_VARIABLE _xcrun_out OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if (_xcrun_out STREQUAL "${CMAKE_${lang}_COMPILER}")
+            set(${output_variable} "")
+        endif()
+        unset(_xcrun_out)      
+    endif()
+endmacro()
+
 
 macro(append_compiler_executables_configuration)
     set(_conan_c_compiler "")
     set(_conan_cpp_compiler "")
     if(CMAKE_C_COMPILER)
         set(_conan_c_compiler "\"c\":\"${CMAKE_C_COMPILER}\",")
+        set_conan_compiler_if_appleclang(C cc _conan_c_compiler)
     else()
         message(WARNING "CMake-Conan: The C compiler is not defined. "
                         "Please define CMAKE_C_COMPILER or enable the C language.")
     endif()
     if(CMAKE_CXX_COMPILER)
         set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-            # Don't pass the path to the compiler inside Xcode if it's the default
-            execute_process(COMMAND xcrun --find c++
-                OUTPUT_VARIABLE _xcrun_out OUTPUT_STRIP_TRAILING_WHITESPACE
-                ERROR_VARIABLE _xcrun_err)
-            if(_xcrun_out STREQUAL ${CMAKE_CXX_COMPILER})
-                set(_conan_cpp_compiler "")
-            endif()
-        endif()
+        set_conan_compiler_if_appleclang(CXX c++ _conan_cpp_compiler)
     else()
         message(WARNING "CMake-Conan: The C++ compiler is not defined. "
                         "Please define CMAKE_CXX_COMPILER or enable the C++ language.")

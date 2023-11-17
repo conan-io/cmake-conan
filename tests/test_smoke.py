@@ -332,12 +332,14 @@ class TestGeneratedProfile:
 
     @darwin
     def test_propagate_compiler_mac_autotools(self, capfd, basic_cmake_project):
-        """Things"""
+        """Test that if the compiler is inside an XCode installation, we don't
+        propagate the path if that's the compiler that would be found by default"""
         source_dir, binary_dir = basic_cmake_project
         shutil.copytree(src_dir / 'tests' / 'resources' / 'autotools_dependency', source_dir, dirs_exist_ok=True)
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
         out, err = capfd.readouterr()
         assert "configure: error: C++ compiler cannot create executables" not in err
+        assert "-- Generating done" in out
         pass
 
 class TestProfileCustomization:
