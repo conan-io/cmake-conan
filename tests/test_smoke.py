@@ -679,31 +679,26 @@ class TestCMakeDepsGenerators:
 
 
 class TestCustomCMakeExe:
-    def test_custom_cmake_path(self, capfd, basic_cmake_project):
+    def test_inject_invoked_path(self, capfd, basic_cmake_project):
         """
-        Test that custom CMake path is correctly used.
+        Test that we inject the CMake we used to invoke the provider for the Conan builds
         """
         source_dir, binary_dir = basic_cmake_project
-        tmp_path = source_dir.parent
 
-        mock_cmake_script = tmp_path / "cmake"
+        # remove hello binaries to make sure we invoke to cmake via Conan
+        run("conan remove hello:*")
 
-        if platform.system() == "Windows":
-            mock_cmake_script = mock_cmake_script + ".bat"
-            with open(mock_cmake_script, "w") as f:
-                f.write("@echo off\n")
-                f.write("echo Mock CMake\n")
-        else:  # Unix
-            with open(mock_cmake_script, "w") as f:
-                f.write("#!/bin/bash\n")
-                f.write("echo 'Mock CMake'\n")
-            os.chmod(mock_cmake_script, 0o755)
+        cmake_dir = os.path.dirname(subprocess.check_output(["which", "cmake"]).decode().strip())
 
-        run(f"cmake -S {source_dir} -B {binary_dir} -DCONAN_CMAKE_EXE_PATH={tmp_path} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", fails=True)
+        # remove the cmake folder from the path, invoke cmake with the full path and make sure that nothing fails
+        original_path = os.environ["PATH"]
+        modified_path = ":".join([p for p in original_path.split(":") if p != cmake_dir])
+        os.environ["PATH"] = modified_path
+
+        run(f"{cmake_dir}/cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
+
+        os.environ["PATH"] = original_path
 
         _, err = capfd.readouterr()
 
-        assert "Mock CMake" in err
-
-        path_env = os.environ.get('PATH', '')
-        assert str(tmp_path) not in path_env
+        assert "Built target hello" in err

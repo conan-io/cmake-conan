@@ -390,11 +390,10 @@ function(conan_install)
     message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
 
 
-    if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
-        set(_OLD_PATH $ENV{PATH})
-        set(ENV{PATH} "${CONAN_CMAKE_EXE_PATH}:$ENV{PATH}")
-        message(STATUS "Modified PATH to include ${CONAN_CMAKE_EXE_PATH}.")
-    endif()
+    # We inject to the PATH the folder where the CMake that invoked the provider lives
+    # so that in case it's not on the system path the conan install does not fail
+    set(_OLD_PATH $ENV{PATH})
+    set(ENV{PATH} "${CMAKE_DIR}:$ENV{PATH}")
 
     execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
@@ -403,10 +402,7 @@ function(conan_install)
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-    if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
-        set(ENV{PATH} "${_OLD_PATH}")
-        message(STATUS "Restored original PATH.")
-    endif()
+    set(ENV{PATH} "${_OLD_PATH}")
 
     if(NOT "${return_code}" STREQUAL "0")
         message(FATAL_ERROR "Conan install failed='${return_code}'")
@@ -594,6 +590,5 @@ cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependen
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
 
-# Append a Conan CMake executable to the PATH. This will override the system-wide installed CMake binary,
-# but it will not be selected over the CMake that may be added via tool_requires.
-set(CONAN_CMAKE_EXE_PATH "" CACHE STRING "Path to the Conan CMake executable")
+get_filename_component(CMAKE_DIR "${CMAKE_COMMAND}" DIRECTORY)
+set(CMAKE_DIR "${CMAKE_DIR}" CACHE INTERNAL "Path where the CMake executable is")
