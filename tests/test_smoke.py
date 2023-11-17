@@ -33,14 +33,8 @@ darwin = pytest.mark.skipif(platform.system() != "Darwin", reason="Darwin only")
 windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows only")
 
 
-def run(cmd, check=True, fails=False):
-    try:
-        subprocess.run(cmd, shell=True, check=check)
-        if fails:
-            raise Exception(f"Command did not fail as expected: {cmd}")
-    except subprocess.CalledProcessError:
-        if not fails:
-            raise
+def run(cmd, check=True):
+    subprocess.run(cmd, shell=True, check=check)
 
 
 
