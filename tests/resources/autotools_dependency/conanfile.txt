@@ -1,0 +1,2 @@
+[requires]
+helloautotools/0.1
