@@ -579,3 +579,12 @@ cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependen
 # Configurable variables for Conan profiles
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
+
+# Append a Conan CMake executable to the PATH. This will override the system-wide installed CMake binary,
+# but it will not be selected over the CMake that may be added via tool_requires.
+set(CONAN_CMAKE_EXE_PATH "" CACHE STRING "Path to the Conan CMake executable")
+
+if(NOT "${CONAN_CMAKE_EXE_PATH}" STREQUAL "")
+    set(ENV{PATH} "${CONAN_CMAKE_EXE_PATH}:$ENV{PATH}")
+    message(STATUS "Added ${CONAN_CMAKE_EXE_PATH} to PATH.")
+endif()
