@@ -277,6 +277,15 @@ macro(append_compiler_executables_configuration)
     endif()
     if(CMAKE_CXX_COMPILER)
         set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+            # Don't pass the path to the compiler inside Xcode if it's the default
+            execute_process(COMMAND xcrun --find c++
+                OUTPUT_VARIABLE _xcrun_out OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_VARIABLE _xcrun_err)
+            if(_xcrun_out STREQUAL ${CMAKE_CXX_COMPILER})
+                set(_conan_cpp_compiler "")
+            endif()
+        endif()
     else()
         message(WARNING "CMake-Conan: The C++ compiler is not defined. "
                         "Please define CMAKE_CXX_COMPILER or enable the C++ language.")

@@ -62,9 +62,15 @@ def setup_conan_home(conan_home_dir, tmp_path_factory):
     # Detect default profile
     run("conan profile detect -vquiet")
     
-    # Create hello lib from built-in template
+    # Create hello lib from built-in CMake template
     os.chdir(workdir.as_posix())
     run("conan new cmake_lib -d name=hello -d version=0.1 -vquiet")
+    run("conan export . -vquiet")
+
+    # Create hello-autootols from built-in autotools template
+    recipe_dir = tmp_path_factory.mktemp(f"temp_autotools")
+    os.chdir(recipe_dir.as_posix())
+    run("conan new autotools_lib -d name=helloautotools -d version=0.1 -vquiet")
     run("conan export . -vquiet")
 
     # additional recipes to export from resources, overlay on top of `hello` and export
@@ -323,6 +329,16 @@ class TestGeneratedProfile:
         assert "The CXX compiler identification is Clang" in out
         assert "The C compiler is not defined." not in err
         assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
+
+    @darwin
+    def test_propagate_compiler_mac_autotools(self, capfd, basic_cmake_project):
+        """Things"""
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'autotools_dependency', source_dir, dirs_exist_ok=True)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, err = capfd.readouterr()
+        assert "configure: error: C++ compiler cannot create executables" not in err
+        pass
 
 class TestProfileCustomization:
     def test_profile_defaults(self, capfd, basic_cmake_project):
