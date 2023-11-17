@@ -338,7 +338,7 @@ class TestGeneratedProfile:
         shutil.copytree(src_dir / 'tests' / 'resources' / 'autotools_dependency', source_dir, dirs_exist_ok=True)
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
         out, err = capfd.readouterr()
-        assert "checking for g++... g++" in err
+        assert "checking for g++... g++" in err, err
         assert "configure: error: C++ compiler cannot create executables" not in err
         assert "-- Generating done" in out
 
