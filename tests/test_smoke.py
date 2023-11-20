@@ -674,24 +674,38 @@ class TestCMakeDepsGenerators:
 class TestInjectCMakeFolderToPath:
     def test_inject_invoked_path(self, capfd, basic_cmake_project):
         """
-        Test that we inject the CMake we used to invoke the provider for the Conan builds
+        Test that we inject the CMake we used to invoke the provider for the Conan builds.
+        This test will fail if CMake is not found in the PATH.
         """
         source_dir, binary_dir = basic_cmake_project
 
-        # remove hello binaries to make sure we invoke to cmake via Conan
-        run("conan remove hello:*")
+        cmake_search_cmd = ["where", "cmake"] if platform.system() else ["which", "cmake"]
 
-        cmake_dir = os.path.dirname(subprocess.check_output(["which", "cmake"]).decode().strip())
+        try:
+            cmake_path_output = subprocess.check_output(cmake_search_cmd, universal_newlines=True)
+        except subprocess.CalledProcessError:
+            pytest.fail("CMake should be available in the PATH.")
 
-        # remove the cmake folder from the path, invoke cmake with the full path and make sure that nothing fails
-        original_path = os.environ["PATH"]
-        modified_path = ":".join([p for p in original_path.split(":") if p != cmake_dir])
-        os.environ["PATH"] = modified_path
+        cmake_dir = os.path.dirname(cmake_path_output.strip())
 
-        run(f"{cmake_dir}/cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
+        try:
+            # Remove hello binaries to make sure we invoke cmake via Conan
+            run("conan remove hello:*")
 
-        os.environ["PATH"] = original_path
+            # Modify the PATH to remove the CMake directory and then invoke CMake using the full path
+            original_path = os.environ["PATH"]
+            modified_path = os.pathsep.join([p for p in original_path.split(os.pathsep) if p != cmake_dir])
+            os.environ["PATH"] = modified_path
 
-        _, err = capfd.readouterr()
+            # Run the CMake command with the modified PATH
+            run(f"{cmake_dir}/cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
 
-        assert "Built target hello" in err
+            _, err = capfd.readouterr()
+            assert "Built target hello" in err
+
+        except Exception as e:
+            raise e
+        finally:
+            # Restore the PATH
+            os.environ["PATH"] = original_path
+
