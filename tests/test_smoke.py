@@ -679,7 +679,7 @@ class TestInjectCMakeFolderToPath:
         """
         source_dir, binary_dir = basic_cmake_project
 
-        cmake_search_cmd = ["where", "cmake"] if platform.system() else ["which", "cmake"]
+        cmake_search_cmd = ["where", "cmake"] if platform.system() == "Windows" else ["which", "cmake"]
 
         try:
             cmake_path_output = subprocess.check_output(cmake_search_cmd, universal_newlines=True)
