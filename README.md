@@ -65,6 +65,12 @@ If you need to customize the profile, you can do so by modifying the value of `C
 * `-DCONAN_BUILD_PROFILE=/path/to/profile`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
 * `-DCONAN_HOST_PROFILE=default;custom`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
 
+### Customizing Conan install --build flag
+By default, the CMake-Conan dependency provider will pass the `--build=missing` flag to  `conan install` to build any packages that don't have a compatible binary. If you would like to override this setting, you can pass one or more `--build` options in a `CONAN_BUILD` CMake cache variable. Some examples:
+
+* `-DCONAN_BUILD=never`: use binary packages or fail if a binary package is not found
+* `-DCONAN_BUILD=fmt;zlib`: build the `fmt` and `zlib` packages from source
+
 ## Development, contributors
 
 There are some tests, you can run in python, with pytest, for example:

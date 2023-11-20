@@ -376,6 +376,23 @@ class TestProfileCustomization:
         assert "ERROR: Invalid setting 'JuliusOS' is not a valid 'settings.os' value." in err
 
 
+class TestBuildFlagCustomization:
+    def test_build_flag_default(self, capfd, basic_cmake_project):
+        """Test the default --build flag"""
+        source_dir, binary_dir = basic_cmake_project
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=True)
+        out, _ = capfd.readouterr()
+        assert "--build=missing" in out
+
+    def test_build_flag_list(self, capfd, basic_cmake_project):
+        """Test passing a list of --build flags"""
+        source_dir, binary_dir = basic_cmake_project
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -DCONAN_BUILD="fmt;zlib"', check=True)
+        out, _ = capfd.readouterr()
+        assert "--build=fmt" in out
+        assert "--build=zlib" in out
+
+
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
     def subdir_setup(self, tmp_path_factory):
