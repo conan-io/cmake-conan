@@ -1,5 +1,6 @@
 set(CONAN_MINIMUM_VERSION 2.0.5)
 
+
 function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
     # it could be cross compilation
     message(STATUS "CMake-Conan: cmake_system_name=${CMAKE_SYSTEM_NAME}")
