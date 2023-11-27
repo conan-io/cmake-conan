@@ -574,6 +574,10 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
         SET_DEPENDENCY_PROVIDER conan_provide_dependency
         SUPPORTED_METHODS FIND_PACKAGE
     )
+else()
+    macro(find_package)
+        conan_provide_dependency(${ARGV})
+    endmacro()
 endif()
 
 
