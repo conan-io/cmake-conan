@@ -1,6 +1,5 @@
 set(CONAN_MINIMUM_VERSION 2.0.5)
 
-
 function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
     # it could be cross compilation
     message(STATUS "CMake-Conan: cmake_system_name=${CMAKE_SYSTEM_NAME}")
@@ -545,7 +544,12 @@ macro(conan_provide_dependency method package_name)
     set(_find_args_${package_name} "${ARGN}")
     list(REMOVE_ITEM _find_args_${package_name} "REQUIRED")
     if(NOT "MODULE" IN_LIST _find_args_${package_name})
-        find_package(${package_name} ${_find_args_${package_name}} BYPASS_PROVIDER PATHS "${_conan_generators_folder}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        if (CMAKE_VERSION VERSION_LESS "3.24")
+            # use undocumended cmake function
+            _find_package(${package_name} ${_find_args_${package_name}} PATHS "${_conan_generators_folder}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        else()
+            find_package(${package_name} ${_find_args_${package_name}} BYPASS_PROVIDER PATHS "${_conan_generators_folder}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+        endif()
         unset(_find_args_${package_name})
     endif()
 
@@ -564,10 +568,12 @@ macro(conan_provide_dependency method package_name)
 endmacro()
 
 
-cmake_language(
-    SET_DEPENDENCY_PROVIDER conan_provide_dependency
-    SUPPORTED_METHODS FIND_PACKAGE
-)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    cmake_language(
+        SET_DEPENDENCY_PROVIDER conan_provide_dependency
+        SUPPORTED_METHODS FIND_PACKAGE
+    )
+endif()
 
 
 macro(conan_provide_dependency_check)
