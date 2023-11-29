@@ -396,14 +396,253 @@ function(conan_profile_detect_default)
     endif()
 endfunction()
 
+function(conan_install_format_arguments ARGUMENTS)
+    set(_conan_values
+        -f
+        --format
+        -v
+        --name
+        --version
+        --user
+        --channel
+        --requires
+        --tool-requires
+        -b
+        --build
+        -r
+        --remote
+        -pr
+        --profile
+        -pr:b
+        --profile:build
+        -pr:h
+        --profile:host
+        -pr:a
+        --profile:all
+        -o
+        --options
+        -o:b
+        --options:build
+        -o:h
+        --options:host
+        -o:a
+        --options:all
+        -s
+        --settings
+        -s:b
+        --settings:build
+        -s:h
+        --settings:host
+        -s:a
+        --settings:all
+        -c
+        --conf
+        -c:b
+        --conf:build
+        -c:h
+        --conf:host
+        -c:a
+        --conf:all
+        --lockfile-out
+        --lockfile-overrides
+        -g
+        --generator
+        -of
+        --output-folder
+        -d
+        --deployer
+        --deployer-folder
+    )
+    unset(_args)
+    foreach (_arg IN LISTS ARGN)
+        foreach(_conan_value IN LISTS _conan_values)
+            string(FIND "${_arg}" "${_conan_value}=" _conan_value_pos)
+            if (_conan_value_pos EQUAL 0)
+                list(APPEND _args "${_conan_value}")
+                string(REPLACE "${_conan_value}=" "" _arg "${_arg}")
+                break()
+            endif()
+        endforeach()
+        list(APPEND _args "${_arg}")
+    endforeach()
+    set(_conan_replaces
+        --help -h
+        -h HELP
+        --format -f
+        -v VERBOSE
+        -f FORMAT
+        --name NAME
+        --version VERSION
+        --user USER
+        --channel CHANNEL
+        --requires REQUIRES
+        --tool-requires TOOL_REQUIRES
+        --build -b
+        -b BUILD
+        --remote -r
+        -r REMOTE
+        --no-remote -nr
+        -nr NO_REMOTE
+        --update -u
+        -u UPDATE
+        --profile:all -p:a
+        -p:a PROFILE_ALL
+        --profile:host -p:h
+        -p:h PROFILE_HOST
+        --profile:build -p:b
+        -p:b PROFILE_BUILD
+        --profile -pr
+        -pr PROFILE
+        --options:all -o:a
+        -o:a OPTIONS_ALL
+        --options:host -o:h
+        -o:h OPTIONS_HOST
+        --options:build -o:b
+        -o:b OPTIONS_BUILD
+        -o OPTIONS
+        --settings:all -s:a
+        -s:a SETTINGS_ALL
+        --settings:build -s:b
+        -s:b SETTINGS_BUILD
+        --settings:host -s:h
+        -s:h SETTINGS_HOST
+        --settings -s
+        -s SETTINGS
+        --conf:all -c:a
+        -c:a CONF_ALL
+        --conf:build -c:b
+        -c:b CONF_BUILD
+        --conf:host -c:h
+        -c:h CONF_HOST
+        --conf -c
+        -c CONF
+        --lockfile -l
+        -l LOCKFILE
+        --lockfile-partial LOCKFILE_PARTIAL
+        --lockfile-out LOCKFILE_OUT
+        --lockfile-packages LOCKFILE_PACKAGES
+        --lockfile-clean LOCKFILE_CLEAN
+        --lockfile-overrides LOCKFILE_OVERRIDES
+        --generator -g
+        -g GENERATOR
+        --output-folder -of
+        -of OUTPUT_FOLDER
+        --deployer -d
+        -d DEPLOYER
+        --build-require BUILD_REQUIRE
+    )
+    list(LENGTH _conan_replaces _conan_replaces_count)
+    list(LENGTH _args _args_count)
+    math(EXPR _args_count "${_args_count} - 1")
+    if (_args_count GREATER -1)
+        foreach(idx RANGE 0 ${_args_count} 1)
+            list(GET _args ${idx} item)
+            if (item STREQUAL "-v")
+                math(EXPR _type_idx "${idx} + 1")
+                if (_type_idx LESS_EQUAL _args_count)
+                    list(GET _args ${_type_idx} _v_mode)
+                else()
+                    set(_v_mode "")
+                endif()
+                string(TOLOWER "${_v_mode}" _v_mode_lower)
+                set(_v_modes quiet error warning notice status verbose v debug vv trace)
+                if (NOT "${_v_mode_lower}" IN_LIST _v_modes)
+                    list(REMOVE_AT _args ${idx})
+                    list(INSERT _args ${idx} "-vverbose")
+                endif()
+            endif()
+        endforeach()
+    endif()
+    set(_args ";${_args};")
+    string(REPLACE ";-vvv;" ";-v;trace;" _args "${_args}")
+    string(REPLACE ";-vv;" ";-v;debug;" _args "${_args}")
+    string(REPLACE ";-v" ";-v;" _args "${_args}")
+    string(REPLACE ";;" ";" _args "${_args}")
+    math(EXPR _conan_replaces_count "${_conan_replaces_count} - 1")
+    foreach(idx RANGE 0 ${_conan_replaces_count} 2)
+        list(GET _conan_replaces ${idx} _from)
+        math(EXPR idx "${idx} + 1")
+        list(GET _conan_replaces ${idx} _to)
+        string(REPLACE ";${_from};" ";${_to};" _args "${_args}")
+        string(REPLACE ";${_from}=" ";${_to};" _args "${_args}")
+    endforeach()
+    list(POP_FRONT _args)
+    list(POP_BACK _args)
+    set(${ARGUMENTS} "${_args}" PARENT_SCOPE)
+endfunction()
 
-function(conan_install)
-    cmake_parse_arguments(ARGS CONAN_ARGS ${ARGN})
-    set(CONAN_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/conan)
-    # Invoke "conan install" with the provided arguments
-    set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
-    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
-    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
+function(conan_install_arguments_unset PREFIX)
+    set(_conan_options NO_REMOTE UPDATE LOCKFILE_PARTIAL LOCKFILE_PACKAGES LOCKFILE_CLEAN BUILD_REQUIRE HELP)
+    set(_conan_one_values VERBOSE FORMAT NAME VERSION USER CHANNEL PROFILE PROFILE_BUILD PROFILE_HOST PROFILE_ALL LOCKFILE LOCKFILE_OUT DEPLOYER DEPLOYER_FOLDER OUTPUT_FOLDER)
+    set(_conan_multi_values BUILD REQUIRES TOOL_REQUIRES REMOTE OPTIONS OPTIONS_BUILD OPTIONS_HOST OPTIONS_ALL SETTINGS SETTINGS_BUILD SETTINGS_HOST SETTINGS_ALL CONF CONF_BUILD CONF_HOST CONF_ALL LOCKFILE_OVERRIDES GENERATOR)
+    foreach(_conan_value IN LISTS _conan_one_values _conan_multi_values _conan_options)
+        unset(${PREFIX}_${_conan_one_value} PARENT_SCOPE)
+    endforeach()
+endfunction()
+
+function(conan_install_parse_arguments PREFIX)
+    set(_conan_options NO_REMOTE UPDATE LOCKFILE_PARTIAL LOCKFILE_PACKAGES LOCKFILE_CLEAN BUILD_REQUIRE HELP)
+    set(_conan_one_values VERBOSE FORMAT NAME VERSION USER CHANNEL PROFILE PROFILE_BUILD PROFILE_HOST PROFILE_ALL LOCKFILE LOCKFILE_OUT DEPLOYER DEPLOYER_FOLDER OUTPUT_FOLDER)
+    set(_conan_multi_values BUILD REQUIRES TOOL_REQUIRES REMOTE OPTIONS OPTIONS_BUILD OPTIONS_HOST OPTIONS_ALL SETTINGS SETTINGS_BUILD SETTINGS_HOST SETTINGS_ALL CONF CONF_BUILD CONF_HOST CONF_ALL LOCKFILE_OVERRIDES GENERATOR)
+    foreach(_conan_option IN LISTS _conan_options)
+        set(_${PREFIX}_${_conan_option} FALSE)
+    endforeach()
+    foreach(_conan_value IN LISTS _conan_one_values _conan_multi_values)
+        unset(_${PREFIX}_${_conan_one_value})
+    endforeach()
+    unset(_${PREFIX}_UNPARSED_ARGUMENTS)
+    unset(_${PREFIX}_PATH)
+    set(_next_one "")
+    set(_next_many "")
+    conan_install_format_arguments(_arguments "${ARGN}")
+    foreach(_arg IN LISTS _arguments)
+        if (NOT _next_one STREQUAL "")
+            if (DEFINED _${PREFIX}_${_next_one})
+                message(WARNING "Argument ${_next_one} defined multiple times only last one will be used")
+            endif()
+            set(_${PREFIX}_${_next_one} "${_arg}")
+            set(_next_one "")
+        elseif (NOT _next_many STREQUAL "")
+            list(APPEND _${PREFIX}_${_next_many} "${_arg}")
+            set(_next_many "")
+        elseif ("${_arg}" IN_LIST _conan_options)
+            if (DEFINED _${PREFIX}_${_next_one})
+                message(WARNING "Argument ${_next_one} set multiple times")
+            endif()
+            set(_${PREFIX}_${_arg} TRUE)
+        elseif("${_arg}" IN_LIST _conan_one_values)
+            set(_next_one "${_arg}")
+        elseif ("${_arg}" IN_LIST _conan_multi_values)
+            set(_next_many "${_arg}")
+        else()
+            list(APPEND _${PREFIX}_UNPARSED_ARGUMENTS ${_arg})
+        endif()
+    endforeach()
+    if (NOT _next_many STREQUAL "")
+        message(FATAL_ERROR "Missing value for ${_next_many}")
+    endif()
+    if (NOT _next_one STREQUAL "")
+        message(FATAL_ERROR "Missing value for ${_next_one}")
+    endif()
+    foreach(_conan_option IN LISTS _conan_options)
+        set(${PREFIX}_${_conan_option} ${_${PREFIX}_${_conan_option}} PARENT_SCOPE)
+    endforeach()
+    if (_${PREFIX}_UNPARSED_ARGUMENTS)
+        list(GET _${PREFIX}_UNPARSED_ARGUMENTS 0 _${PREFIX}_PATH)
+        list(REMOVE_AT _${PREFIX}_UNPARSED_ARGUMENTS 0)
+    endif()
+    foreach(_conan_value IN LISTS _conan_one_values _conan_multi_values ITEMS UNPARSED_ARGUMENTS PATH)
+        if (DEFINED _${PREFIX}_${_conan_value})
+            set(${PREFIX}_${_conan_value} "${_${PREFIX}_${_conan_value}}" PARENT_SCOPE)
+        else()
+            unset(${PREFIX}_${_conan_value} PARENT_SCOPE)
+        endif()
+    endforeach()
+endfunction()
+
+function(conan_install CONANFILE)
+    message(STATUS "CMake-Conan: conan install ${ARGN}")
+    execute_process(COMMAND ${CONAN_COMMAND} install ${ARGN}
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
@@ -421,9 +660,8 @@ function(conan_install)
         message(STATUS "CMake-Conan: CONAN_GENERATORS_FOLDER=${CONAN_GENERATORS_FOLDER}")
         set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
         # reconfigure on conanfile changes
-        string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
-        message(STATUS "CMake-Conan: CONANFILE=${CMAKE_SOURCE_DIR}/${CONANFILE}")
-        set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/${CONANFILE}")
+        message(STATUS "CMake-Conan: CONANFILE=${CONANFILE}")
+        set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CONANFILE}")
         # success
         set_property(GLOBAL PROPERTY CONAN_INSTALL_SUCCESS TRUE)
     endif()
@@ -492,6 +730,13 @@ macro(conan_provide_dependency method package_name)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
         conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
         message(STATUS "CMake-Conan: first find_package() found. Installing dependencies with Conan")
+        conan_install_parse_arguments(_conan_arg "${CONAN_ARGS}")
+        if (DEFINED _conan_arg_PROFILE_HOST)
+            message(FATAL_ERROR "CONAN_HOST_PROFILE should be used instead of CONAN_ARGS to set host profile")
+        endif()
+        if (DEFINED _conan_arg_PROFILE_BUILD)
+            message(FATAL_ERROR "CONAN_BUILD_PROFILE should be used instead of CONAN_ARGS to set build profile")
+        endif()
         if("default" IN_LIST CONAN_HOST_PROFILE OR "default" IN_LIST CONAN_BUILD_PROFILE)
             conan_profile_detect_default()
         endif()
@@ -500,29 +745,54 @@ macro(conan_provide_dependency method package_name)
         endif()
         construct_profile_argument(_host_profile_flags CONAN_HOST_PROFILE)
         construct_profile_argument(_build_profile_flags CONAN_BUILD_PROFILE)
-        if(EXISTS "${CMAKE_SOURCE_DIR}/conanfile.py")
-            file(READ "${CMAKE_SOURCE_DIR}/conanfile.py" outfile)
-            if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
-                message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile")
-            endif()
-            set(generator "")
-        elseif (EXISTS "${CMAKE_SOURCE_DIR}/conanfile.txt")
-            file(READ "${CMAKE_SOURCE_DIR}/conanfile.txt" outfile)
-            if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
-                message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile. "
-                        "Please define the generator as it will be mandatory in the future")
-            endif()
-            set(generator "-g;CMakeDeps")
+        if(NOT DEFINED _conan_arg_PATH)
+            set(_conan_arg_PATH "${CMAKE_SOURCE_DIR}")
+            set(_required_args "${_conan_arg_PATH}")
+        else()
+            set(_required_args "")
         endif()
+
+        if (EXISTS "${_conan_arg_PATH}/conanfile.py")
+            set(_conan_arg_PATH "${_conan_arg_PATH}/conanfile.py")
+        elseif(EXISTS "${_conan_arg_PATH}/conanfile.txt")
+            set(_conan_arg_PATH "${_conan_arg_PATH}/conanfile.txt")
+        endif()
+        if((NOT EXISTS "${_conan_arg_PATH}") OR (IS_DIRECTORY ${_conan_arg_PATH}))
+            message(FATAL_ERROR "Missing conanfile.txt or conanfile.py in path ${_conan_arg_PATH}")
+        endif()
+        file(READ "${_conan_arg_PATH}" outfile)
+        if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
+            message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile")
+        endif()
+        if ((DEFINED _conan_arg_GENERATOR) AND (NOT "${_conan_arg_GENERATOR}" STREQUAL "CMakeDeps"))
+            message(FATAL_ERROR "CONAN_ARGS might only set --generator|-g to CMakeDeps")
+        endif()
+        set(_build_flags "")
+        if (NOT DEFINED _conan_args_BUILD)
+            set(_build_flags --build=missing)
+        endif()
+        set(generator "-g;CMakeDeps")
         get_property(_multiconfig_generator GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+        if (NOT DEFINED _conan_arg_OUTPUT_FOLDER)
+            list(APPEND _required_args "-of=${CMAKE_BINARY_DIR}/conan")
+        endif()
+        if (NOT DEFINED _conan_args_FORMAT)
+            list(APPEND _required_args --format=json)
+        elseif(NOT "${_conan_args_FORMAT}" STREQUAL "json")
+            message(FATAL_ERROR "CONAN_ARGS can only set --format|-f to `json`")
+        endif()
         if(NOT _multiconfig_generator)
             message(STATUS "CMake-Conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
-            conan_install(${_host_profile_flags} ${_build_profile_flags} --build=missing ${generator})
+            conan_install(${_conan_arg_PATH} ${_required_args} ${CONAN_ARGS} ${_host_profile_flags} ${_build_profile_flags} ${_build_flags} ${generator})
         else()
             message(STATUS "CMake-Conan: Installing both Debug and Release")
-            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release --build=missing ${generator})
-            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug --build=missing ${generator})
+            conan_install(${_conan_arg_PATH} ${_required_args} ${CONAN_ARGS} ${_host_profile_flags} ${_build_profile_flags} -s build_type=Release ${_build_flags} ${generator})
+            conan_install(${_conan_arg_PATH} ${_required_args} ${CONAN_ARGS} ${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug ${_build_flags} ${generator})
         endif()
+        unset(_build_flags)
+        unset(_required_args)
+        conan_install_arguments_unset(_conan_arg)
         unset(_host_profile_flags)
         unset(_build_profile_flags)
         unset(_multiconfig_generator)
