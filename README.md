@@ -22,7 +22,7 @@ git clone https://github.com/conan-io/cmake-conan.git -b develop2
 
 ### Example project
 
-This repository contains a `CMakeLists.txt` with an example project that depends on `fmt`. 
+This repository contains a `CMakeLists.txt` with an example project that depends on `fmt`.
 
 ```bash
 cd cmake-conan/example
@@ -35,7 +35,7 @@ cmake --build build --config Release
 
 * Ensure you have placed a `conanfile.txt` or `conanfile.py` at the root of your project, listing your requirements. You can see [conanfile.txt](example/conanfile.txt) for an example, or check the Conan documentation for `conanfile`: [.txt docs](https://docs.conan.io/2/reference/conanfile_txt.html), [.py docs](https://docs.conan.io/2/reference/conanfile/attributes.html#requirements).
 
-* When first invoking CMake to configure the project, pass `-DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake`. This will ensure that `conan install` is invoked from within CMake. This integration **does not require making any changes to your `CMakeLists.txt` scripts**. 
+* When first invoking CMake to configure the project, pass `-DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake`. This will ensure that `conan install` is invoked from within CMake. This integration **does not require making any changes to your `CMakeLists.txt` scripts**.
 
 ```bash
 cd [your-project]
@@ -64,6 +64,12 @@ If you need to customize the profile, you can do so by modifying the value of `C
 * `-DCONAN_HOST_PROFILE=clang16`: do not perform autodetection, and use the `clang16` profile which must exist in the Conan profiles folder (see [docs](https://docs.conan.io/2.0/reference/commands/profile.html?highlight=profiles%20folder#conan-profile-list).)
 * `-DCONAN_BUILD_PROFILE=/path/to/profile`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
 * `-DCONAN_HOST_PROFILE=default;custom`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
+
+### Custom Conan configuration install directory
+
+To use Conan config from a specific directory, just change the `CONAN_CONFIG_DIR` variable by passing it as CMake cache variable.
+
+* `-DCONAN_HOST_PROFILE=default;auto-cmake`: perform autodetection as described above, and fallback to the default profile for anything else (default behaviour).
 
 ## Development, contributors
 

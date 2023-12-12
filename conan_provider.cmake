@@ -272,7 +272,7 @@ macro(set_conan_compiler_if_appleclang lang command output_variable)
         if (_xcrun_out STREQUAL "${CMAKE_${lang}_COMPILER}")
             set(${output_variable} "")
         endif()
-        unset(_xcrun_out)      
+        unset(_xcrun_out)
     endif()
 endmacro()
 
@@ -372,6 +372,20 @@ function(detect_host_profile output_file)
     message(STATUS "CMake-Conan: Creating profile ${_FN}")
     file(WRITE ${_FN} ${PROFILE})
     message(STATUS "CMake-Conan: Profile: \n${PROFILE}")
+endfunction()
+
+
+function(conan_config_install)
+    execute_process(COMMAND ${CONAN_COMMAND} config install -t dir ${CONAN_CONFIG_DIR}
+                    RESULT_VARIABLE return_code
+                    OUTPUT_VARIABLE conan_stdout
+                    ERROR_VARIABLE conan_stderr
+                    ECHO_ERROR_VARIABLE    # show the text output regardless
+                    ECHO_OUTPUT_VARIABLE
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    if(NOT "${return_code}" STREQUAL "0")
+        message(FATAL_ERROR "Conan config install -t dir ${CONAN_CONFIG_DIR} failed='${return_code}'")
+    endif()
 endfunction()
 
 
@@ -491,6 +505,9 @@ macro(conan_provide_dependency method package_name)
         find_program(CONAN_COMMAND "conan" REQUIRED)
         conan_get_version(${CONAN_COMMAND} CONAN_CURRENT_VERSION)
         conan_version_check(MINIMUM ${CONAN_MINIMUM_VERSION} CURRENT ${CONAN_CURRENT_VERSION})
+        if(CONAN_CONFIG_DIR)
+            conan_config_install()
+        endif()
         message(STATUS "CMake-Conan: first find_package() found. Installing dependencies with Conan")
         if("default" IN_LIST CONAN_HOST_PROFILE OR "default" IN_LIST CONAN_BUILD_PROFILE)
             conan_profile_detect_default()
