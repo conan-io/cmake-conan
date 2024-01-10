@@ -211,10 +211,10 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             else()
                 set(_COMPILER_RUNTIME "static")
             endif()
+            message(STATUS "CMake-Conan: CMake deduced from CMAKE_MSVC_RUNTIME_LIBRARY compiler.runtime=${_COMPILER_RUNTIME}")
 
             # Only define compiler.runtime_type when explicitly requested
             # If a generator expression is used, let Conan handle it conditional on build_type
-            get_property(_IS_MULTI_CONFIG_GENERATOR GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
             if(NOT CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>")
                 if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "Debug")
                     set(_COMPILER_RUNTIME_TYPE "Debug")
@@ -224,7 +224,9 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
             endif()
 
             unset(_KNOWN_MSVC_RUNTIME_VALUES)
-            unset(_IS_MULTI_CONFIG_GENERATOR)
+        else()  # CMake will default to the dynamic runtime, lets make Conan default too
+            set(_COMPILER_RUNTIME "dynamic")
+            message(STATUS "CMake-Conan: CMAKE_MSVC_RUNTIME_LIBRARY not defined, assuming compiler.runtime=${_COMPILER_RUNTIME}")
         endif()
     elseif(_COMPILER MATCHES AppleClang)
         set(_COMPILER "apple-clang")
