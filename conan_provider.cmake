@@ -195,39 +195,42 @@ function(detect_compiler COMPILER COMPILER_VERSION COMPILER_RUNTIME COMPILER_RUN
         string(SUBSTRING ${MSVC_VERSION} 0 3 _COMPILER_VERSION)
         # Configure compiler.runtime and compiler.runtime_type settings for MSVC
         if(CMAKE_MSVC_RUNTIME_LIBRARY)
-            set(_KNOWN_MSVC_RUNTIME_VALUES "")
-            list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreaded MultiThreadedDLL)
-            list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreadedDebug MultiThreadedDebugDLL)
-            list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreaded$<$<CONFIG:Debug>:Debug> MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
-
-            # only accept the 6 possible values, otherwise we don't don't know to map this
-            if(NOT CMAKE_MSVC_RUNTIME_LIBRARY IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
-                message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${CMAKE_MSVC_RUNTIME_LIBRARY} to Conan settings")
-            endif()
-
-            # Runtime is "dynamic" in all cases if it ends in DLL
-            if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES ".*DLL$")
-                set(_COMPILER_RUNTIME "dynamic")
-            else()
-                set(_COMPILER_RUNTIME "static")
-            endif()
-            message(STATUS "CMake-Conan: CMake deduced from CMAKE_MSVC_RUNTIME_LIBRARY compiler.runtime=${_COMPILER_RUNTIME}")
-
-            # Only define compiler.runtime_type when explicitly requested
-            # If a generator expression is used, let Conan handle it conditional on build_type
-            if(NOT CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "<CONFIG:Debug>:Debug>")
-                if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "Debug")
-                    set(_COMPILER_RUNTIME_TYPE "Debug")
-                else()
-                    set(_COMPILER_RUNTIME_TYPE "Release")
-                endif()
-            endif()
-
-            unset(_KNOWN_MSVC_RUNTIME_VALUES)
-        else()  # CMake will default to the dynamic runtime, lets make Conan default too
-            set(_COMPILER_RUNTIME "dynamic")
-            message(STATUS "CMake-Conan: CMAKE_MSVC_RUNTIME_LIBRARY not defined, assuming compiler.runtime=${_COMPILER_RUNTIME}")
+            set(_msvc_runtime_library ${CMAKE_MSVC_RUNTIME_LIBRARY})
+        else()
+            set(_msvc_runtime_library MultiThreaded$<$<CONFIG:Debug>:Debug>DLL) # default value documented by CMake
         endif()
+
+        set(_KNOWN_MSVC_RUNTIME_VALUES "")
+        list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreaded MultiThreadedDLL)
+        list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreadedDebug MultiThreadedDebugDLL)
+        list(APPEND _KNOWN_MSVC_RUNTIME_VALUES MultiThreaded$<$<CONFIG:Debug>:Debug> MultiThreaded$<$<CONFIG:Debug>:Debug>DLL)
+
+        # only accept the 6 possible values, otherwise we don't don't know to map this
+        if(NOT _msvc_runtime_library IN_LIST _KNOWN_MSVC_RUNTIME_VALUES)
+            message(FATAL_ERROR "CMake-Conan: unable to map MSVC runtime: ${_msvc_runtime_library} to Conan settings")
+        endif()
+
+        # Runtime is "dynamic" in all cases if it ends in DLL
+        if(_msvc_runtime_library MATCHES ".*DLL$")
+            set(_COMPILER_RUNTIME "dynamic")
+        else()
+            set(_COMPILER_RUNTIME "static")
+        endif()
+        message(STATUS "CMake-Conan: CMake compiler.runtime=${_COMPILER_RUNTIME}")
+
+        # Only define compiler.runtime_type when explicitly requested
+        # If a generator expression is used, let Conan handle it conditional on build_type
+        if(NOT _msvc_runtime_library MATCHES "<CONFIG:Debug>:Debug>")
+            if(_msvc_runtime_library MATCHES "Debug")
+                set(_COMPILER_RUNTIME_TYPE "Debug")
+            else()
+                set(_COMPILER_RUNTIME_TYPE "Release")
+            endif()
+            message(STATUS "CMake-Conan: CMake compiler.runtime_type=${_COMPILER_RUNTIME_TYPE}")
+        endif()
+
+        unset(_KNOWN_MSVC_RUNTIME_VALUES)
+
     elseif(_COMPILER MATCHES AppleClang)
         set(_COMPILER "apple-clang")
         string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
