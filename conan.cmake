@@ -519,7 +519,7 @@ function(old_conan_cmake_install)
     foreach(ARG ${ARGUMENTS_ENV})
         set(CONAN_ENV_VARS ${CONAN_ENV_VARS} -e=${ARG})
     endforeach()
-    set(conan_args install ${CONANFILE} ${settings} ${CONAN_ENV_VARS} ${CONAN_GENERATORS} ${CONAN_BUILD_POLICY} ${CONAN_INSTALL_UPDATE} ${CONAN_INSTALL_NO_IMPORTS} ${CONAN_OPTIONS} ${CONAN_INSTALL_FOLDER} ${ARGUMENTS_INSTALL_ARGS})
+    set(conan_args install ${CONANFILE} ${settings} ${CONAN_ENV_VARS} ${CONAN_GENERATORS} ${CONAN_BUILD_POLICY} ${CONAN_INSTALL_UPDATE} ${CONAN_INSTALL_NO_IMPORTS} ${CONAN_OPTIONS} ${CONAN_INSTALL_FOLDER} ${CONAN_OUTPUT_FOLDER} ${ARGUMENTS_INSTALL_ARGS})
 
     string (REPLACE ";" " " _conan_args "${conan_args}")
     message(STATUS "Conan executing: ${CONAN_CMD} ${_conan_args}")
