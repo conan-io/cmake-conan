@@ -687,3 +687,13 @@ class TestCMakeDepsGenerators:
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
         assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
+
+
+class TestTryCompile:
+    @windows
+    def test_try_compile(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'try_compile', source_dir, dirs_exist_ok=True)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider}')
+        out, _ = capfd.readouterr()
+        assert 'Performing Test HELLO_WORLD_CAN_COMPILE - Success' in out

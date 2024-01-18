@@ -7,4 +7,4 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(fmt REQUIRED)
 
 add_executable(main main.cpp)
-target_link_libraries(main PRIVATE fmt::fmt)                    
+target_link_libraries(main PRIVATE fmt::fmt)
