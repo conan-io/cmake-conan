@@ -408,12 +408,26 @@ function(conan_install)
     # Invoke "conan install" with the provided arguments
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
     message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
+
+
+    # In case there was not a valid cmake executable in the PATH, we inject the
+    # same we used to invoke the provider to the PATH
+    if(DEFINED PATH_TO_CMAKE_BIN)
+        set(_OLD_PATH $ENV{PATH})
+        set(ENV{PATH} "$ENV{PATH}:${PATH_TO_CMAKE_BIN}")
+    endif()
+
     execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    if(DEFINED PATH_TO_CMAKE_BIN)
+        set(ENV{PATH} "${_OLD_PATH}")
+    endif()
+
     if(NOT "${return_code}" STREQUAL "0")
         message(FATAL_ERROR "Conan install failed='${return_code}'")
     else()
@@ -599,3 +613,10 @@ cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependen
 # Configurable variables for Conan profiles
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
+
+find_program(_cmake_program NAMES cmake NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_FIND_ROOT_PATH)
+
+if(NOT _cmake_program)
+    get_filename_component(PATH_TO_CMAKE_BIN "${CMAKE_COMMAND}" DIRECTORY)
+    set(PATH_TO_CMAKE_BIN "${PATH_TO_CMAKE_BIN}" CACHE INTERNAL "Path where the CMake executable is")
+endif()
