@@ -375,6 +375,17 @@ class TestProfileCustomization:
         assert f"--profile:host={custom_profile}" in out
         assert "ERROR: Invalid setting 'JuliusOS' is not a valid 'settings.os' value." in err
 
+class TestConanInstallArgs:
+    def test_conan_install_args(self, capfd, basic_cmake_project):
+        """Test ability to pass CONAN_INSTALL_ARGS"""
+        source_dir, binary_dir = basic_cmake_project
+        conan_install_args = f'"--build=*;--lockfile-out={binary_dir}/conan.lock"'
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -DCONAN_INSTALL_ARGS={conan_install_args}", check=True)
+        out, _ = capfd.readouterr()
+        assert "--build=missing" not in out
+        assert "--build=*" in out
+        assert "--lockfile-out=" in out
+        assert os.path.exists(os.path.join(binary_dir, "conan.lock"))
 
 class TestSubdir:
     @pytest.fixture(scope="class", autouse=True)
