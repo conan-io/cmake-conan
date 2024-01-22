@@ -542,7 +542,19 @@ class TestAndroid:
         assert "tools.android:ndk_path=" in out
 
 
-class TestiOS:
+class TestAppleOS:
+    @darwin
+    def test_macos_arch(self, capfd, basic_cmake_project):
+        "Test that when an architecture is not explicitly set, we detect the default system one"
+        source_dir, binary_dir = basic_cmake_project
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        arch = platform.processor()
+        if 'arm' in arch:
+            assert "-- CMake-Conan: cmake_system_processor=armv8" in out
+        elif 'i386' in arch:
+            assert "-- CMake-Conan: cmake_system_processor=x86_64" in out
+    
     @darwin
     def test_ios(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
@@ -569,8 +581,6 @@ class TestiOS:
         assert "os.version=11.0" in out
         assert "compiler.libcxx=libc++" in out
 
-
-class TestTvOS:
     @darwin
     def test_tvos(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
@@ -597,8 +607,6 @@ class TestTvOS:
         assert "os.version=15.0" in out
         assert "compiler.libcxx=libc++" in out
 
-
-class TestWatchOS:
     @darwin
     def test_watchos(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
