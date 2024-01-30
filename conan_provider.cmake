@@ -536,11 +536,11 @@ macro(conan_provide_dependency method package_name)
         get_property(_multiconfig_generator GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
         if(NOT _multiconfig_generator)
             message(STATUS "CMake-Conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
-            conan_install(${_host_profile_flags} ${_build_profile_flags} --build=missing ${generator})
+            conan_install(${_host_profile_flags} ${_build_profile_flags} ${CONAN_INSTALL_ARGS} ${generator})
         else()
             message(STATUS "CMake-Conan: Installing both Debug and Release")
-            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release --build=missing ${generator})
-            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug --build=missing ${generator})
+            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release ${CONAN_INSTALL_ARGS} ${generator})
+            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Debug ${CONAN_INSTALL_ARGS} ${generator})
         endif()
         unset(_host_profile_flags)
         unset(_build_profile_flags)
@@ -613,10 +613,11 @@ cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependen
 # Configurable variables for Conan profiles
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
+set(CONAN_INSTALL_ARGS "--build=missing" CACHE STRING "Command line arguments for conan install")
 
 find_program(_cmake_program NAMES cmake NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_FIND_ROOT_PATH)
-
 if(NOT _cmake_program)
     get_filename_component(PATH_TO_CMAKE_BIN "${CMAKE_COMMAND}" DIRECTORY)
     set(PATH_TO_CMAKE_BIN "${PATH_TO_CMAKE_BIN}" CACHE INTERNAL "Path where the CMake executable is")
 endif()
+

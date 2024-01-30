@@ -60,10 +60,17 @@ Please note that for the above to work, a `default` profile must already exist. 
 
 If you need to customize the profile, you can do so by modifying the value of `CONAN_HOST_PROFILE` and `CONAN_BUILD_PROFILE` and passing them as CMake cache variables. Some examples:
 
-* `-DCONAN_HOST_PROFILE=default;auto-cmake`: perform autodetection as described above, and fallback to the default profile for anything else (default behaviour).
+* `-DCONAN_HOST_PROFILE="default;auto-cmake"`: perform autodetection as described above, and fallback to the default profile for anything else (default behaviour).
 * `-DCONAN_HOST_PROFILE=clang16`: do not perform autodetection, and use the `clang16` profile which must exist in the Conan profiles folder (see [docs](https://docs.conan.io/2.0/reference/commands/profile.html?highlight=profiles%20folder#conan-profile-list).)
-* `-DCONAN_BUILD_PROFILE=/path/to/profile`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
-* `-DCONAN_HOST_PROFILE=default;custom`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
+* `-DCONAN_BUILD_PROFILE="/path/to/profile"`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
+* `-DCONAN_HOST_PROFILE="default;custom"`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
+
+### Customizing the invocation of Conan install
+The CMake-Conan dependency provider will autodetect and pass the profile information as described above. If the `conan install` command invocation needs to be customized further, the `CONAN_INSTALL_ARGS` variable can be used. 
+* By default, `CONAN_INSTALL_ARGS` is initialised to pass `--build=missing`. If you customize this variable, please be aware that Conan will revert to its default behaviour unless you specify the `--build` flag.
+* Two arguments are reserved to the dependency provider implementation and must not be set: the path to a `conanfile.txt|.py`, and the output format (`--format`).
+* Values are semi-colon separated, e.g. `--build=never;--update;--lockfile-out=''`
+
 
 ## Development, contributors
 
