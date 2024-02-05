@@ -331,12 +331,13 @@ class TestGeneratedProfile:
         assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
 
     @darwin
-    def test_propagate_compiler_mac_autotools(self, capfd, basic_cmake_project):
+    @pytest.mark.parametrize("cmake_generator", ["Unix Makefiles", "Xcode"])
+    def test_propagate_compiler_mac_autotools(self, capfd, basic_cmake_project, cmake_generator):
         """Test that if the compiler is inside an XCode installation, we don't
         propagate the path if that's the compiler that would be found by default"""
         source_dir, binary_dir = basic_cmake_project
         shutil.copytree(src_dir / 'tests' / 'resources' / 'autotools_dependency', source_dir, dirs_exist_ok=True)
-        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -G"{cmake_generator}"', check=False)
         out, err = capfd.readouterr()
         assert "checking for g++... g++" in err, err
         assert "configure: error: C++ compiler cannot create executables" not in err
