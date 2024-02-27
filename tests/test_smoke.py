@@ -419,6 +419,27 @@ class TestSubdir:
         out, _ = capfd.readouterr()
         assert "subdir/0.1: Hello World Release!" in out
 
+
+class TestSubdir2:
+
+    def test_add_subdirectory(self, tmp_path_factory, capfd):
+        "The CMAKE_PREFIX_PATH is set for CMakeLists.txt included with add_subdirectory BEFORE the first find_package."
+        workdir = tmp_path_factory.mktemp("test_subdir")
+        source_dir, binary_dir = setup_cmake_workdir(workdir, ["subdir2"])
+
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "first find_package() found. Installing dependencies with Conan" in out
+        run(f"cmake --build {binary_dir} --config Release")
+        if platform.system() == "Windows":
+            app_executable = binary_dir / "subdir" / "Release" / "appSubdir.exe"
+        else:
+            app_executable = binary_dir / "subdir" / "appSubdir"
+        run(app_executable.as_posix())
+        out, _ = capfd.readouterr()
+        assert "hello/0.1: Hello World Release!" in out
+
+
 class TestLibcxx:
     @darwin
     def test_libcxx_macos(self, capfd, basic_cmake_project):
