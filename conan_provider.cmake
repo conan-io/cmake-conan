@@ -451,8 +451,46 @@ function(conan_install)
     # success
     set_property(GLOBAL PROPERTY CONAN_INSTALL_SUCCESS TRUE)
 
+
+    conan_set_program_path()
+
+    list(PREPEND CMAKE_PROGRAM_PATH ${_CONAN_PROGRAM_PATH})
+    set(CMAKE_PROGRAM_PATH ${CMAKE_PROGRAM_PATH} PARENT_SCOPE)
+
 endfunction()
 
+macro(conan_set_program_path)
+    set(_CONAN_PROGRAM_PATH "")
+
+    message("${conan_stdout}")
+    string(JSON _conan_graph_nodes_length LENGTH ${conan_stdout} graph nodes)
+    math(EXPR _conan_graph_nodes_length "${_conan_graph_nodes_length} - 1")
+    foreach(_node_number RANGE ${_conan_graph_nodes_length})
+
+        string(JSON _dep_binary GET ${conan_stdout} graph nodes ${_node_number} binary)
+        string(JSON _dep_context GET ${conan_stdout} graph nodes ${_node_number} context)
+        
+        if(NOT _dep_binary STREQUAL "Cache" OR NOT _dep_context STREQUAL "build")
+            continue()
+        endif()
+
+        string(JSON _current_node_length LENGTH ${conan_stdout} graph nodes ${_node_number} cpp_info)
+        math(EXPR _current_node_components "${_current_node_length} - 1")
+        foreach(_component RANGE ${_current_node_components})
+            string(JSON _current_component_name MEMBER ${conan_stdout} graph nodes ${_node_number} cpp_info ${_component})
+            string(JSON _current_component_bindirs GET ${conan_stdout} graph nodes ${_node_number} cpp_info ${_current_component_name} bindirs)
+            string(JSON _bindirs_length LENGTH ${_current_component_bindirs})
+            math(EXPR _bindirs_length "${_bindirs_length} - 1")
+            foreach(_bindir_index RANGE ${_bindirs_length})
+                string(JSON _bindir  GET ${_current_component_bindirs} ${_bindir_index})
+                list(APPEND _CONAN_PROGRAM_PATH ${_bindir})
+            endforeach()
+        endforeach()
+    endforeach()
+
+    message("conan_program_path: ${_CONAN_PROGRAM_PATH}")
+    list(REMOVE_DUPLICATES _CONAN_PROGRAM_PATH)
+endmacro()
 
 function(conan_get_version conan_command conan_current_version)
     execute_process(
@@ -542,6 +580,7 @@ macro(conan_provide_dependency method package_name)
         if(NOT _multiconfig_generator)
             message(STATUS "CMake-Conan: Installing single configuration ${CMAKE_BUILD_TYPE}")
             conan_install(${_host_profile_flags} ${_build_profile_flags} ${CONAN_INSTALL_ARGS} ${generator})
+            message("CMAKE_PROGRAM_PATH yyy: ${CMAKE_PROGRAM_PATH}")
         else()
             message(STATUS "CMake-Conan: Installing both Debug and Release")
             conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=Release ${CONAN_INSTALL_ARGS} ${generator})
