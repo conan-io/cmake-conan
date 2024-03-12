@@ -470,7 +470,7 @@ macro(conan_set_program_path)
         string(JSON _dep_binary GET ${conan_stdout} graph nodes ${_node_number} binary)
         string(JSON _dep_context GET ${conan_stdout} graph nodes ${_node_number} context)
         
-        if(NOT _dep_binary STREQUAL "Cache" OR NOT _dep_context STREQUAL "build")
+        if(_dep_binary STREQUAL "Skip" OR NOT _dep_context STREQUAL "build")
             continue()
         endif()
 
@@ -488,7 +488,6 @@ macro(conan_set_program_path)
         endforeach()
     endforeach()
 
-    message("conan_program_path: ${_CONAN_PROGRAM_PATH}")
     list(REMOVE_DUPLICATES _CONAN_PROGRAM_PATH)
 endmacro()
 
