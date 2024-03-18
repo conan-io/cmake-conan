@@ -477,6 +477,11 @@ class TestOsVersion:
             "-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15")
         out, _ = capfd.readouterr()
         assert "os.version=10.15" in out
+        # Simulates a second execution to see if the cache variable is working
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15")
+        out, _ = capfd.readouterr()
+        assert "os.version=10.15" in out
 
     def test_no_os_version(self, capfd, basic_cmake_project):
         "If CMAKE_OSX_DEPLOYMENT_TARGET is not set, os.version is not added to the Conan profile"
@@ -484,7 +489,12 @@ class TestOsVersion:
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
             "-DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
-        assert "os.version=10.15" not in out
+        assert "os.version=" not in out
+        # Simulates a second execution to see if the cache variable is working
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release")
+        out, _ = capfd.readouterr()
+        assert "os.version=" not in out
 
 class TestAndroid:
     def test_android_armv8(self, capfd, basic_cmake_project):
