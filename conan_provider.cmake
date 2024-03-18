@@ -50,7 +50,7 @@ function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
                 message(STATUS "CMake-Conan: cmake_osx_sysroot=${CMAKE_OSX_SYSROOT}")
                 set(${OS_SDK} ${_OS_SDK} PARENT_SCOPE)
             endif()
-            if(DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+            if(CONAN_USE_CMAKE_OSX_DEPLOYMENT_TARGET)
                 message(STATUS "CMake-Conan: cmake_osx_deployment_target=${CMAKE_OSX_DEPLOYMENT_TARGET}")
                 set(${OS_VERSION} ${CMAKE_OSX_DEPLOYMENT_TARGET} PARENT_SCOPE)
             endif()
@@ -611,6 +611,19 @@ macro(conan_provide_dependency_check)
 endmacro()
 
 
+macro(set_osx_deployment_target_flag)
+    if(NOT DEFINED $CACHE{CONAN_USE_CMAKE_OSX_DEPLOYMENT_TARGET})
+        if (DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+            set(CONAN_USE_CMAKE_OSX_DEPLOYMENT_TARGET TRUE CACHE BOOL
+                "Specifies whether CMAKE_OSX_DEPLOYMENT_TARGET should be use")
+        else()
+            set(CONAN_USE_CMAKE_OSX_DEPLOYMENT_TARGET FALSE CACHE BOOL
+                "Specifies whether CMAKE_OSX_DEPLOYMENT_TARGET should be use")
+        endif()
+    endif ()
+endmacro()
+
+
 # Add a deferred call at the end of processing the top-level directory
 # to check if the dependency provider was invoked at all.
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependency_check)
@@ -619,6 +632,8 @@ cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL conan_provide_dependen
 set(CONAN_HOST_PROFILE "default;auto-cmake" CACHE STRING "Conan host profile")
 set(CONAN_BUILD_PROFILE "default" CACHE STRING "Conan build profile")
 set(CONAN_INSTALL_ARGS "--build=missing" CACHE STRING "Command line arguments for conan install")
+
+set_osx_deployment_target_flag()
 
 find_program(_cmake_program NAMES cmake NO_PACKAGE_ROOT_PATH NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH NO_CMAKE_FIND_ROOT_PATH)
 if(NOT _cmake_program)
