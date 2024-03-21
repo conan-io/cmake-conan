@@ -378,6 +378,11 @@ function(detect_host_profile output_file)
         string(APPEND PROFILE "tools.android:ndk_path=${CMAKE_ANDROID_NDK}\n")
     endif()
 
+    string(APPEND PROFILE "[buildenv]\n")
+    string(APPEND PROFILE "CC=${CMAKE_C_COMPILER}\n")
+    string(APPEND PROFILE "CXX=${CMAKE_CXX_COMPILER}\n")
+    string(APPEND PROFILE "LD=${CMAKE_LINKER}\n")
+
     message(STATUS "CMake-Conan: Creating profile ${_FN}")
     file(WRITE ${_FN} ${PROFILE})
     message(STATUS "CMake-Conan: Profile: \n${PROFILE}")
