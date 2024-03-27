@@ -308,7 +308,7 @@ class TestGeneratedProfile:
         out, err = capfd.readouterr()
         assert "The CXX compiler identification is GNU" in out
         assert "CMake-Conan: The C compiler is not defined." in err
-        assert 'tools.build:compiler_executables={"cpp":"/usr/bin/c++"}' in out
+        assert 'tools.build:compiler_executables={"cpp":"/usr/bin/c++",}' in out
 
     @linux
     def test_propagate_c_compiler(self, capfd, basic_cmake_project):
@@ -318,7 +318,7 @@ class TestGeneratedProfile:
         out, err = capfd.readouterr()
         assert "The CXX compiler identification is GNU" in out
         assert "The C compiler is not defined." not in err
-        assert 'tools.build:compiler_executables={"c":"/usr/bin/cc","cpp":"/usr/bin/c++"}' in out
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/cc","cpp":"/usr/bin/c++",}' in out
 
     @linux
     def test_propagate_non_default_compiler(self, capfd, basic_cmake_project):
@@ -328,7 +328,7 @@ class TestGeneratedProfile:
         out, err = capfd.readouterr()
         assert "The CXX compiler identification is Clang" in out
         assert "The C compiler is not defined." not in err
-        assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++"}' in out
+        assert 'tools.build:compiler_executables={"c":"/usr/bin/clang","cpp":"/usr/bin/clang++",}' in out
 
     @darwin
     @pytest.mark.parametrize("cmake_generator", ["Unix Makefiles", "Xcode"])
