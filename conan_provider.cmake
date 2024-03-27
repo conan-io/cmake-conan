@@ -1,5 +1,5 @@
 set(CONAN_MINIMUM_VERSION 2.0.5)
-
+set(CONANFILE_DIR "${CMAKE_SOURCE_DIR}")
 
 function(detect_os OS OS_API_LEVEL OS_SDK OS_SUBSYSTEM OS_VERSION)
     # it could be cross compilation
@@ -411,7 +411,7 @@ function(conan_install)
     set(CONAN_OUTPUT_FOLDER ${CMAKE_BINARY_DIR}/conan)
     # Invoke "conan install" with the provided arguments
     set(CONAN_ARGS ${CONAN_ARGS} -of=${CONAN_OUTPUT_FOLDER})
-    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN}")
+    message(STATUS "CMake-Conan: conan install ${CONANFILE_DIR} ${CONAN_ARGS} ${ARGN}")
 
 
     # In case there was not a valid cmake executable in the PATH, we inject the
@@ -421,7 +421,7 @@ function(conan_install)
         set(ENV{PATH} "$ENV{PATH}:${PATH_TO_CMAKE_BIN}")
     endif()
 
-    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${CONAN_ARGS} ${ARGN} --format=json
+    execute_process(COMMAND ${CONAN_COMMAND} install "${CONANFILE_DIR}" ${CONAN_ARGS} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
@@ -446,8 +446,8 @@ function(conan_install)
     set_property(GLOBAL PROPERTY CONAN_GENERATORS_FOLDER "${CONAN_GENERATORS_FOLDER}")
     # reconfigure on conanfile changes
     string(JSON CONANFILE GET ${conan_stdout} graph nodes 0 label)
-    message(STATUS "CMake-Conan: CONANFILE=${CMAKE_SOURCE_DIR}/${CONANFILE}")
-    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/${CONANFILE}")
+    message(STATUS "CMake-Conan: CONANFILE=${CONANFILE_DIR}/${CONANFILE}")
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CONANFILE_DIR}/${CONANFILE}")
     # success
     set_property(GLOBAL PROPERTY CONAN_INSTALL_SUCCESS TRUE)
 
@@ -524,14 +524,14 @@ macro(conan_provide_dependency method package_name)
         endif()
         construct_profile_argument(_host_profile_flags CONAN_HOST_PROFILE)
         construct_profile_argument(_build_profile_flags CONAN_BUILD_PROFILE)
-        if(EXISTS "${CMAKE_SOURCE_DIR}/conanfile.py")
-            file(READ "${CMAKE_SOURCE_DIR}/conanfile.py" outfile)
+        if(EXISTS "${CONANFILE_DIR}/conanfile.py")
+            file(READ "${CONANFILE_DIR}/conanfile.py" outfile)
             if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
                 message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile")
             endif()
             set(generator "")
-        elseif (EXISTS "${CMAKE_SOURCE_DIR}/conanfile.txt")
-            file(READ "${CMAKE_SOURCE_DIR}/conanfile.txt" outfile)
+        elseif (EXISTS "${CONANFILE_DIR}/conanfile.txt")
+            file(READ "${CONANFILE_DIR}/conanfile.txt" outfile)
             if(NOT "${outfile}" MATCHES ".*CMakeDeps.*")
                 message(WARNING "Cmake-conan: CMakeDeps generator was not defined in the conanfile. "
                         "Please define the generator as it will be mandatory in the future")
@@ -625,4 +625,3 @@ if(NOT _cmake_program)
     get_filename_component(PATH_TO_CMAKE_BIN "${CMAKE_COMMAND}" DIRECTORY)
     set(PATH_TO_CMAKE_BIN "${PATH_TO_CMAKE_BIN}" CACHE INTERNAL "Path where the CMake executable is")
 endif()
-
