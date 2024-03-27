@@ -297,14 +297,14 @@ macro(append_compiler_executables_configuration)
                         "Please define CMAKE_C_COMPILER or enable the C language.")
     endif()
     if(CMAKE_CXX_COMPILER)
-        set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\"")
+        set(_conan_cpp_compiler "\"cpp\":\"${CMAKE_CXX_COMPILER}\",")
         set_conan_compiler_if_appleclang(CXX c++ _conan_cpp_compiler)
     else()
         message(WARNING "CMake-Conan: The C++ compiler is not defined. "
                         "Please define CMAKE_CXX_COMPILER or enable the C++ language.")
     endif()
     if(CMAKE_RC_COMPILER)
-        set(_conan_rc_compiler "\"rc\":\"${CMAKE_RC_COMPILER}\",")
+        set(_conan_rc_compiler "\"rc\":\"${CMAKE_RC_COMPILER}\"")
         # Not necessary to warn if RC not defined
     endif()
 
