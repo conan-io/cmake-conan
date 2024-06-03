@@ -277,6 +277,23 @@ class TestFindModules:
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
 
+    def test_policy_scope(self, capfd, basic_cmake_project):
+        """
+        Ensure that the policy settings of the user project is not affected by the
+        "module's policy-affecting calls.
+        """
+        source_dir, binary_dir = basic_cmake_project
+        shutil.copytree(resources_dir / 'find_module' / 'policy_scope', source_dir, dirs_exist_ok=True)
+
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
+        out, err = capfd.readouterr()
+        assert not re.search(rf'CMake Error at {re.escape(str(conan_provider))}.*\(if\):\n  if given arguments', err)
+        assert "Conan: Target declared 'hello::hello'" in out
+        assert "Conan: Target declared 'bye::bye'" in out
+        assert "\"a\" \"IN_LIST\" \"test_list\"" in err
+        assert "this should not happen as IN_LIST is a CMake 3.3 feature." not in err
+
+
 
 class TestCMakeModulePath:
 
