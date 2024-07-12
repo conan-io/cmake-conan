@@ -294,7 +294,6 @@ macro(append_compiler_executables_configuration)
     if(CMAKE_C_COMPILER)
         set(_conan_c_compiler "\"c\":\"${CMAKE_C_COMPILER}\"")
         set_conan_compiler_if_appleclang(C cc _conan_c_compiler)
-        message("_conan_c_compiler ${_conan_c_compiler}")
         list(APPEND _conan_compilers_list ${_conan_c_compiler})
     else()
         message(WARNING "CMake-Conan: The C compiler is not defined. "
