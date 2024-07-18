@@ -127,10 +127,10 @@ function(detect_arch ARCH)
 endfunction()
 
 
-function(detect_cxx_standard CXX_STANDARD)
-    set(${CXX_STANDARD} ${CMAKE_CXX_STANDARD} PARENT_SCOPE)
+function(detect_cxx_standard cxx_standard)
+    set(${cxx_standard} ${CMAKE_CXX_STANDARD} PARENT_SCOPE)
     if(CMAKE_CXX_EXTENSIONS)
-        set(${CXX_STANDARD} "gnu${CMAKE_CXX_STANDARD}" PARENT_SCOPE)
+        set(${cxx_standard} "gnu${CMAKE_CXX_STANDARD}" PARENT_SCOPE)
     endif()
 endfunction()
 
