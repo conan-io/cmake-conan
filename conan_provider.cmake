@@ -275,15 +275,15 @@ function(detect_compiler compiler compiler_version compiler_runtime compiler_run
 
     elseif(_compiler MATCHES AppleClang)
         set(_compiler "apple-clang")
-        string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+        string(REPLACE "." ";" VERSION_LIST ${_compiler_version})
         list(GET VERSION_LIST 0 _compiler_version)
     elseif(_compiler MATCHES Clang)
         set(_compiler "clang")
-        string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+        string(REPLACE "." ";" VERSION_LIST ${_compiler_version})
         list(GET VERSION_LIST 0 _compiler_version)
     elseif(_compiler MATCHES GNU)
         set(_compiler "gcc")
-        string(REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION})
+        string(REPLACE "." ";" VERSION_LIST ${_compiler_version})
         list(GET VERSION_LIST 0 _compiler_version)
     endif()
 
