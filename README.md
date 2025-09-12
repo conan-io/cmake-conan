@@ -50,7 +50,7 @@ cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/con
 
 * Only the `CMakeDeps` generator is specified - for build settings that would otherwise be provided by `CMakeToolchain` (for example, the compiler itself or other global build settings) please invoke Conan separately as per [documentation](https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html).
 * Currently this only works such that Conan can satisfy invocations to CMake's `find_package`. For dependencies that have logic outside of `find_package`, for example, by making direct calls to `find_program`, `find_library`, `find_path` or `find_file`, these may not work correctly.
-* When using a single-configuration CMake generator, you must specify a valid `CMAKE_BUILD_TYPE` (can't be left blank)
+* When using a single-configuration CMake generator, you must specify a valid `CMAKE_BUILD_TYPE` (can't be left blank). Alternatively, `CONAN_INSTALL_BUILD_CONFIGURATIONS` can be set to a non-empty list of build types (see next section).
 * Deriving Conan settings is currently only supported on the most common platforms with the most popular compilers.
 
 ### Customizing Conan profiles
@@ -68,10 +68,25 @@ If you need to customize the profile, you can do so by modifying the value of `C
 * `-DCONAN_BUILD_PROFILE="/path/to/profile"`: alternatively, provide a path to a profile file that may be anywhere in the filesystem.
 * `-DCONAN_HOST_PROFILE="default;custom"`: semi-colon separated list of profiles. A compound profile will be used (see [docs](https://docs.conan.io/2.0/reference/commands/install.html#profiles-settings-options-conf)) - compunded from left to right, where right has the highest priority.
 
+Any `build_type` specified by a host profile is ignored.
+The `build_type` is handled separately, and the default behavior depends on the CMake generator used:
+* For single-configuration generators, `conan install` is executed once with `build_type` set to the `CMAKE_BUILD_TYPE`. The `CMAKE_BUILD_TYPE` must not be empty.
+* For multi-configuration generators, `conan install` is executed twice: once with `build_type` set to `Release`, and a second time with `build_type` set to `Debug`.
+
+You can override the default build type(s) by setting the `CONAN_INSTALL_BUILD_CONFIGURATIONS` CMake variable to a list of build types.
+`conan install` will then be invoked once for each build type.
+This can be used with both single- and multi-configuration generators.
+For example:
+* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release;Debug`: execute `conan install` for both `Release` and `Debug` build types, even for single-configuration generators.
+* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release`: execute `conan install` once for just the `Release` build type, even for multi-configuration generators.
+
 ### Customizing the invocation of Conan install
 The CMake-Conan dependency provider will autodetect and pass the profile information as described above. If the `conan install` command invocation needs to be customized further, the `CONAN_INSTALL_ARGS` variable can be used. 
 * By default, `CONAN_INSTALL_ARGS` is initialised to pass `--build=missing`. If you customize this variable, please be aware that Conan will revert to its default behaviour unless you specify the `--build` flag.
-* Two arguments are reserved to the dependency provider implementation and must not be set: the path to a `conanfile.txt|.py`, and the output format (`--format`).
+* Some arguments are reserved for the dependency provider implementation and must not be set in `CONAN_INSTALL_ARGS`:
+  * The path to a `conanfile.txt|.py`.
+  * The output format (`--format`).
+  * The build type setting (`-s build_type=...`).
 * Values are semi-colon separated, e.g. `--build=never;--update;--lockfile-out=''`
 
 
