@@ -461,7 +461,6 @@ endfunction()
 
 
 function(conan_install)
-    cmake_parse_arguments(ARGS conan_args ${ARGN})
     set(conan_output_folder ${CMAKE_BINARY_DIR}/conan)
     # Invoke "conan install" with the provided arguments
     set(conan_args ${conan_args} -of=${conan_output_folder})
