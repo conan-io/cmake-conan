@@ -191,7 +191,8 @@ class TestBasic:
         assert all(expected in out for expected in expected_conan_install_outputs)
         assert "CMake-Conan: Installing configuration(s): Release, Debug\n" in out
         # We don't need to do a build, just running CMake configure is enough to verify the config selection
-
+    
+    @pytest.mark.usefixtures("build_dir_multi")
     def test_multi_config_override_install_config(self, capfd):
         "Ensure that CONAN_INSTALL_BUILD_CONFIGURATIONS is honored for multi-config generators"
         generator = "-G'Ninja Multi-Config'" if platform.system() != "Windows" else ""
