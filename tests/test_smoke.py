@@ -196,7 +196,7 @@ class TestBasic:
     def test_multi_config_override_install_config(self, capfd):
         "Ensure that CONAN_INSTALL_BUILD_CONFIGURATIONS is honored for multi-config generators"
         generator = "-G'Ninja Multi-Config'" if platform.system() != "Windows" else ""
-        run(f'cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release')
+        run(f'cmake -S {self.source_dir} -B {self.binary_dir_multi} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release')
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         assert "CMake-Conan: Installing configuration(s): Release\n" in out
