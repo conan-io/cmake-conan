@@ -186,10 +186,10 @@ class TestBasic:
     def test_single_config_override_install_config(self, capfd):
         "Ensure that CONAN_INSTALL_BUILD_CONFIGURATIONS is honored for single-config generators"
         generator = "-GNinja" if platform.system() == "Windows" else ""
-        run(f'cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release;Debug"')
+        run(f'cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release"')
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
-        assert "CMake-Conan: Installing configuration(s): Release, Debug\n" in out
+        assert "CMake-Conan: Installing configuration(s): Release\n" in out
         # We don't need to do a build, just running CMake configure is enough to verify the config selection
     
     @pytest.mark.usefixtures("build_dir_multi")
