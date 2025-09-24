@@ -599,7 +599,7 @@ macro(conan_provide_dependency method package_name)
             set(_build_configs "${CONAN_INSTALL_BUILD_CONFIGURATIONS}")
             list(LENGTH _build_configs _build_configs_length)
             if(NOT _multiconfig_generator AND _build_configs_length GREATER 1)
-                message(FATAL_ERROR "cmake-conan: when using a single-config CMake generation, "
+                message(FATAL_ERROR "cmake-conan: when using a single-config CMake generator, "
                         "please only specify a single configuration in CONAN_INSTALL_BUILD_CONFIGURATIONS")
             endif()
             unset(_build_configs_length)
