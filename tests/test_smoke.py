@@ -36,6 +36,15 @@ windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows onl
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
+def clear_folder_contents(folder_path):
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"{folder_path} is not a valid directory.")
+    for entry in os.listdir(folder_path):
+        entry_path = os.path.join(folder_path, entry)
+        if os.path.isfile(entry_path) or os.path.islink(entry_path):
+            os.unlink(entry_path)
+        elif os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
 
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
@@ -221,7 +230,8 @@ class TestBasic:
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
     def test_msvc_runtime_multiconfig(self, capfd, msvc_runtime):
-        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"'
+        clear_folder_contents(self.binary_dir_multi)
         run(f"cmake -S {self.source_dir} -B {self.binary_dir_multi} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {msvc_runtime_flag}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
@@ -246,7 +256,8 @@ class TestBasic:
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
     def test_msvc_runtime_singleconfig(self, capfd, config, msvc_runtime):
-        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"'
+        clear_folder_contents(self.binary_dir)
         run(f"cmake -S {self.source_dir} -B {self.binary_dir} -GNinja -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE={config} {msvc_runtime_flag} -GNinja")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
