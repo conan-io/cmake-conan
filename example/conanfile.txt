@@ -1,5 +1,8 @@
 [requires]
-fmt/9.1.0
+fmt/[>10]
+
+[tool_requires]
+cppcheck/[>=2.13 <3]
 
 [layout]
 cmake_layout
