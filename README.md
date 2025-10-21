@@ -75,10 +75,10 @@ The `build_type` is handled separately, and the default behavior depends on the 
 
 You can override the default build type(s) by setting the `CONAN_INSTALL_BUILD_CONFIGURATIONS` CMake variable to a list of build types.
 `conan install` will then be invoked once for each build type.
-This can be used with both single- and multi-configuration generators.
+This can be used with both single- and multi-configuration generators, although currently only one build type can be specified for single-configuration generators.
 For example:
-* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release;Debug`: execute `conan install` for both `Release` and `Debug` build types, even for single-configuration generators.
-* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release`: execute `conan install` once for just the `Release` build type, even for multi-configuration generators.
+* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release;Debug`: execute `conan install` for both `Release` and `Debug` build types with a multi-configuration generator.
+* `-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release`: execute `conan install` once for just the `Release` build type, applicable for both single- and multi-configuration generators.
 
 ### Customizing the invocation of Conan install
 The CMake-Conan dependency provider will autodetect and pass the profile information as described above. If the `conan install` command invocation needs to be customized further, the `CONAN_INSTALL_ARGS` variable can be used. 
