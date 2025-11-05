@@ -304,7 +304,7 @@ endfunction()
 
 
 function(detect_build_type build_type)
-    get_property(multiconfig_generator GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    get_property(multiconfig_generator GLOBAL PROPERTY )
     if(NOT multiconfig_generator)
         # Only set when we know we are in a single-configuration generator
         # Note: we may want to fail early if `CMAKE_BUILD_TYPE` is not defined
@@ -606,7 +606,8 @@ macro(conan_provide_dependency method package_name)
         else()
             # No configuration overrides, provide sensible defaults            
             if(_multiconfig_generator)
-                set(_build_configs Release Debug)
+                # use specified CMAKE_CONFIGURATION_TYPES otherwhise downstream tools may run into problems
+                set(_build_configs ${CMAKE_CONFIGURATION_TYPES})
             else()
                 set(_build_configs ${CMAKE_BUILD_TYPE})
             endif()
