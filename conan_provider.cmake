@@ -433,7 +433,7 @@ function(detect_host_profile output_file)
     if(CMAKE_TOOLCHAIN_FILE AND EXISTS ${CMAKE_TOOLCHAIN_FILE})
       # pass cmake toolchain file to conan
       string(APPEND profile "tools.cmake.cmaketoolchain:toolchain_file=${CMAKE_TOOLCHAIN_FILE}\n")
-  endif()
+    endif()
 
 
     # propagate compilers via profile
