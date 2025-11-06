@@ -12,6 +12,7 @@
       "name": "_arm_none_eabi",
       "inherits": "_conan",
       "hidden": true,
+      "generator": "Ninja Multi-Config",
       "toolchainFile": "${sourceDir}/gcc-arm-none-eabi.cmake",
       "cacheVariables": {
         "BUILD_TARGET": true,
@@ -44,6 +45,32 @@
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
       }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "arm_none_eabi_gcc_14_win_dbg",
+      "configurePreset": "arm_none_eabi_gcc_14_win",
+      "displayName": "Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "arm_none_eabi_gcc_14_win_rel",
+      "configurePreset": "arm_none_eabi_gcc_14_win",
+      "displayName": "Release",
+      "configuration": "Release"
+    },
+    {
+      "name": "arm_none_eabi_gcc_14_linux_dbg",
+      "configurePreset": "arm_none_eabi_gcc_14_linux",
+      "displayName": "Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "arm_none_eabi_gcc_14_linux_rel",
+      "configurePreset": "arm_none_eabi_gcc_14_linux",
+      "displayName": "Release",
+      "configuration": "Release"
     }
   ]
 }
