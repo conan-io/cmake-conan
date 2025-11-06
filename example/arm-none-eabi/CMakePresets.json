@@ -1,0 +1,49 @@
+﻿{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "_conan",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/../../conan_provider.cmake"
+      }
+    },
+    {
+      "name": "_arm_none_eabi",
+      "inherits": "_conan",
+      "hidden": true,
+      "toolchainFile": "${sourceDir}/gcc-arm-none-eabi.cmake",
+      "cacheVariables": {
+        "BUILD_TARGET": true,
+        "COMPILER_ARCH_FLAGS": "-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard"
+      }
+    },
+    {
+      "name": "arm_none_eabi_gcc_14_win",
+      "description": "Windows Cross Compiler",
+      "inherits": [ "_arm_none_eabi" ],
+      "cacheVariables": {
+        "TOOLCHAIN_URL": "https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-mingw-w64-i686-arm-none-eabi.zip"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "arm_none_eabi_gcc_14_linux",
+      "description": "Linux Cross Compiler",
+      "hidden": true,
+      "inherits": [ "_arm_none_eabi" ],
+      "cacheVariables": {
+        "TOOLCHAIN_URL": "https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz",
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    }
+  ]
+}

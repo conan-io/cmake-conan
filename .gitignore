@@ -40,3 +40,4 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+example/arm-none-eabi/.vs
