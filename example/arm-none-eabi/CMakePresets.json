@@ -9,8 +9,17 @@
       }
     },
     {
+      "name": "_dir",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/out/${presetName}/build",
+      "installDir": "${sourceDir}/out/${presetName}/install",
+      "cacheVariables": {
+        "REPORTS_DIR": "${sourceDir}/out/${presetName}/reports"
+      }
+    },
+    {
       "name": "_arm_none_eabi",
-      "inherits": "_conan",
+      "inherits": [ "_conan", "_dir" ],
       "hidden": true,
       "generator": "Ninja Multi-Config",
       "toolchainFile": "${sourceDir}/gcc-arm-none-eabi.cmake",
