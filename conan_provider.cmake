@@ -126,9 +126,15 @@ function(detect_arch arch)
     elseif(host_arch MATCHES "AMD64|amd64|x86_64|x64")
         set(_arch x86_64)
     endif()
+    # https://github.com/emscripten-core/emscripten/blob/4.0.6/cmake/Modules/Platform/Emscripten.cmake#L294
     if(EMSCRIPTEN)
-        # https://github.com/emscripten-core/emscripten/blob/4.0.6/cmake/Modules/Platform/Emscripten.cmake#L294C1-L294C80
-        set(_arch wasm)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            # https://github.com/emscripten-core/emscripten/blob/4.0.6/cmake/Modules/Platform/Emscripten.cmake#L225
+            set(_arch wasm64)
+        else()
+            # https://github.com/emscripten-core/emscripten/blob/4.0.6/cmake/Modules/Platform/Emscripten.cmake#L230
+            set(_arch wasm)
+        endif()
     endif()
     message(STATUS "CMake-Conan: cmake_system_processor=${_arch}")
     set(${arch} ${_arch} PARENT_SCOPE)
