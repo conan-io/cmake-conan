@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set(CONAN_MINIMUM_VERSION 2.0.5)
+set(CONAN_MINIMUM_VERSION 2.4.0)
 
 # Create a new policy scope and set the minimum required cmake version so the
 # features behind a policy setting like if(... IN_LIST ...) behaves as expected
@@ -132,6 +132,14 @@ function(detect_arch arch)
     endif()
     message(STATUS "CMake-Conan: cmake_system_processor=${_arch}")
     set(${arch} ${_arch} PARENT_SCOPE)
+endfunction()
+
+
+function(detect_c_standard c_standard)
+    set(${c_standard} ${CMAKE_C_STANDARD} PARENT_SCOPE)
+    if(CMAKE_C_EXTENSIONS)
+        set(${c_standard} "gnu${CMAKE_C_STANDARD}" PARENT_SCOPE)
+    endif()
 endfunction()
 
 
@@ -370,6 +378,7 @@ function(detect_host_profile output_file)
     detect_os(os os_api_level os_sdk os_subsystem os_version)
     detect_arch(arch)
     detect_compiler(compiler compiler_version compiler_runtime compiler_runtime_type)
+    detect_c_standard(compiler_cstd)
     detect_cxx_standard(compiler_cppstd)
     detect_lib_cxx(compiler_libcxx)
     detect_build_type(build_type)
@@ -405,6 +414,9 @@ function(detect_host_profile output_file)
     endif()
     if(compiler_runtime_type)
         string(APPEND profile compiler.runtime_type=${compiler_runtime_type} "\n")
+    endif()
+    if(compiler_cstd)
+        string(APPEND profile compiler.cstd=${compiler_cstd} "\n")
     endif()
     if(compiler_cppstd)
         string(APPEND profile compiler.cppstd=${compiler_cppstd} "\n")
