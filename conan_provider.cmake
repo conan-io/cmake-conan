@@ -35,6 +35,10 @@ set(CONAN_MINIMUM_VERSION 2.0.5)
 cmake_policy(PUSH)
 cmake_minimum_required(VERSION 3.24)
 
+# Handling of empty values for single-value keywords with cmake_parse_arguments()
+if(POLICY CMP0174)
+    cmake_policy(SET CMP0174 NEW)
+endif()
 
 function(detect_os os os_api_level os_sdk os_subsystem os_version)
     # it could be cross compilation
@@ -461,11 +465,48 @@ endfunction()
 
 
 function(conan_install)
-    set(conan_output_folder ${CMAKE_BINARY_DIR}/conan)
-    # Invoke "conan install" with the provided arguments
-    set(conan_args -of=${conan_output_folder})
-    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN}")
+    # Use keyword-based arguments so that the arguments at the call sites are clearer
+    set(noValueKeywords "")
+    set(singleValueKeywords
+        BUILD_TYPE
+        SELF_BUILD_TYPE
+    )
+    set(multiValueKeywords
+        HOST_PROFILE_FLAGS
+        BUILD_PROFILE_FLAGS
+        EXTRA_INSTALL_ARGS
+        CONAN_GENERATOR
+    )
+    cmake_parse_arguments(PARSE_ARGV 0 arg
+        "${noValueKeywords}" "${singleValueKeywords}" "${multiValueKeywords}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        list(JOIN arg_UNPARSED_ARGUMENTS ", " unknown_args)
+        message(FATAL_ERROR "Unexpected arguments: ${unknown_args}")
+    endif()
+    if("${arg_BUILD_TYPE}" STREQUAL "")
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}(): BUILD_TYPE is missing or empty")
+    endif()
 
+    set(conan_output_folder ${CMAKE_BINARY_DIR}/conan)
+    set(install_output_json ${conan_output_folder}/conan_install_${arg_BUILD_TYPE}.json)
+    set(install_output_log  ${conan_output_folder}/conan_install_${arg_BUILD_TYPE}.log)
+
+    # Invoke "conan install" with the provided arguments
+    set(conan_args
+        -of=${conan_output_folder}
+        ${arg_HOST_PROFILE_FLAGS}
+        ${arg_BUILD_PROFILE_FLAGS}
+        -s build_type=${arg_BUILD_TYPE}   # Needs to come after the profiles so it can override them
+    )
+    if(NOT "${arg_SELF_BUILD_TYPE}" STREQUAL "")
+        list(APPEND conan_args -s &:build_type=${arg_SELF_BUILD_TYPE})
+    endif()
+    list(APPEND conan_args
+        ${arg_EXTRA_INSTALL_ARGS}
+        ${arg_CONAN_GENERATOR}   # Should be last to ensure it can't be overridden
+    )
+    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${conan_args}")
 
     # In case there was not a valid cmake executable in the PATH, we inject the
     # same we used to invoke the provider to the PATH
@@ -474,12 +515,17 @@ function(conan_install)
         set(ENV{PATH} "$ENV{PATH}:${PATH_TO_CMAKE_BIN}")
     endif()
 
-    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN} --format=json
+    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${conan_args} --format=json
                     RESULT_VARIABLE return_code
-                    OUTPUT_VARIABLE conan_stdout
-                    ERROR_VARIABLE conan_stderr
+                    OUTPUT_VARIABLE conan_stdout   # JSON output goes here
+                    ERROR_VARIABLE conan_stderr    # Progress and general status messages go here
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    # Save the outputs to files so the user can process them later if they want
+    # (e.g. to troubleshoot or to work out which packages were built rather than downloaded)
+    file(WRITE "${install_output_json}" "${conan_stdout}")
+    file(WRITE "${install_output_log}"  "${conan_stderr}")
 
     if(DEFINED PATH_TO_CMAKE_BIN)
         set(ENV{PATH} "${old_path}")
@@ -617,9 +663,16 @@ macro(conan_provide_dependency method package_name)
         foreach(_build_config IN LISTS _build_configs)
             set(_self_build_config "")
             if(NOT _multiconfig_generator AND NOT _build_config STREQUAL "${CMAKE_BUILD_TYPE}")
-                set(_self_build_config -s &:build_type=${CMAKE_BUILD_TYPE})
+                set(_self_build_config ${CMAKE_BUILD_TYPE})
             endif()
-            conan_install(${_host_profile_flags} ${_build_profile_flags} -s build_type=${_build_config} ${_self_build_config} ${CONAN_INSTALL_ARGS} ${generator})
+            conan_install(
+                HOST_PROFILE_FLAGS ${_host_profile_flags}
+                BUILD_PROFILE_FLAGS ${_build_profile_flags}
+                BUILD_TYPE "${_build_config}"
+                SELF_BUILD_TYPE "${_self_build_config}"
+                CONAN_GENERATOR ${generator}
+                EXTRA_INSTALL_ARGS ${CONAN_INSTALL_ARGS}
+            )
         endforeach()
         unset(_self_build_config)
         unset(_multiconfig_generator)
