@@ -12,7 +12,7 @@ find_package(Andromeda REQUIRED)
 
 # Ensure that CMake module path is a list with two values:
 # - the `orion-module-subfolder` is first, and the one set above (cmake-source-dir/cmake) is second
-# Note: on multi-config generators, CMakeDeps will prepend it twice (one for Debug, one for Release)
+# Note: on multi-config generators, CMakeConfigDeps will prepend it twice (one for Debug, one for Release)
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(is_multi_config)
   set(_expected_list_size 3)

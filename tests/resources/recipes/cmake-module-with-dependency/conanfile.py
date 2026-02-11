@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeConfigDeps
 
 
 class cmake_module_onlyRecipe(ConanFile):
@@ -37,7 +37,7 @@ class cmake_module_onlyRecipe(ConanFile):
         self.requires("cmake-module-only/0.1")
 
     def generate(self):
-        deps = CMakeDeps(self)
+        deps = CMakeConfigDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
         tc.generate()

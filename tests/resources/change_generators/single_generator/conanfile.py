@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeDeps
+from conan.tools.cmake import CMakeConfigDeps
 
 class testRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
@@ -9,5 +9,5 @@ class testRecipe(ConanFile):
         self.requires("bye/0.1")
 
     def generate(self):
-        deps = CMakeDeps(self)
+        deps = CMakeConfigDeps(self)
         deps.generate()
