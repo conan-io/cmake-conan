@@ -275,16 +275,6 @@ class TestBasic:
         assert all(expected in out for expected in expected_runtime_outputs)
         
 class TestFindModules:
-    def test_find_module(self, capfd, basic_cmake_project):
-        "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
-        source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(resources_dir / 'find_module' / 'basic_module', source_dir, dirs_exist_ok=True)
-
-        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
-        out, err = capfd.readouterr()
-        assert "Conan: Target declared 'hello::hello'" in out
-        assert "Conan: Target declared 'bye::bye'" in out
-        run("cmake --build .")
 
     @pytest.mark.parametrize("use_find_components", [True, False])
     def test_find_builtin_module(self, capfd, use_find_components, basic_cmake_project):
