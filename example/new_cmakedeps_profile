@@ -1,8 +1,0 @@
-# To test the new incubating CMakeDeps + cmake-conan
-# cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=../conan_provider.cmake -DCONAN_HOST_PROFILE="auto-cmake;../new_cmakedeps_profile"
-
-[options]
-*:shared=True
-
-[conf]
-tools.cmake.cmakedeps:new=will_break_next

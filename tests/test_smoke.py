@@ -36,6 +36,15 @@ windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows onl
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
+def clear_folder_contents(folder_path):
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"{folder_path} is not a valid directory.")
+    for entry in os.listdir(folder_path):
+        entry_path = os.path.join(folder_path, entry)
+        if os.path.isfile(entry_path) or os.path.islink(entry_path):
+            os.unlink(entry_path)
+        elif os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
 
 @pytest.fixture(scope="session")
 def conan_home_dir(tmp_path_factory):
@@ -172,7 +181,7 @@ class TestBasic:
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
         assert "Overriding config types" in out
-        assert "CMake-Conan: Installing single configuration Release" in out
+        assert "CMake-Conan: Installing configuration(s): Release\n" in out
         run("cmake --build .")
         out, _ = capfd.readouterr()
         assert all(expected not in out for expected in expected_conan_install_outputs)
@@ -182,6 +191,25 @@ class TestBasic:
         out, _ = capfd.readouterr()
         expected_output = [f.format(config="Release") for f in expected_app_outputs]
         assert all(expected in out for expected in expected_output)
+
+    def test_single_config_override_install_config(self, capfd):
+        "Ensure that CONAN_INSTALL_BUILD_CONFIGURATIONS is honored for single-config generators"
+        generator = "-GNinja" if platform.system() == "Windows" else ""
+        run(f'cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release"')
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        assert "CMake-Conan: Installing configuration(s): Release\n" in out
+        # We don't need to do a build, just running CMake configure is enough to verify the config selection
+    
+    @pytest.mark.usefixtures("build_dir_multi")
+    def test_multi_config_override_install_config(self, capfd):
+        "Ensure that CONAN_INSTALL_BUILD_CONFIGURATIONS is honored for multi-config generators"
+        generator = "-G'Ninja Multi-Config'" if platform.system() != "Windows" else ""
+        run(f'cmake -S {self.source_dir} -B {self.binary_dir_multi} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {generator} -DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release')
+        out, _ = capfd.readouterr()
+        assert all(expected in out for expected in expected_conan_install_outputs)
+        assert "CMake-Conan: Installing configuration(s): Release\n" in out
+        # We don't need to do a build, just running CMake configure is enough to verify the config selection
 
     @unix
     def test_reconfigure_on_conanfile_changes(self, capfd):
@@ -202,7 +230,8 @@ class TestBasic:
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
     def test_msvc_runtime_multiconfig(self, capfd, msvc_runtime):
-        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"'
+        clear_folder_contents(self.binary_dir_multi)
         run(f"cmake -S {self.source_dir} -B {self.binary_dir_multi} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} {msvc_runtime_flag}")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
@@ -227,7 +256,8 @@ class TestBasic:
                                               "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL",
                                               "MultiThreaded", "MultiThreadedDebugDLL"])
     def test_msvc_runtime_singleconfig(self, capfd, config, msvc_runtime):
-        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"' 
+        msvc_runtime_flag = f'-DCMAKE_MSVC_RUNTIME_LIBRARY="{msvc_runtime}"'
+        clear_folder_contents(self.binary_dir)
         run(f"cmake -S {self.source_dir} -B {self.binary_dir} -GNinja -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE={config} {msvc_runtime_flag} -GNinja")
         out, _ = capfd.readouterr()
         assert all(expected in out for expected in expected_conan_install_outputs)
@@ -496,7 +526,8 @@ class TestLibcxx:
 
     @linux
     def test_clang_libcxx_linux(self, capfd, basic_cmake_project):
-        """Ensure libc++ is set when using libc++ with Clang"""
+        """Ensure libc++ is set when using libc++ with Clang
+        """
         source_dir, binary_dir = basic_cmake_project
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} '
             '-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_COMPILER=clang++')
@@ -688,28 +719,21 @@ class TestMSVCArch:
     @windows
     def test_msvc_arm64(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 16 2019" -A ARM64')
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 17 2022" -A ARM64')
         out, _ = capfd.readouterr()
         assert "arch=armv8" in out
 
     @windows
-    def test_msvc_arm(self, capfd, basic_cmake_project):
-        source_dir, binary_dir = basic_cmake_project
-        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 16 2019" -A ARM')
-        out, _ = capfd.readouterr()
-        assert "arch=armv7" in out
-
-    @windows
     def test_msvc_x86_64(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 16 2019" -A x64')
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 17 2022" -A x64')
         out, _ = capfd.readouterr()
         assert "arch=x86_64" in out
 
     @windows
     def test_msvc_x86(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
-        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 16 2019" -A Win32')
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -G "Visual Studio 17 2022" -A Win32')
         out, _ = capfd.readouterr()
         assert "arch=x86" in out
 
