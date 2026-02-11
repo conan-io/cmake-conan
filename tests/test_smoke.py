@@ -33,6 +33,11 @@ darwin = pytest.mark.skipif(platform.system() != "Darwin", reason="Darwin only")
 windows = pytest.mark.skipif(platform.system() != "Windows", reason="Windows only")
 
 
+def normalize_console_output(output):
+    # terminals can wrap console output resulting in
+    # inconsistent levels of whitespace in CMake output
+    return re.sub(r"\s+", " ", output)
+
 def run(cmd, check=True):
     subprocess.run(cmd, shell=True, check=check)
 
@@ -768,7 +773,15 @@ class TestCMakeDepsGenerators:
         self.copy_resource(resource_path, source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
-        assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
+        assert 'Cmake-conan: CMakeDeps or CMakeConfigDeps generator was not defined in the conanfile' in normalize_console_output(err)
+
+    # CMakeConfigDeps generator is declared in the generate() function in conanfile.py
+    def test_cmakeconfigdeps_generator(self, capfd, basic_cmake_project):
+        source_dir, binary_dir = basic_cmake_project
+        self.copy_resource('cmakeconfigdeps_generator', source_dir)
+        run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release')
+        _, err = capfd.readouterr()
+        assert 'Cmake-conan: CMakeDeps or CMakeConfigDeps generator was not defined in the conanfile' not in normalize_console_output(err)
 
 
 class TestTryCompile:
