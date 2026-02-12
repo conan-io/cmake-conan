@@ -20,6 +20,7 @@ else()
   set(_expected_list_size 2)
 endif()
 
+message(STATUS "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
 list(LENGTH CMAKE_MODULE_PATH _cmake_module_path_length)
 if(NOT _cmake_module_path_length EQUAL ${_expected_list_size})
   message(STATUS "CMAKE_MODULE_PATH DOES NOT have expected value 1: ${CMAKE_MODULE_PATH}")
