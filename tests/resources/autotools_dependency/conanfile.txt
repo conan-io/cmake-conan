@@ -1,2 +1,5 @@
 [requires]
 helloautotools/0.1
+
+[generators]
+CMakeConfigDeps
