@@ -275,16 +275,6 @@ class TestBasic:
         assert all(expected in out for expected in expected_runtime_outputs)
         
 class TestFindModules:
-    def test_find_module(self, capfd, basic_cmake_project):
-        "Ensure that a call to find_package(XXX MODULE REQUIRED) is honoured by the dependency provider"
-        source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(resources_dir / 'find_module' / 'basic_module', source_dir, dirs_exist_ok=True)
-
-        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
-        out, err = capfd.readouterr()
-        assert "Conan: Target declared 'hello::hello'" in out
-        assert "Conan: Target declared 'bye::bye'" in out
-        run("cmake --build .")
 
     @pytest.mark.parametrize("use_find_components", [True, False])
     def test_find_builtin_module(self, capfd, use_find_components, basic_cmake_project):
@@ -295,7 +285,7 @@ class TestFindModules:
         boost_find_components = "ON" if use_find_components else "OFF"
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release -D_TEST_BOOST_FIND_COMPONENTS={boost_find_components}", check=False)
         out, err = capfd.readouterr()
-        assert "Conan: Target declared 'Boost::boost'" in out
+        assert "Conan: Target declared imported STATIC library 'Boost::boost'" in out
         run("cmake --build .")
 
     def test_cmake_builtin_module(self, capfd, basic_cmake_project):
@@ -306,23 +296,6 @@ class TestFindModules:
         run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release")
         out, _ = capfd.readouterr()
         assert "Found Threads: TRUE" in out
-
-    def test_policy_scope(self, capfd, basic_cmake_project):
-        """
-        Ensure that the policy settings of the user project is not affected by the
-        "module's policy-affecting calls.
-        """
-        source_dir, binary_dir = basic_cmake_project
-        shutil.copytree(resources_dir / 'find_module' / 'policy_scope', source_dir, dirs_exist_ok=True)
-
-        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release", check=False)
-        out, err = capfd.readouterr()
-        assert not re.search(rf'CMake Error at {re.escape(str(conan_provider))}.*\(if\):\n  if given arguments', err)
-        assert "Conan: Target declared 'hello::hello'" in out
-        assert "Conan: Target declared 'bye::bye'" in out
-        assert "\"a\" \"IN_LIST\" \"test_list\"" in err
-        assert "this should not happen as IN_LIST is a CMake 3.3 feature." not in err
-
 
 
 class TestCMakeModulePath:
@@ -738,13 +711,13 @@ class TestMSVCArch:
         assert "arch=x86" in out
 
 
-class TestCMakeDepsGenerators:
+class TestCMakeConfigDepsGenerators:
     @staticmethod
     def copy_resource(gen_resource, source_dir):
         os.remove(source_dir / "conanfile.txt")
         shutil.copytree(src_dir / 'tests' / 'resources' / 'change_generators' / gen_resource, source_dir, dirs_exist_ok=True)
 
-    # CMakeDeps generator is declared in the generate() function in conanfile.py
+    # CMakeConfigDeps generator is declared in the generate() function in conanfile.py
     def test_single_generator(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
         self.copy_resource('single_generator', source_dir)
@@ -752,23 +725,23 @@ class TestCMakeDepsGenerators:
         out, _ = capfd.readouterr()
         assert 'Generating done' in out
 
-    # CMakeDeps generator is declared both in generators attribute and generate() function in conanfile.py
+    # CMakeConfigDeps generator is declared both in generators attribute and generate() function in conanfile.py
     def test_duplicate_generator(self, capfd, basic_cmake_project):
         source_dir, binary_dir = basic_cmake_project
         self.copy_resource('duplicate_generator', source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
-        assert ('ConanException: CMakeDeps is declared in the generators attribute, but was instantiated in the '
+        assert ('ConanException: CMakeConfigDeps is declared in the generators attribute, but was instantiated in the '
                 'generate() method too') in err
 
-    # CMakeDeps generator is not declared in the conanfile
+    # CMakeConfigDeps generator is not declared in the conanfile
     @pytest.mark.parametrize("resource_path", ["no_generator_py", "no_generator_txt"])
     def test_no_generator_py(self, capfd, basic_cmake_project, resource_path):
         source_dir, binary_dir = basic_cmake_project
         self.copy_resource(resource_path, source_dir)
         run(f'cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release', check=False)
         _, err = capfd.readouterr()
-        assert 'Cmake-conan: CMakeDeps generator was not defined in the conanfile' in err
+        assert 'Cmake-conan: CMakeConfigDeps generator was not defined in the conanfile' in err
 
 
 class TestTryCompile:

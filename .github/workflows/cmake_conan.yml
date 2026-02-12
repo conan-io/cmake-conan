@@ -1,4 +1,11 @@
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - develop2
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ${{ matrix.os }}

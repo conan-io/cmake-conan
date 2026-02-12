@@ -48,10 +48,12 @@ cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/con
 
 ### Known limitations with Conan 2.0
 
-* Only the `CMakeDeps` generator is specified - for build settings that would otherwise be provided by `CMakeToolchain` (for example, the compiler itself or other global build settings) please invoke Conan separately as per [documentation](https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html).
-* Currently this only works such that Conan can satisfy invocations to CMake's `find_package`. For dependencies that have logic outside of `find_package`, for example, by making direct calls to `find_program`, `find_library`, `find_path` or `find_file`, these may not work correctly.
+* Only the `CMakeConfigDeps` generator is the recommended for ``cmake-conan``. It is designed to solve some previous issues of ``CMakeDeps``.
+* For build settings that would otherwise be provided by `CMakeToolchain` (for example, the compiler itself or other global build settings) please invoke Conan separately as per [documentation](https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html), that is first calling ``conan install`` then ``cmake --preset``
+* Currently the ``cmake-conan`` triggers the ``conan install`` at the first ``find_package()`` occurence. That means that any other dependencies that have logic outside of `find_package`, for example, by making direct calls to `find_program`, `find_library`, `find_path` or `find_file`, these may not work correctly if done after, and they must follow at least one ``find_package()``.
 * When using a single-configuration CMake generator, you must specify a valid `CMAKE_BUILD_TYPE` (can't be left blank). Alternatively, `CONAN_INSTALL_BUILD_CONFIGURATIONS` can be set to a non-empty list of build types (see next section).
-* Deriving Conan settings is currently only supported on the most common platforms with the most popular compilers.
+* Deriving Conan settings is currently only supported on the most common platforms with the most popular compilers. The intention is that this ``conan_provider.cmake`` only supports the main compilers of the mainstream platforms, that means Windows+MSVC, Linux+gcc, Apple+clang. All other compilers, architecturs and variants will need Conan profile files for specifying the inputs.
+
 
 ### Customizing Conan profiles
 The CMake-Conan dependency provider will create a Conan profile where the settings (`os`, `arch`, `compiler`, `build_type`) are retrieved from what CMake has detected for the current build. Conan uses two profiles for dependencies, the _host_ and the _build_ profiles. You can read more about them [here](https://docs.conan.io/2.0/tutorial/consuming_packages/cross_building_with_conan.html?highlight=build%20profile#conan-two-profiles-model-build-and-host-profiles). In CMake-Conan, the default behaviour is as follows:

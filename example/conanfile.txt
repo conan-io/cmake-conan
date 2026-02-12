@@ -5,4 +5,4 @@ fmt/9.1.0
 cmake_layout
 
 [generators]
-CMakeDeps
+CMakeConfigDeps

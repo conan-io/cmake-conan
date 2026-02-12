@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeConfigDeps
 
 
 class cmake_module_onlyRecipe(ConanFile):
@@ -34,7 +34,7 @@ class cmake_module_onlyRecipe(ConanFile):
         cmake_layout(self)
 
     def generate(self):
-        deps = CMakeDeps(self)
+        deps = CMakeConfigDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
         tc.generate()
@@ -54,7 +54,5 @@ class cmake_module_onlyRecipe(ConanFile):
         if self.options.with_builddir:
             self.cpp_info.builddirs.append("orion-module-subfolder")
 
-        # Set this to be MODULE only, to force the case in a test where this is detected by module name
         self.cpp_info.set_property("cmake_file_name", "Orion")
         self.cpp_info.set_property("cmake_target_name", "Orion::orion")
-        self.cpp_info.set_property("cmake_find_mode", "module")
