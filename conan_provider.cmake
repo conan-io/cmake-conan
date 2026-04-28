@@ -620,9 +620,15 @@ macro(conan_provide_dependency method package_name)
             if(_multiconfig_generator)
                 set(_build_configs Release Debug)
             else()
-                set(_build_configs ${CMAKE_BUILD_TYPE})
+                # Check if Conan dependencies should be build with a different build type
+                # defined by variable CMAKE_MAP_IMPORTED_CONFIG_<CMAKE_BUILD_TYPE>
+                string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+                if(CMAKE_MAP_IMPORTED_CONFIG_${CMAKE_BUILD_TYPE_UPPER})
+                    set(_build_configs ${CMAKE_MAP_IMPORTED_CONFIG_${CMAKE_BUILD_TYPE_UPPER}})
+                else()
+                    set(_build_configs ${CMAKE_BUILD_TYPE})
+                endif()
             endif()
-            
         endif()
 
         list(JOIN _build_configs ", " _build_configs_msg)
