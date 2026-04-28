@@ -312,6 +312,15 @@ function(detect_build_type build_type)
     if(NOT multiconfig_generator)
         # Only set when we know we are in a single-configuration generator
         # Note: we may want to fail early if `CMAKE_BUILD_TYPE` is not defined
+        # Also: If CMAKE_MAP_IMPORTED_CONFIG_<CONFIG> is set, use its value
+        # as the Conan build type instead of the current CMake build type, see also:
+        # https://cmake.org/cmake/help/latest/prop_tgt/MAP_IMPORTED_CONFIG_CONFIG.html#map-imported-config-config
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+        if(CMAKE_MAP_IMPORTED_CONFIG_${CMAKE_BUILD_TYPE_UPPER})
+            set(${BUILD_TYPE} ${CMAKE_MAP_IMPORTED_CONFIG_${CMAKE_BUILD_TYPE_UPPER}} PARENT_SCOPE)
+        else()
+            set(${BUILD_TYPE} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+        endif()
         set(${build_type} ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
     endif()
 endfunction()
