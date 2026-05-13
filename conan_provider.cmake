@@ -470,7 +470,8 @@ function(conan_install)
     set(conan_output_folder ${CMAKE_BINARY_DIR}/conan)
     # Invoke "conan install" with the provided arguments
     set(conan_args -of=${conan_output_folder})
-    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN}")
+    list(JOIN ARGN " " argn_str)
+    message(STATUS "CMake-Conan: conan install ${CMAKE_SOURCE_DIR} ${conan_args} ${argn_str}")
 
 
     # In case there was not a valid cmake executable in the PATH, we inject the
