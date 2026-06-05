@@ -478,7 +478,11 @@ function(conan_install)
     # same we used to invoke the provider to the PATH
     if(DEFINED PATH_TO_CMAKE_BIN)
         set(old_path $ENV{PATH})
-        set(ENV{PATH} "$ENV{PATH}:${PATH_TO_CMAKE_BIN}")
+        if(CMAKE_HOST_WIN32)
+            set(ENV{PATH} "$ENV{PATH};${PATH_TO_CMAKE_BIN}")
+        else()
+            set(ENV{PATH} "$ENV{PATH}:${PATH_TO_CMAKE_BIN}")
+        endif()
     endif()
 
     execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN} --format=json
