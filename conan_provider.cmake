@@ -431,6 +431,13 @@ function(detect_host_profile output_file)
     string(APPEND profile "[conf]\n")
     string(APPEND profile "tools.cmake.cmaketoolchain:generator=${CMAKE_GENERATOR}\n")
 
+    # if a custom cmake toolchain was specified use it
+    if(CMAKE_TOOLCHAIN_FILE)
+      # pass cmake toolchain file to conan
+      string(APPEND profile "tools.cmake.cmaketoolchain:toolchain_file=${CMAKE_TOOLCHAIN_FILE}\n")
+    endif()
+
+
     # propagate compilers via profile
     append_compiler_executables_configuration()
 

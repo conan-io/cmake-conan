@@ -1,0 +1,23 @@
+﻿// linker/stm32f407xx.icf
+
+// Stack und Heap Größen
+define symbol __ICFEDIT_size_cstack__ = 0x00000400;  // 1 KiB
+define symbol __ICFEDIT_size_heap__   = 0x00000200;  // 512 B
+define symbol __ICFEDIT_region_STACK_top = 0x20020000;
+
+
+// Flash-Region (ROM)
+define memory mem with size = 4G;
+define region ROM_region = mem:[from 0x08000000 to 0x080FFFFF];  // 1 MiB Flash
+define region RAM_region = mem:[from 0x20000000 to 0x2001FFFF];  // 128 KiB SRAM
+
+// Stack-Top: oberstes Ende des RAMs
+define symbol __ICFEDIT_region_STACK_top = 0x20020000;
+
+// Platzierung der Sektionen
+initialize by copy { readwrite };  // .data wird aus Flash in RAM kopiert
+do not initialize { section .noinit };  // .noinit bleibt unberührt
+
+place at address mem:0x08000000 { readonly };     // z. B. .isr_vector
+place in ROM_region { readonly };                // .text, .rodata, etc.
+place in RAM_region { readwrite, block CSTACK, block HEAP };
