@@ -614,7 +614,8 @@ macro(conan_provide_dependency method package_name)
         else()
             # No configuration overrides, provide sensible defaults            
             if(_multiconfig_generator)
-                set(_build_configs Release Debug)
+                # use specified CMAKE_CONFIGURATION_TYPES otherwhise downstream tools may run into problems
+                set(_build_configs ${CMAKE_CONFIGURATION_TYPES})
             else()
                 set(_build_configs ${CMAKE_BUILD_TYPE})
             endif()
