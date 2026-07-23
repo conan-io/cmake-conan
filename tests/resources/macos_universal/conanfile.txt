@@ -1,0 +1,7 @@
+[requires]
+hello/0.1
+bye/0.1
+archconfig/0.1
+
+[generators]
+CMakeConfigDeps

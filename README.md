@@ -14,7 +14,7 @@ CMake dependency provider for the Conan C and C++ package manager.
 
 Prerequisites:
 * CMake 3.24
-* Conan 2.0.5
+* Conan 2.0.5 (2.1.0 or later for macOS universal binary builds)
 * A CMake-based project that contains a `conanfile.txt` or `conanfile.py` to list the required dependencies.
 
 First, clone this repository in the `develop2` branch.
@@ -90,6 +90,19 @@ The CMake-Conan dependency provider will autodetect and pass the profile informa
   * The output format (`--format`).
   * The build type setting (`-s build_type=...`).
 * Values are semi-colon separated, e.g. `--build=never;--update;--lockfile-out=''`
+
+### macOS universal binaries
+
+For a macOS build that targets two architectures, enable `CONAN_OSX_UNIVERSAL_BINARIES` to have the dependency provider build the Conan dependencies for both and merge them into universal binaries:
+
+```bash
+cmake -B build -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=[path-to-cmake-conan]/conan_provider.cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCONAN_OSX_UNIVERSAL_BINARIES=ON
+```
+
+* The option is off by default. Without it, multiple architectures only work if the recipes produce universal binaries themselves.
+* Requires Conan 2.1.0 or later. Only the `arm64` plus `x86_64` pair is supported, and only for macOS targets (iOS, tvOS and watchOS are unaffected).
+* The dependencies are copied into the build tree, once per architecture, so expect a bigger build directory.
+* Reinstalls are skipped while the conanfile, the profiles, the install arguments and the resolved dependency versions are unchanged. A version range that picks up a new package in the local cache reinstalls automatically. Delete `<build>/conan-universal-stamp.txt` to force a reinstall.
 
 
 ## Development, contributors

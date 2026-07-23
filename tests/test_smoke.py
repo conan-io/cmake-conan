@@ -83,13 +83,13 @@ def setup_conan_home(conan_home_dir, tmp_path_factory):
     run("conan export . -vquiet")
 
     # additional recipes to export from resources, overlay on top of `hello` and export
-    additional_recipes = ['boost', 'bye', 'cmake-module-only', 'cmake-module-with-dependency']
+    additional_recipes = ['boost', 'bye', 'cmake-module-only', 'cmake-module-with-dependency', 'archconfig']
 
     for recipe in additional_recipes:
         recipe_dir = tmp_path_factory.mktemp(f"temp_{recipe}")
         os.chdir(recipe_dir.as_posix())
         run(f"conan new cmake_lib -d name={recipe} -d version=0.1 -f -vquiet")
-        shutil.copy2(src_dir / 'tests' / 'resources' / 'recipes' / recipe / 'conanfile.py', ".")
+        shutil.copytree(src_dir / 'tests' / 'resources' / 'recipes' / recipe, ".", dirs_exist_ok=True)
         run("conan export . -vquiet")
 
     # Additional profiles for testing
@@ -686,6 +686,195 @@ class TestAppleOS:
         assert "os.sdk=watchsimulator" in out
         assert "os.version=7.0" in out
         assert "compiler.libcxx=libc++" in out
+
+
+@darwin
+class TestMacosUniversal:
+    # Class-scoped workdir: the tests build on each other in declaration order
+    # (test_universal_build creates the stamp that test_universal_reconfigure_uses_stamp checks)
+    @pytest.fixture(scope="class", autouse=True)
+    def setup_universal_workdir(self, tmp_path_factory):
+        workdir = tmp_path_factory.mktemp("test_macos_universal")
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal'])
+        TestMacosUniversal.source_dir = source_dir
+        TestMacosUniversal.binary_dir = binary_dir
+        cwd = os.getcwd()
+        os.chdir(binary_dir.as_posix())
+        yield
+        os.chdir(cwd)
+
+    def test_universal_build(self, capfd):
+        "Both architectures are installed, merged with lipo, and the app is universal"
+        run(f"cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'")
+        out, _ = capfd.readouterr()
+        assert "CMake-Conan: Universal binary build, installing each architecture separately" in out
+        assert "cmake_system_processor=armv8;x86_64" in out
+        assert "--deployer=full_deploy" in out
+        assert "dispatching per-architecture header" in out
+        assert "archconfig_arch.h" in out
+        assert re.search(r"CMake-Conan: 3 packages, \d+ binaries merged, \d+ files identical, "
+                         r"\d+ headers dispatched per architecture, 0 errors", out)
+        run("cmake --build .")
+        archs = subprocess.check_output("lipo -archs ./app", shell=True, text=True)
+        assert set(archs.split()) == {"arm64", "x86_64"}
+        run("./app")
+        out, _ = capfd.readouterr()
+        expected_output = [f.format(config="Release") for f in expected_app_outputs]
+        assert all(expected in out for expected in expected_output)
+        # the app executes its native slice, so the dispatched header must match the host
+        assert f"archconfig: {platform.machine()}" in out
+
+    def test_universal_reconfigure_uses_stamp(self, capfd):
+        "Unchanged inputs skip the installs; a conanfile content change triggers them again"
+        run(f"cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'")
+        out, _ = capfd.readouterr()
+        assert "Universal binary build up to date" in out
+        assert "Installing configuration(s)" not in out
+        # a touch changes only the mtime, the stamp still matches
+        os.utime(self.source_dir / "conanfile.txt")
+        run(f"cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'")
+        out, _ = capfd.readouterr()
+        assert "Universal binary build up to date" in out
+        # a content change reconfigures from the build (CMAKE_CONFIGURE_DEPENDS) and reinstalls
+        with open(self.source_dir / "conanfile.txt", "a") as f:
+            f.write("\n# force reinstall\n")
+        run("cmake --build .")
+        out, _ = capfd.readouterr()
+        assert "Universal binary build, installing each architecture separately" in out
+        assert ", 0 errors" in out
+
+    def test_universal_version_range_update(self, capfd, tmp_path, monkeypatch):
+        "A version range picking up a new package in the local cache triggers a reinstall"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir = workdir / "src"
+        binary_dir = workdir / "build"
+        source_dir.mkdir()
+        binary_dir.mkdir()
+        (source_dir / "conanfile.txt").write_text(
+            "[requires]\nhello/[>=0.1 <1.0]\n\n[generators]\nCMakeConfigDeps\n")
+        (source_dir / "CMakeLists.txt").write_text(
+            "cmake_minimum_required(VERSION 3.24)\nproject(RangeApp CXX)\n"
+            "find_package(hello REQUIRED)\nadd_executable(app main.cpp)\n"
+            "target_link_libraries(app hello::hello)\n")
+        (source_dir / "main.cpp").write_text('#include "hello.h"\nint main(){ hello(); }\n')
+        monkeypatch.chdir(binary_dir)
+        cmd = (f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+               "-DCMAKE_BUILD_TYPE=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON "
+               "'-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'")
+        run(cmd)
+        out, _ = capfd.readouterr()
+        assert "Universal binary build, installing each architecture separately" in out
+        # unchanged graph, the stamp hits
+        run(cmd)
+        out, _ = capfd.readouterr()
+        assert "Universal binary build up to date" in out
+        # a new version satisfying the range appears in the local cache
+        recipe_dir = tmp_path / "hello02"
+        recipe_dir.mkdir()
+        monkeypatch.chdir(recipe_dir)
+        run("conan new cmake_lib -d name=hello -d version=0.2 -f -vquiet")
+        run("conan export . -vquiet")
+        monkeypatch.chdir(binary_dir)
+        run(cmd)
+        out, err = capfd.readouterr()
+        assert "Universal binary build, installing each architecture separately" in out
+        assert "hello/0.2" in out + err
+        run("cmake --build .")
+        archs = subprocess.check_output("lipo -archs ./app", shell=True, text=True)
+        assert set(archs.split()) == {"arm64", "x86_64"}
+
+    def test_universal_space_separated_archs(self, capfd, tmp_path, monkeypatch):
+        "The space-separated CMAKE_OSX_ARCHITECTURES form (usable with the Xcode "
+        "generator, where ARCHS is space-separated) behaves like the ;-list"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal'])
+        monkeypatch.chdir(binary_dir)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-G Xcode -DCONAN_INSTALL_BUILD_CONFIGURATIONS=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON "
+            "'-DCMAKE_OSX_ARCHITECTURES=arm64 x86_64'")
+        out, _ = capfd.readouterr()
+        assert "Universal binary build, installing each architecture separately" in out
+        assert "cmake_system_processor=armv8;x86_64" in out
+        assert ", 0 errors" in out
+
+    def test_universal_multi_config(self, capfd, tmp_path, monkeypatch):
+        "Xcode's default Release+Debug configurations install per architecture and merge cleanly"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal'])
+        monkeypatch.chdir(binary_dir)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-G Xcode -DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'")
+        out, _ = capfd.readouterr()
+        assert "CMake-Conan: Installing configuration(s): Release, Debug" in out
+        assert "Universal binary build, installing each architecture separately" in out
+        assert ", 0 errors" in out
+
+    def test_universal_missing_build_type(self, capfd, tmp_path, monkeypatch):
+        "A single-config generator without CMAKE_BUILD_TYPE fails before wiping anything"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal'])
+        monkeypatch.chdir(binary_dir)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'", check=False)
+        out, err = capfd.readouterr()
+        # cmake wraps message() output at ~76 columns, compare whitespace-insensitively
+        assert "needs at least one build type" in " ".join(err.split())
+        assert "CMake-Conan: conan install" not in out
+
+    @pytest.mark.parametrize("archs,expected", [
+        ("arm64;i860", "to a Conan architecture"),
+        ("arm64;arm64e", "more than once"),
+        ("arm64;x86_64;arm64e", "at most two architectures"),
+    ])
+    def test_universal_unsupported_archs(self, capfd, tmp_path, monkeypatch, archs, expected):
+        "Unusable architecture sets fail with a clear message before any conan install"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal_archs'])
+        monkeypatch.chdir(binary_dir)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            f"-DCMAKE_BUILD_TYPE=Release -DCONAN_OSX_UNIVERSAL_BINARIES=ON '-DCMAKE_OSX_ARCHITECTURES={archs}'", check=False)
+        out, err = capfd.readouterr()
+        # cmake wraps message() output at ~76 columns, compare whitespace-insensitively
+        assert expected in " ".join(err.split())
+        assert "CMake-Conan: conan install" not in out
+
+    def test_ios_multiarch_fallback(self, capfd, basic_cmake_project):
+        "Non-macOS Apple multi-arch keeps the previous single-install warning behavior"
+        source_dir, binary_dir = basic_cmake_project
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator "
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' "
+            "'-DCONAN_INSTALL_ARGS=--build=never'", check=False)
+        out, err = capfd.readouterr()
+        # cmake wraps message() output at ~76 columns, compare whitespace-insensitively
+        assert ("Multiple architectures detected, this will only work if "
+                "Conan recipe(s) produce fat binaries.") in " ".join(err.split())
+        assert "cmake_system_processor=armv8\n" in out
+        assert "arch=armv8" in out
+        assert "--deployer" not in out
+
+    def test_universal_disabled_by_default(self, capfd, tmp_path, monkeypatch):
+        "Without CONAN_OSX_UNIVERSAL_BINARIES the previous single-install behavior applies"
+        workdir = tmp_path / "test_workdir"
+        workdir.mkdir()
+        source_dir, binary_dir = setup_cmake_workdir(workdir, resource_dirs=['macos_universal_archs'])
+        monkeypatch.chdir(binary_dir)
+        run(f"cmake -S {source_dir} -B {binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} "
+            "-DCMAKE_BUILD_TYPE=Release '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'", check=False)
+        out, err = capfd.readouterr()
+        # cmake wraps message() output at ~76 columns, compare whitespace-insensitively
+        assert ("Multiple architectures detected, this will only work if "
+                "Conan recipe(s) produce fat binaries.") in " ".join(err.split())
+        assert "Universal binary build" not in out
+        assert "--deployer" not in out
 
 
 class TestMSVCArch:
