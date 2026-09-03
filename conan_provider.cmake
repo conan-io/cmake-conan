@@ -485,12 +485,28 @@ function(conan_install)
         endif()
     endif()
 
-    execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN} --format=json
+    foreach(attempt RANGE 1)
+        execute_process(COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} ${conan_args} ${ARGN} --format=json
                     RESULT_VARIABLE return_code
                     OUTPUT_VARIABLE conan_stdout
                     ERROR_VARIABLE conan_stderr
                     ECHO_ERROR_VARIABLE    # show the text output regardless
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        if(NOT "${return_code}" STREQUAL "0")
+            string(FIND "${conan_stderr}" "ERROR:" error_position REVERSE)
+            if (NOT error_position EQUAL -1)
+                string(SUBSTRING "${conan_stderr}" "${error_position}" -1 error_message)
+                if (error_message MATCHES [[.*ERROR: HTTPSConnectionPool.*]])
+                    message(WARNING "Conan Remote Error: '${error_message}'. Retrying with local cache only.")
+                    list(APPEND conan_args "--no-remote")
+                endif()
+            else()
+                message(FATAL_ERROR "Conan install failed='${return_code}'")
+            endif()
+        else()
+            break()
+        endif()
+    endforeach()
 
     if(DEFINED PATH_TO_CMAKE_BIN)
         set(ENV{PATH} "${old_path}")
