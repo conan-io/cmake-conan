@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -273,7 +274,19 @@ class TestBasic:
         runtime = msvc_runtime.replace("$<$<CONFIG:Debug>:Debug>", debug_tag)
         expected_runtime_outputs = [f.format(expected_runtime=runtime) for f in expected_app_msvc_runtime]
         assert all(expected in out for expected in expected_runtime_outputs)
-        
+
+    @pytest.fixture
+    def bad_remote(self):
+        run(" ".join(["conan", "remote", "add", "bad-remote", f"https://{uuid4()}"]), check=True)
+        yield
+        run(" ".join(["conan", "remote", "remove", "bad-remote"]), check=True)
+
+    def test_configure_offline(self, bad_remote):
+        generator = "-GNinja" if platform.system() == "Windows" else ""
+        run(f"cmake -S {self.source_dir} -B {self.binary_dir} -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES={conan_provider} -DCMAKE_BUILD_TYPE=Release {generator}",
+            check=True)
+
+
 class TestFindModules:
 
     @pytest.mark.parametrize("use_find_components", [True, False])
