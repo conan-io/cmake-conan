@@ -499,8 +499,12 @@ function(conan_install)
                 if (error_message MATCHES [[.*ERROR: HTTPSConnectionPool.*]])
                     message(WARNING "Conan Remote Error: '${error_message}'. Retrying with local cache only.")
                     list(APPEND conan_args "--no-remote")
+                else()
+                    # some other error from conan install that we don't handle
+                    message(FATAL_ERROR "Conan install failed='${return_code}'")
                 endif()
             else()
+                # some unknown error running the conan install command itself
                 message(FATAL_ERROR "Conan install failed='${return_code}'")
             endif()
         else()
